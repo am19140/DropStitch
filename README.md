@@ -1,56 +1,74 @@
-# Welcome to your Expo app 👋
+# DropStitch 🧶
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A phone app for knitters: keep your patterns, count your rows, tick off each step and keep track of your yarn.
 
-## Get started
+Built with [Expo](https://expo.dev) (SDK 57) and React Native, so one codebase runs on iPhone and Android.
 
-1. Install dependencies
+## What's in the app
 
-   ```bash
-   npm install
-   ```
+- **Home**: your current project in a big **Continue** card (row count, step, start date), plus anything else on the needles.
+- **Project page**: the title and when you started, **Go to current step**, a **Notes** box that saves as you type, and the **pattern file**.
+- **Current step**: a big row counter, the step's instructions, *Mark step done* / *Next step*, and an **All steps** list where you can add, paste, edit and reorder steps. The screen stays awake while you knit.
+- **Pattern viewer**: PDFs and photos with a draggable row marker, and the row counter underneath so you can count while you read.
+- **Projects**: active projects and finished ones, shown as colour boxes like paint chips. Finished projects keep their notes.
+- **Yarn**: your stash. Add a yarn ball with its colour (30 to choose from), material, needles that fit and an optional name.
 
-2. Start the app
+Pasted pattern text becomes steps automatically, and row counts are picked up from lines like `Rows 1-10`, `Rnd 5`, `knit 20 rows` or `repeat rows 1-4 3 times`.
 
-   ```bash
-   npx expo start
-   ```
+Everything is stored on the phone. There are no accounts and no server.
 
-In the output, you'll find options to open the app in a
+## Design
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+"Strawberry matcha": strawberry (`#C45F3F`), strawberry milk (`#FFC0C0`), matcha (`#898E46`) and matcha milk (`#E3E6C3`) on a very light beige (`#FBF7F0`).
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Fraunces Black** (soft + wonky) for big titles and row numbers. The static files in `assets/fonts` have those settings baked in.
+- **Manrope** for everything else.
+- **Caveat** for the little handwritten notes.
 
-## Get a fresh project
+All colours and fonts live in `src/constants/theme.ts`. The line drawings are placeholders in `src/components/illustrations.tsx`, ready to be swapped for final artwork.
 
-When you're ready, run:
+## Running it
+
+You need **Node.js 22.13 or newer**. Then:
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **On your phone**: install **Expo Go**. On Android, scan the QR code from inside Expo Go; on iPhone, scan it with the Camera app. Your phone must be on the same Wi-Fi as your computer. If that doesn't work, try `npx expo start --tunnel`.
+- **In a browser**: press `w`. The web version is only for quick checks during development.
 
-### Other setup steps
+To build a real installable app, use [EAS Build](https://docs.expo.dev/build/introduction/): `npx eas-cli@latest build`.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Checks
 
-## Learn more
+```bash
+npx tsc --noEmit   # typecheck
+npx expo lint      # lint
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Project layout
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```
+src/
+  app/                       Screens (Expo Router, file-based)
+    _layout.tsx              Fonts, navigation stack
+    (tabs)/                  Bottom menu: Home (index), Projects, Yarn
+    welcome.tsx              First-launch screen
+    new.tsx                  New project
+    project/[id]/index.tsx   Project page
+    project/[id]/knit.tsx    Current step + row counter
+    project/[id]/pdf.tsx     Pattern viewer + row counter
+    project/[id]/edit.tsx    Rename, files, start over, finish, delete
+    yarn/new.tsx             New yarn ball
+  components/                UI pieces (tab bar, project box, yarn ball, knit bar, …)
+  lib/                       Step parsing, pattern files, dates, the PDF viewer page
+  store/projects.ts          Projects, yarn and settings (zustand, saved with AsyncStorage)
+  constants/theme.ts         Colours, fonts, spacing
+```
 
-## Join the community
+## Notes
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- PDFs are drawn with [pdf.js](https://mozilla.github.io/pdf.js/), loaded from a CDN, so the first time a PDF is opened the phone needs an internet connection.
+- The app icon and splash image are still Expo's defaults.
