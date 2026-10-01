@@ -1,4 +1,11 @@
-export type ParsedStep = { text: string; rows?: number };
+export type ParsedStep = {
+  text: string;
+  rows?: number;
+  section?: string;
+  startSide?: 'RS' | 'WS';
+  inRound?: boolean;
+  lines?: string[];
+};
 
 const ROW_WORD = String.raw`(?:rows?|rnds?|rounds?|r)`;
 const DASH = String.raw`\s*(?:-|–|—|to|through|thru)\s*`;
@@ -14,8 +21,22 @@ const ROW_AMOUNT = /\b(\d+)\s*(?:more\s+)?(?:rows|rounds|rnds)\b/i;
 // "... 3 times" / "3x"
 const TIMES = /\b(\d+)\s*(?:times|x)\b/i;
 
+// "work RS and WS rows 7 times each" → 14 rows
+const BOTH_SIDES = /\b(?:RS and WS|WS and RS)\b[^.]*?\b(\d+)\s*times(?:\s*each)?/i;
+// "every RS row 5 times", "every other row 5 times", "every 4th row 6 times", "every row 3 times"
+const EVERY_NTH = /\bevery\s+(RS|WS|other|alt(?:ernate)?|(\d+)(?:st|nd|rd|th))?\s*(?:row|rnd|round)s?\s+(\d+)\s*(?:more\s+)?times/i;
+
 /** Works out how many rows a single line of pattern text covers, if it says. */
 export function detectRows(line: string): number | undefined {
+  const both = line.match(BOTH_SIDES);
+  if (both) return Number(both[1]) * 2;
+  const every = line.match(EVERY_NTH);
+  if (every) {
+    const times = Number(every[3]);
+    if (!every[1]) return times;
+    if (every[2]) return Number(every[2]) * times;
+    return 2 * times;
+  }
   const range = line.match(LEADING_RANGE);
   if (range) {
     const from = Number(range[1]);
@@ -44,6 +65,26 @@ export function parseSteps(text: string): ParsedStep[] {
     .filter((line) => line.length > 0)
     .map((line) => {
       const rows = detectRows(line);
-      return rows && rows > 0 && rows <= 9999 ? { text: line, rows } : { text: line };
+      const step: ParsedStep = { text: line };
+      if (rows && rows > 0 && rows <= 9999) step.rows = rows;
+      if (detectRound(line)) step.inRound = true;
+      else {
+        const side = detectSide(line);
+        if (side) step.startSide = side;
+      }
+      return step;
     });
+}
+
+/** Side of the first row a line talks about ("Row 1 (RS)", "next WS row", "RS and WS"). */
+export function detectSide(text: string): 'RS' | 'WS' | undefined {
+  // "…ending with a WS row" says where the step ends, not where it starts.
+  const m = text.replace(/\bend(?:ing|s)?\s+(?:with|after|on)\s+an?\s+(?:RS|WS)\s+row\b/gi, '').match(/\b(RS|WS)\b/);
+  if (!m) return undefined;
+  return m[1].toUpperCase() as 'RS' | 'WS';
+}
+
+/** Whether a line is worked in the round. */
+export function detectRound(text: string): boolean {
+  return /\b(rnds?|rounds?|in the round)\b/i.test(text) && !/\b(RS|WS)\b/.test(text);
 }

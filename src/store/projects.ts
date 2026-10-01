@@ -23,7 +23,17 @@ export type Step = {
   rows?: number;
   rowsDone: number;
   done: boolean;
+  /** Part of the pattern this step belongs to, e.g. "Left shoulder". */
+  section?: string;
+  /** Side of the first row in this step, for knitting worked back and forth. */
+  startSide?: Side;
+  /** Worked in the round (no right/wrong side rows). */
+  inRound?: boolean;
+  /** Row-by-row instructions that repeat, e.g. ["Row 1 (RS): k1, p1", "Row 2 (WS): purl"]. */
+  lines?: string[];
 };
+
+export type Side = 'RS' | 'WS';
 
 export type Project = {
   id: string;
@@ -36,6 +46,8 @@ export type Project = {
   /** Total rows knitted on this project. */
   rowCount: number;
   notes: string;
+  /** Size being knitted, when the pattern has several. */
+  size?: string;
   /** Colour of the project's box (from the palette in constants/theme). */
   color: string;
   /** Set when the project is finished; finished projects move to "Finished". */
@@ -61,7 +73,20 @@ export function newId() {
 }
 
 export function makeStep(step: ParsedStep): Step {
-  return { id: newId(), text: step.text, rows: step.rows, rowsDone: 0, done: false };
+  return { ...step, id: newId(), rowsDone: 0, done: false };
+}
+
+/** Which side the next row is on, or undefined when it isn't known. */
+export function currentSide(step: Step): Side | undefined {
+  if (step.inRound || !step.startSide) return undefined;
+  const even = step.rowsDone % 2 === 0;
+  return even ? step.startSide : step.startSide === 'RS' ? 'WS' : 'RS';
+}
+
+/** The row-specific instruction for the next row, when the step repeats a few rows. */
+export function currentLine(step: Step): string | undefined {
+  if (!step.lines?.length) return undefined;
+  return step.lines[step.rowsDone % step.lines.length];
 }
 
 export function projectTitle(project: Project) {
@@ -74,9 +99,9 @@ export function projectProgress(project: Project) {
   return { done, total, fraction: total === 0 ? 0 : done / total };
 }
 
-type NewProject = { name: string; files: PatternFile[]; steps: ParsedStep[] };
+type NewProject = { name: string; files: PatternFile[]; steps: ParsedStep[]; size?: string };
 type NewYarn = Omit<Yarn, 'id' | 'createdAt'>;
-type StepPatch = Partial<Pick<Step, 'text' | 'rows'>>;
+type StepPatch = Partial<Pick<Step, 'text' | 'rows' | 'startSide' | 'inRound'>>;
 
 type ProjectsState = {
   projects: Project[];
@@ -131,7 +156,7 @@ export const useProjects = create<ProjectsState>()(
         seenWelcome: false,
         markWelcomeSeen: () => set({ seenWelcome: true }),
 
-        addProject: ({ name, files, steps }) => {
+        addProject: ({ name, files, steps, size }) => {
           const now = Date.now();
           const used = useProjects.getState().projects.length;
           const project: Project = {
@@ -144,6 +169,7 @@ export const useProjects = create<ProjectsState>()(
             currentStep: 0,
             rowCount: 0,
             notes: '',
+            size,
             color: ProjectColors[used % ProjectColors.length],
           };
           set((state) => ({ projects: [project, ...state.projects] }));

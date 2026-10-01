@@ -55,5 +55,5 @@ const styles = StyleSheet.create({
   middle: { flex: 1, justifyContent: 'center' },
   title: { marginTop: 16, fontFamily: Fonts.display, fontSize: 84, lineHeight: 80, letterSpacing: -2.5, color: C.text },
   highlight: { fontFamily: Fonts.displayItalic, backgroundColor: C.pink },
-  note: { marginTop: 22, fontSize: 28, lineHeight: 32, transform: [{ rotate: '-3deg' }], alignSelf: 'flex-start' },
+  note: { marginTop: 22, fontSize: 22, lineHeight: 28 },
 });

@@ -200,5 +200,5 @@ const styles = StyleSheet.create({
   miniBoxText: { fontFamily: Fonts.extrabold, fontSize: 9, lineHeight: 11, letterSpacing: 0.4, color: C.text },
   empty: { alignItems: 'center', paddingTop: 40 },
   emptyBody: { marginTop: 16, maxWidth: 290, textAlign: 'center', fontSize: 15, lineHeight: 22 },
-  emptyNote: { marginTop: 10, transform: [{ rotate: '-3deg' }] },
+  emptyNote: { marginTop: 10 },
 });

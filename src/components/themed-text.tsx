@@ -34,8 +34,8 @@ const styles = StyleSheet.create({
   small: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20 },
   smallBold: { fontFamily: Fonts.bold, fontSize: 14, lineHeight: 20 },
   eyebrow: { fontFamily: Fonts.bold, fontSize: 11, lineHeight: 16, letterSpacing: 2 },
-  /** Caveat, for small handwritten notes. */
-  note: { fontFamily: Fonts.note, fontSize: 25, lineHeight: 30 },
+  /** Little notes and messages. */
+  note: { fontFamily: Fonts.note, fontSize: 20, lineHeight: 26 },
   link: { fontFamily: Fonts.semibold, fontSize: 15, lineHeight: 22 },
   code: { fontFamily: Fonts.mono, fontSize: 12 },
 });

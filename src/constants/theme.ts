@@ -47,7 +47,8 @@ export const Fonts = {
   semibold: 'Manrope_600SemiBold',
   bold: 'Manrope_700Bold',
   extrabold: 'Manrope_800ExtraBold',
-  note: 'Caveat_600SemiBold',
+  /** Little notes and messages: straight Fraunces italic. */
+  note: 'Fraunces-BlackItalic',
   // Older names still used by a few components.
   sans: 'Manrope_500Medium',
   mono: 'monospace',

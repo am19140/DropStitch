@@ -1,4 +1,3 @@
-import { Caveat_600SemiBold } from '@expo-google-fonts/caveat';
 import {
   Manrope_400Regular,
   Manrope_500Medium,
@@ -32,7 +31,6 @@ export default function RootLayout() {
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
-    Caveat_600SemiBold,
   });
   const ready = hydrated && (fontsLoaded || !!fontError);
 

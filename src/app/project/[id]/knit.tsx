@@ -6,20 +6,33 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/button';
-import { SitterArt } from '@/components/illustrations';
 import { haptic, KnitBar } from '@/components/knit-bar';
-import { rowInfo } from '@/components/project-box';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
 import { ThemedText } from '@/components/themed-text';
-import { Colors, Fonts, Spacing } from '@/constants/theme';
-import { projectTitle, useProject, useProjects } from '@/store/projects';
+import { CardShadow, Colors, Fonts, Spacing } from '@/constants/theme';
+import { cheer } from '@/lib/cheers';
+import {
+  currentLine,
+  currentSide,
+  projectTitle,
+  useProject,
+  useProjects,
+  type Side,
+  type Step,
+} from '@/store/projects';
 
 const C = Colors.light;
 type Tab = 'counter' | 'steps';
 
-/** The current step: big row count, the step's instructions, and the row buttons. */
+const SIDE_STYLE = {
+  RS: { bg: C.pink, short: 'RS', long: 'right side' },
+  WS: { bg: C.matcha, short: 'WS', long: 'wrong side' },
+  round: { bg: C.matchaMilk, short: 'RND', long: 'in the round' },
+} as const;
+
+/** The current step: where you are in the pattern, which row and which side, plus the row buttons. */
 export default function KnitScreen() {
   // Knitting means long stretches without touching the screen; don't let it sleep.
   useKeepAwake(undefined, { suppressDeactivateWarnings: true });
@@ -28,26 +41,45 @@ export default function KnitScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProject(id);
   const [tab, setTab] = useState<Tab>('counter');
-  const { completeStep, finishProject } = useProjects(
-    useShallow((s) => ({ completeStep: s.completeStep, finishProject: s.finishProject }))
+  const { completeStep, finishProject, updateStep } = useProjects(
+    useShallow((s) => ({ completeStep: s.completeStep, finishProject: s.finishProject, updateStep: s.updateStep }))
   );
 
   if (!project) return null;
 
-  const { step, row, target } = rowInfo(project);
+  const step: Step | undefined = project.steps[project.currentStep];
+  const rowsDone = step ? step.rowsDone : project.rowCount;
+  const target = step?.rows;
+  const done = !!target && rowsDone >= target;
   const isLast = project.currentStep >= project.steps.length - 1;
-  const done = !!target && row >= target;
-  const left = target ? target - row : 0;
-  const cheer = done ? 'step done!' : target && left <= 3 ? 'almost there!' : target ? 'keep going!' : 'take your time';
+  // The row you're working on now (1-based); once the step is done, show the last row.
+  const rowNow = done ? target : rowsDone + 1;
+  const side = step ? currentSide(step) : undefined;
+  const sideKey: keyof typeof SIDE_STYLE | undefined = step?.inRound ? 'round' : side;
+  const unit = step?.inRound ? 'round' : 'row';
+  const line = step && !done ? currentLine(step) : undefined;
+  const repeatOf = step?.lines?.length && target ? Math.ceil(target / step.lines.length) : 0;
+  const repeatNow = step?.lines?.length ? Math.min(repeatOf, Math.floor(rowsDone / step.lines.length) + 1) : 0;
 
   const onStepDone = () => {
     haptic('success');
+    completeStep(project.id);
     if (isLast) {
-      completeStep(project.id);
       finishProject(project.id);
       router.replace({ pathname: '/project/[id]', params: { id: project.id } });
+    }
+  };
+
+  /** Tapping the side badge corrects it: right side → wrong side → in the round → right side. */
+  const cycleSide = () => {
+    if (!step) return;
+    const next: keyof typeof SIDE_STYLE = sideKey === 'RS' ? 'WS' : sideKey === 'WS' ? 'round' : 'RS';
+    if (next === 'round') {
+      updateStep(project.id, step.id, { inRound: true, startSide: undefined });
     } else {
-      completeStep(project.id);
+      // Store the side of the step's first row, so the current row ends up on `next`.
+      const flip: Side = next === 'RS' ? 'WS' : 'RS';
+      updateStep(project.id, step.id, { inRound: false, startSide: rowsDone % 2 === 0 ? next : flip });
     }
   };
 
@@ -69,11 +101,18 @@ export default function KnitScreen() {
         <ThemedText type="eyebrow" themeColor="textSecondary" numberOfLines={1} style={{ marginTop: 4 }}>
           {project.steps.length
             ? `${projectTitle(project).toUpperCase()} · STEP ${project.currentStep + 1} OF ${project.steps.length}`
-            : 'ROW COUNTER'}
+            : projectTitle(project).toUpperCase()}
         </ThemedText>
-        <Text style={styles.title} numberOfLines={1}>
-          {projectTitle(project)}
-        </Text>
+        {step?.section ? (
+          <Text style={styles.where} numberOfLines={2}>
+            <Text style={styles.whereSmall}>You’re knitting the{'\n'}</Text>
+            {step.section.toLowerCase()}
+          </Text>
+        ) : (
+          <Text style={styles.where} numberOfLines={1}>
+            {project.steps.length ? 'Current step' : 'Row counter'}
+          </Text>
+        )}
         <TextTabs<Tab>
           value={tab}
           onChange={setTab}
@@ -87,25 +126,55 @@ export default function KnitScreen() {
       {tab === 'counter' ? (
         <ScrollView contentContainerStyle={styles.body}>
           <View style={styles.hero}>
-            <Text style={[styles.number, done && { color: C.matcha }]}>{row}</Text>
-            <ThemedText themeColor="textSecondary" style={{ marginTop: 10 }}>
-              {target ? `of ${target} rows` : step ? 'rows in this step' : 'rows'}
-            </ThemedText>
-            <ThemedText type="note" style={styles.cheer}>
-              {cheer}
-            </ThemedText>
-            <View style={styles.art} pointerEvents="none">
-              <SitterArt width={190} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.number, done && { color: C.matcha }]}>{rowNow}</Text>
+              <ThemedText style={styles.rowLabel}>
+                {done
+                  ? `all ${target} ${unit}s done`
+                  : target
+                    ? `${unit} ${rowNow} of ${target}`
+                    : `${unit} ${rowNow}`}
+              </ThemedText>
             </View>
+            {step && !done && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={
+                  sideKey ? `This ${unit} is ${SIDE_STYLE[sideKey].long}. Tap to change.` : 'Set which side this row is on'
+                }
+                onPress={cycleSide}
+                style={[styles.sideBadge, { backgroundColor: sideKey ? SIDE_STYLE[sideKey].bg : C.surface }, !sideKey && styles.sideUnknown]}>
+                <Text style={styles.sideShort}>{sideKey ? SIDE_STYLE[sideKey].short : '?'}</Text>
+                <Text style={styles.sideLong}>{sideKey ? SIDE_STYLE[sideKey].long : 'tap to set side'}</Text>
+              </Pressable>
+            )}
           </View>
 
-          <View style={styles.stepCard}>
+          <View style={styles.cheer}>
+            <Text style={styles.cheerText}>{cheer(project.currentStep, rowsDone, target)}</Text>
+          </View>
+
+          <View style={[styles.stepCard, CardShadow]}>
             {step ? (
               <>
-                <ThemedText style={{ fontSize: 16, lineHeight: 24 }}>{step.text}</ThemedText>
+                <ThemedText type="eyebrow" themeColor="textSecondary">CURRENT STEP</ThemedText>
+                <ThemedText style={styles.stepText}>{step.text}</ThemedText>
+                {line && (
+                  <View style={styles.thisRow}>
+                    <ThemedText type="eyebrow">{`THIS ${unit.toUpperCase()}`}</ThemedText>
+                    <ThemedText style={styles.thisRowText}>{line}</ThemedText>
+                  </View>
+                )}
+                {repeatOf > 1 && !done && (
+                  <View style={styles.repeatChip}>
+                    <Text style={styles.repeatText}>
+                      repeat {repeatNow} of {repeatOf}
+                    </Text>
+                  </View>
+                )}
                 {target ? (
                   <View style={styles.track}>
-                    <View style={[styles.fill, { width: `${Math.min(100, Math.round((row / target) * 100))}%` }]} />
+                    <View style={[styles.fill, { width: `${Math.min(100, Math.round((rowsDone / target) * 100))}%` }]} />
                   </View>
                 ) : null}
                 {done ? (
@@ -118,7 +187,7 @@ export default function KnitScreen() {
               </>
             ) : (
               <>
-                <ThemedText style={{ fontSize: 16, lineHeight: 24 }}>
+                <ThemedText style={styles.stepText}>
                   No steps yet. Add the pattern’s steps under “All steps” to tick them off as you go.
                 </ThemedText>
                 <Pressable accessibilityRole="button" onPress={() => setTab('steps')} style={styles.linkButton}>
@@ -142,13 +211,24 @@ export default function KnitScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.background },
   top: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three },
-  title: { marginTop: 4, marginBottom: 6, fontFamily: Fonts.display, fontSize: 32, lineHeight: 38, color: C.text },
+  where: { marginTop: 4, marginBottom: 4, fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, color: C.text },
+  whereSmall: { fontFamily: Fonts.semibold, fontSize: 15, lineHeight: 22, color: C.textSecondary },
   body: { paddingHorizontal: Spacing.four, paddingBottom: 24 },
-  hero: { marginTop: 16, height: 220 },
-  number: { fontFamily: Fonts.display, fontSize: 150, lineHeight: 140, letterSpacing: -6, color: C.text },
-  cheer: { marginTop: 4, alignSelf: 'flex-start', transform: [{ rotate: '-4deg' }] },
-  art: { position: 'absolute', right: -60, top: 0 },
-  stepCard: { marginTop: 8, padding: 20, borderRadius: 24, backgroundColor: C.matchaMilk, gap: 14 },
+  hero: { marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  number: { fontFamily: Fonts.display, fontSize: 120, lineHeight: 118, letterSpacing: -4, color: C.text },
+  rowLabel: { fontFamily: Fonts.bold, fontSize: 17, color: C.text },
+  sideBadge: { width: 128, paddingVertical: 18, borderRadius: 28, alignItems: 'center', gap: 2 },
+  sideUnknown: { borderWidth: 1.5, borderColor: C.border, borderStyle: 'dashed' },
+  sideShort: { fontFamily: Fonts.display, fontSize: 44, lineHeight: 48, color: C.text },
+  sideLong: { fontFamily: Fonts.bold, fontSize: 13, color: C.text },
+  cheer: { marginTop: 16, alignSelf: 'flex-start', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: C.matchaMilk },
+  cheerText: { fontFamily: Fonts.displayItalic, fontSize: 18, color: C.text },
+  stepCard: { marginTop: 16, padding: 20, borderRadius: 24, backgroundColor: C.surface, gap: 12 },
+  stepText: { fontSize: 17, lineHeight: 25, fontFamily: Fonts.medium },
+  thisRow: { padding: 14, borderRadius: 16, backgroundColor: C.pink, gap: 4 },
+  thisRowText: { fontFamily: Fonts.semibold, fontSize: 16, lineHeight: 23 },
+  repeatChip: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999, backgroundColor: C.matchaMilk },
+  repeatText: { fontFamily: Fonts.bold, fontSize: 13, color: C.text },
   track: { height: 4, borderRadius: 2, backgroundColor: 'rgba(137, 142, 70, 0.3)' },
   fill: { height: 4, borderRadius: 2, backgroundColor: C.matcha },
   linkButton: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },

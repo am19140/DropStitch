@@ -8,7 +8,7 @@
  * so they can be restored next time.
  */
 
-const PDFJS = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build';
+export const PDFJS = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build';
 
 export type ViewerFile = { kind: 'pdf' | 'image'; mimeType: string; base64: string };
 
