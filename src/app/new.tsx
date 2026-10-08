@@ -138,6 +138,7 @@ export default function NewPatternScreen() {
                           <Pressable
                             key={label + i}
                             accessibilityRole="button"
+                            accessibilityLabel={`Size ${label}`}
                             accessibilityState={{ selected: sizeIndex === i }}
                             onPress={() => setSizeIndex(i)}
                             style={[styles.chip, sizeIndex === i && styles.chipOn]}>

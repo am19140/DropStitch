@@ -69,6 +69,8 @@ export default function KnitScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProject(id);
   const [tab, setTab] = useState<Tab>('counter');
+  // Which step's full pattern text is open, so it closes again when you move on.
+  const [detailFor, setDetailFor] = useState<string | null>(null);
   const { completeStep, finishProject, updateStep, startTimer, pauseTimer } = useProjects(
     useShallow((s) => ({
       completeStep: s.completeStep,
@@ -94,6 +96,7 @@ export default function KnitScreen() {
   const sideKey: keyof typeof SIDE_STYLE | undefined = step?.inRound ? 'round' : side;
   const unit = step?.inRound ? 'round' : 'row';
   const line = step && !done ? currentLine(step) : undefined;
+  const showDetail = !!step && detailFor === step.id;
   const repeatOf = step?.lines?.length && target ? Math.ceil(target / step.lines.length) : 0;
   const repeatNow = step?.lines?.length ? Math.min(repeatOf, Math.floor(rowsDone / step.lines.length) + 1) : 0;
 
@@ -224,13 +227,37 @@ export default function KnitScreen() {
                     <ThemedText style={styles.thisRowText}>{line}</ThemedText>
                   </View>
                 )}
-                {repeatOf > 1 && !done && (
-                  <View style={styles.repeatChip}>
-                    <Text style={styles.repeatText}>
-                      repeat {repeatNow} of {repeatOf}
-                    </Text>
+                {(repeatOf > 1 && !done) || step.stitches ? (
+                  <View style={styles.chips}>
+                    {repeatOf > 1 && !done && (
+                      <View style={styles.repeatChip}>
+                        <Text style={styles.repeatText}>
+                          repeat {repeatNow} of {repeatOf}
+                        </Text>
+                      </View>
+                    )}
+                    {step.stitches ? (
+                      <View style={[styles.repeatChip, { backgroundColor: C.skySoft }]}>
+                        <Text style={styles.repeatText}>ends with {step.stitches} sts</Text>
+                      </View>
+                    ) : null}
                   </View>
-                )}
+                ) : null}
+                {step.detail ? (
+                  <View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityState={{ expanded: showDetail }}
+                      onPress={() => setDetailFor(showDetail ? null : step.id)}
+                      style={styles.detailToggle}>
+                      <Text style={styles.detailToggleText}>
+                        {showDetail ? 'Hide pattern text' : 'Full pattern text'}
+                      </Text>
+                      <Icon name={showDetail ? 'up' : 'chevronDown'} size={16} color={C.textSecondary} strokeWidth={2} />
+                    </Pressable>
+                    {showDetail && <Text style={styles.detailText}>{step.detail}</Text>}
+                  </View>
+                ) : null}
                 {target ? (
                   <View style={styles.track}>
                     <View style={[styles.fill, { width: `${Math.min(100, Math.round((rowsDone / target) * 100))}%` }]} />
@@ -310,6 +337,10 @@ const styles = StyleSheet.create({
   stepText: { fontSize: 17, lineHeight: 25, fontFamily: Fonts.medium },
   thisRow: { padding: 14, borderRadius: 16, backgroundColor: C.sky, gap: 4 },
   thisRowText: { fontFamily: Fonts.semibold, fontSize: 16, lineHeight: 23 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  detailToggle: { alignSelf: 'flex-start', minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  detailToggleText: { fontFamily: Fonts.semibold, fontSize: 13, color: C.textSecondary },
+  detailText: { fontFamily: Fonts.regular, fontSize: 14, lineHeight: 21, color: C.textSecondary },
   repeatChip: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999, backgroundColor: C.beige },
   repeatText: { fontFamily: Fonts.bold, fontSize: 13, color: C.text },
   track: { height: 4, borderRadius: 2, backgroundColor: 'rgba(3, 79, 201, 0.16)' },

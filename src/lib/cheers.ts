@@ -3,7 +3,7 @@
 const START = ['prepare your tea!', 'find your comfiest spot', 'put on a good podcast', 'cast on, cast off, cast away'];
 const MIDDLE = [
   'stretch those fingers',
-  'sip of matcha?',
+  'sip of tea?',
   'you’re on a roll',
   'biscuit break soon',
   'count it out loud',

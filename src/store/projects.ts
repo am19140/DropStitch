@@ -32,6 +32,10 @@ export type Step = {
   inRound?: boolean;
   /** Row-by-row instructions that repeat, e.g. ["Row 1 (RS): k1, p1", "Row 2 (WS): purl"]. */
   lines?: string[];
+  /** The pattern's full wording, when `text` is a shortened version of it. */
+  detail?: string;
+  /** How many stitches you should have once the step is done, when the pattern says. */
+  stitches?: number;
 };
 
 export type Side = 'RS' | 'WS';

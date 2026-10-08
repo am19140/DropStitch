@@ -3,22 +3,23 @@ import { StyleSheet, View } from 'react-native';
 
 import { HtmlView } from '@/components/html-view';
 import { readPatternFile } from '@/lib/pattern-files';
-import { PDFJS } from '@/lib/viewer-html';
+import { LOAD_PDFJS, pdfjsScript } from '@/lib/pdfjs';
 import type { PatternFile } from '@/store/projects';
 
-/** A tiny page that loads pdf.js, pulls the text out of a PDF line by line, and posts it back. */
+/** A tiny page that loads the bundled pdf.js, pulls the text out of a PDF line by line, and posts it back. */
 function extractorHtml(base64: string) {
   const data = JSON.stringify(base64);
   return `<!doctype html><html><head><meta charset="utf-8"></head><body>
+${pdfjsScript()}
 <script type="module">
+  ${LOAD_PDFJS}
   const post = (msg) => {
     const text = JSON.stringify(msg);
     if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(text);
     else window.parent.postMessage(text, '*');
   };
   try {
-    const pdfjs = await import('${PDFJS}/pdf.min.mjs');
-    pdfjs.GlobalWorkerOptions.workerSrc = '${PDFJS}/pdf.worker.min.mjs';
+    const pdfjs = await loadPdfjs();
     const raw = atob(${data});
     const bytes = new Uint8Array(raw.length);
     for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);

@@ -1,14 +1,14 @@
 /**
  * Builds the self-contained HTML page used to show a pattern's files (images and PDFs)
- * inside a WebView (native) or iframe (web). PDFs are drawn with pdf.js from a CDN, which
- * works the same on iOS and Android — Android's WebView can't display PDFs by itself.
+ * inside a WebView (native) or iframe (web). PDFs are drawn with pdf.js, bundled with the app so
+ * it works offline and the same on iOS and Android — Android's WebView can't display PDFs by itself.
  *
  * The page also has a "row marker": a highlight bar the knitter taps or drags to keep
  * their place. Its position and the scroll position are reported back with postMessage
  * so they can be restored next time.
  */
 
-export const PDFJS = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build';
+import { LOAD_PDFJS, pdfjsScript } from '@/lib/pdfjs';
 
 export type ViewerFile = { kind: 'pdf' | 'image'; mimeType: string; base64: string };
 
@@ -58,6 +58,7 @@ export function buildViewerHtml(
   <div id="marker" role="presentation"></div>
 </div>
 <script>window.__VIEWER__ = ${data};</script>
+${files.some((f) => f.kind === 'pdf') ? pdfjsScript() : ''}
 <script type="module">
   const { files, initial } = window.__VIEWER__;
   const doc = document.getElementById('doc');
@@ -125,12 +126,10 @@ export function buildViewerHtml(
     post({ type: 'error', message });
   }
 
+  ${LOAD_PDFJS}
   let pdfjs;
   async function renderPdf(file) {
-    if (!pdfjs) {
-      pdfjs = await import('${PDFJS}/pdf.min.mjs');
-      pdfjs.GlobalWorkerOptions.workerSrc = '${PDFJS}/pdf.worker.min.mjs';
-    }
+    if (!pdfjs) pdfjs = await loadPdfjs();
     const pdf = await pdfjs.getDocument({ data: toBytes(file.base64), isEvalSupported: false }).promise;
     const width = pagesEl.clientWidth || window.innerWidth;
     const ratio = Math.min(window.devicePixelRatio || 1, 3);
@@ -164,7 +163,7 @@ export function buildViewerHtml(
         else await renderImage(file);
       } catch (err) {
         showError(file.kind === 'pdf'
-          ? 'Could not open this PDF. PDFs need an internet connection the first time they are shown.'
+          ? 'Could not open this PDF.'
           : 'Could not show this image.');
       }
     }
