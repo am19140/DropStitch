@@ -15,6 +15,11 @@ import { useProjects } from '@/store/projects';
 const C = Colors.light;
 
 const YARN_COLOURS = [
+  { name: 'Purl’s chair', hex: '#034FC9' },
+  { name: 'Shawl red', hex: '#F51614' },
+  { name: 'Sky wash', hex: '#80ABD7' },
+  { name: 'Fleece', hex: '#E2D9BC' },
+  { name: 'Hot cocoa', hex: '#683629' },
   { name: 'Tomato jam', hex: '#C45F3F' },
   { name: 'Peony bundle', hex: '#FFC0C0' },
   { name: 'Monet ponds', hex: '#898E46' },
@@ -158,7 +163,7 @@ function Chips({ options, isOn, onPress }: { options: string[]; isOn: (o: string
             accessibilityRole="button"
             accessibilityState={{ selected: on }}
             onPress={() => onPress(o)}
-            style={[styles.chip, on && { backgroundColor: C.pink, borderColor: C.pink }]}>
+            style={[styles.chip, on && { backgroundColor: C.sky, borderColor: C.sky }]}>
             <Text style={styles.chipText}>{o}</Text>
           </Pressable>
         );
@@ -170,7 +175,7 @@ function Chips({ options, isOn, onPress }: { options: string[]; isOn: (o: string
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.background },
   content: { paddingHorizontal: Spacing.four, paddingBottom: 32, gap: 22 },
-  preview: { padding: 14, paddingHorizontal: 16, borderRadius: 22, backgroundColor: C.matchaMilk, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  preview: { padding: 14, paddingHorizontal: 16, borderRadius: 22, backgroundColor: C.beige, flexDirection: 'row', alignItems: 'center', gap: 14 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
   swatchRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },

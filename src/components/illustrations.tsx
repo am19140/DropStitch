@@ -1,5 +1,5 @@
 /**
- * Placeholder line illustrations in the app's style (ink lines, matcha + pink spot colour).
+ * Placeholder line illustrations in the app's style (ink lines, cobalt + light blue spot colour).
  * They're kept together here so they can be swapped for final artwork later.
  */
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, Path } from 'react-native-svg';
@@ -7,8 +7,8 @@ import Svg, { Circle, ClipPath, Defs, Ellipse, G, Path } from 'react-native-svg'
 const INK = '#1C1A17';
 const PAPER = '#FBF7F0';
 const SURFACE = '#FFFDF8';
-const MATCHA = '#898E46';
-const PINK = '#FFC0C0';
+const MATCHA = '#034FC9';
+const PINK = '#80ABD7';
 
 type ArtProps = { width: number };
 
@@ -99,7 +99,7 @@ export function CarrierArt({ width }: ArtProps) {
   );
 }
 
-/** Empty-state drawing: a pink yarn ball with two matcha needles. */
+/** Empty-state drawing: a light blue yarn ball with two cobalt needles. */
 export function YarnOutlineArt({ width }: ArtProps) {
   return (
     <Svg width={width} height={(width * 170) / 200} viewBox="0 0 200 170" fill="none" stroke={MATCHA} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">

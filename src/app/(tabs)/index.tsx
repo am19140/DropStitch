@@ -106,7 +106,7 @@ function ContinueCard({ project }: { project: Project }) {
       </View>
       <View style={styles.continuePill}>
         <Text style={styles.continueText}>CONTINUE</Text>
-        <Icon name="arrowRight" size={20} color={C.onPrimary} strokeWidth={2.2} />
+        <Icon name="arrowRight" size={20} color={C.onRed} strokeWidth={2.2} />
       </View>
     </Pressable>
   );
@@ -165,28 +165,28 @@ const styles = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandText: { fontFamily: Fonts.bold, fontSize: 14, color: C.text },
   display: { marginTop: 8, fontFamily: Fonts.display, fontSize: 46, lineHeight: 48, letterSpacing: -1, color: C.text },
-  displayItalic: { fontFamily: Fonts.displayItalic, color: C.matcha },
-  card: { marginTop: 32, padding: 20, paddingTop: 22, borderRadius: 24, backgroundColor: C.pink, gap: 10 },
+  displayItalic: { fontFamily: Fonts.displayItalic, color: C.red },
+  card: { marginTop: 32, padding: 20, paddingTop: 22, borderRadius: 24, backgroundColor: C.sky, gap: 10 },
   cardTop: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   cardTitle: { fontFamily: Fonts.display, fontSize: 30, lineHeight: 33, color: C.text },
-  rowBox: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: C.matcha, alignItems: 'flex-end' },
-  rowNumber: { fontFamily: Fonts.display, fontSize: 56, lineHeight: 58, letterSpacing: -2, color: C.text },
-  rowLabel: { fontFamily: Fonts.semibold, fontSize: 13, color: C.text },
-  chip: { alignSelf: 'flex-start', marginTop: 4, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 999, backgroundColor: C.matchaMilk },
+  rowBox: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: C.primary, alignItems: 'flex-end' },
+  rowNumber: { fontFamily: Fonts.display, fontSize: 56, lineHeight: 58, letterSpacing: -2, color: C.onPrimary },
+  rowLabel: { fontFamily: Fonts.semibold, fontSize: 13, color: C.onPrimary },
+  chip: { alignSelf: 'flex-start', marginTop: 4, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 999, backgroundColor: C.beige },
   chipText: { fontFamily: Fonts.bold, fontSize: 12, color: C.text },
-  track: { height: 6, borderRadius: 3, backgroundColor: C.blush },
-  fill: { height: 6, borderRadius: 3, backgroundColor: C.matcha },
+  track: { height: 6, borderRadius: 3, backgroundColor: C.skySoft },
+  fill: { height: 6, borderRadius: 3, backgroundColor: C.red },
   continuePill: {
     marginTop: 8,
     height: 52,
     borderRadius: 26,
-    backgroundColor: C.primary,
+    backgroundColor: C.red,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
   },
-  continueText: { fontFamily: Fonts.extrabold, fontSize: 18, letterSpacing: 1.4, color: C.onPrimary },
+  continueText: { fontFamily: Fonts.extrabold, fontSize: 18, letterSpacing: 1.4, color: C.onRed },
   smallRow: {
     marginTop: 12,
     padding: 12,

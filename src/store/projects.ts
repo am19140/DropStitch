@@ -52,6 +52,10 @@ export type Project = {
   color: string;
   /** Set when the project is finished; finished projects move to "Finished". */
   finishedAt?: number;
+  /** Knitting time already counted, in milliseconds (not including a running session). */
+  knitMs?: number;
+  /** When the knitting timer was started, while it's running. */
+  timerStartedAt?: number;
   /** Where the knitter left the row marker and scroll position in the pattern viewer. */
   viewer?: { markerY?: number; scrollY?: number };
 };
@@ -67,6 +71,17 @@ export type Yarn = {
   needles: string[];
   createdAt: number;
 };
+
+/** Stops a running timer, adding the session to the project's knitting time. */
+function stopTimer(p: Project): Partial<Project> {
+  if (!p.timerStartedAt) return {};
+  return { knitMs: (p.knitMs ?? 0) + (Date.now() - p.timerStartedAt), timerStartedAt: undefined };
+}
+
+/** Total knitting time so far, including a running session. */
+export function knitTime(p: Project, now = Date.now()) {
+  return (p.knitMs ?? 0) + (p.timerStartedAt ? Math.max(0, now - p.timerStartedAt) : 0);
+}
 
 export function newId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -113,6 +128,8 @@ type ProjectsState = {
   deleteProject: (id: string) => void;
   finishProject: (id: string) => void;
   reopenProject: (id: string) => void;
+  startTimer: (id: string) => void;
+  pauseTimer: (id: string) => void;
 
   increment: (id: string) => void;
   decrement: (id: string) => void;
@@ -181,11 +198,16 @@ export const useProjects = create<ProjectsState>()(
         deleteProject: (id) =>
           set((state) => ({ projects: state.projects.filter((p) => p.id !== id) })),
 
-        finishProject: (id) => edit(id, () => ({ finishedAt: Date.now() })),
+        finishProject: (id) =>
+          edit(id, (p) => ({ finishedAt: Date.now(), ...stopTimer(p) })),
+
+        startTimer: (id) => edit(id, (p) => (p.timerStartedAt ? {} : { timerStartedAt: Date.now() })),
+        pauseTimer: (id) => edit(id, (p) => stopTimer(p)),
         reopenProject: (id) => edit(id, () => ({ finishedAt: undefined })),
 
         increment: (id) =>
           edit(id, (p) => ({
+            timerStartedAt: p.timerStartedAt ?? Date.now(),
             rowCount: p.rowCount + 1,
             steps: p.steps.map((s, i) =>
               i === p.currentStep ? { ...s, rowsDone: s.rowsDone + 1 } : s

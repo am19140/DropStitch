@@ -46,7 +46,7 @@ export function PatternViewer({ project }: { project: Project }) {
               background: theme.background,
               text: theme.text,
               textSecondary: theme.textSecondary,
-              primary: theme.matcha,
+              primary: theme.cocoa,
             },
             latest.viewer ?? {}
           ),

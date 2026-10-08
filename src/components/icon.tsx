@@ -27,6 +27,8 @@ const ICONS = {
   search: ['M20 20l-4-4'],
   more: [],
   calendar: ['M4 10h16', 'M9 3v4', 'M15 3v4'],
+  play: ['M8 5.5l10 6.5-10 6.5z'],
+  pause: ['M9 5v14', 'M15 5v14'],
 } as const;
 
 export type IconName = keyof typeof ICONS;

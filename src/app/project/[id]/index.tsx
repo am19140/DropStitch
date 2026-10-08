@@ -5,11 +5,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { Icon } from '@/components/icon';
 import { rowInfo } from '@/components/project-box';
+import { Purl } from '@/components/purl';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { CardShadow, Colors, Fonts, Spacing } from '@/constants/theme';
-import { daysAgo, longDate } from '@/lib/dates';
-import { projectTitle, useProject, useProjects } from '@/store/projects';
+import { daysAgo, knitDuration, longDate } from '@/lib/dates';
+import { knitTime, projectTitle, useProject, useProjects } from '@/store/projects';
 
 const C = Colors.light;
 
@@ -32,6 +33,7 @@ export default function ProjectScreen() {
   const finished = !!project.finishedAt;
   const { step, row, target } = rowInfo(project);
   const params = { id: project.id };
+  const knitted = knitTime(project);
 
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
@@ -47,15 +49,32 @@ export default function ProjectScreen() {
           }
         />
 
-        <View style={[styles.header, { backgroundColor: finished ? C.matcha : C.matchaMilk }]}>
-          <ThemedText type="eyebrow">
-            {finished
-              ? 'FINISHED'
-              : project.steps.length
-                ? `ON THE NEEDLES · STEP ${project.currentStep + 1} OF ${project.steps.length}`
-                : 'ON THE NEEDLES'}
-          </ThemedText>
-          <Text style={styles.title}>{projectTitle(project)}</Text>
+        {finished && (
+          <View style={styles.proud}>
+            <Purl pose="proud" size={220} />
+            <Text style={styles.proudTitle}>
+              You <Text style={styles.proudItalic}>made</Text> this!
+            </Text>
+            <ThemedText type="note" style={styles.proudNote}>
+              Purl is showing it off to the whole flock
+            </ThemedText>
+          </View>
+        )}
+
+        <View style={[styles.header, { backgroundColor: finished ? C.sky : C.beige }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <ThemedText type="eyebrow">
+                {finished
+                  ? 'FINISHED'
+                  : project.steps.length
+                    ? `ON THE NEEDLES · STEP ${project.currentStep + 1} OF ${project.steps.length}`
+                    : 'ON THE NEEDLES'}
+              </ThemedText>
+              <Text style={styles.title}>{projectTitle(project)}</Text>
+            </View>
+            {!finished && <Purl pose="knitting" size={104} />}
+          </View>
           <View style={styles.dateRow}>
             <Icon name="calendar" size={16} color={C.text} />
             <ThemedText type="small" style={{ flex: 1 }}>
@@ -64,6 +83,14 @@ export default function ProjectScreen() {
                 : `Started ${longDate(project.createdAt)} · ${daysAgo(project.createdAt)}`}
             </ThemedText>
           </View>
+          {knitted > 0 && (
+            <View style={styles.dateRow}>
+              <Icon name="play" size={16} color={C.text} />
+              <ThemedText type="small" style={{ flex: 1 }}>
+                {knitDuration(knitted)} of knitting{project.timerStartedAt ? ' · timer running' : ''}
+              </ThemedText>
+            </View>
+          )}
         </View>
 
         {!finished && (
@@ -109,7 +136,7 @@ export default function ProjectScreen() {
             <View style={[styles.thumbLine, { width: '70%', height: 3, backgroundColor: C.text }]} />
             <View style={styles.thumbLine} />
             <View style={styles.thumbLine} />
-            <View style={[styles.thumbLine, { height: 7, backgroundColor: C.pink }]} />
+            <View style={[styles.thumbLine, { height: 7, backgroundColor: C.sky }]} />
             <View style={styles.thumbLine} />
             <View style={[styles.thumbLine, { width: '80%' }]} />
           </View>
@@ -158,6 +185,10 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.four, paddingTop: Spacing.three, paddingBottom: 48 },
   header: { marginTop: 8, padding: 18, borderRadius: 22, gap: 4 },
   title: { fontFamily: Fonts.display, fontSize: 32, lineHeight: 37, color: C.text },
+  proud: { alignItems: 'center', marginTop: 4, marginBottom: 16 },
+  proudTitle: { marginTop: 4, fontFamily: Fonts.display, fontSize: 40, lineHeight: 44, color: C.text, textAlign: 'center' },
+  proudItalic: { fontFamily: Fonts.displayItalic, color: C.red },
+  proudNote: { marginTop: 6, textAlign: 'center', color: C.primary },
   dateRow: { marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 8 },
   caption: { marginTop: 8, textAlign: 'center' },
   sectionRow: { marginTop: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
@@ -168,8 +199,8 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: C.pink,
-    backgroundColor: C.blush,
+    borderColor: C.sky,
+    backgroundColor: C.skySoft,
     color: C.text,
     fontFamily: Fonts.regular,
     fontSize: 15,
@@ -194,5 +225,5 @@ const styles = StyleSheet.create({
     backgroundColor: C.surface,
     gap: 7,
   },
-  thumbLine: { height: 2, borderRadius: 1, backgroundColor: 'rgba(111, 104, 94, 0.4)' },
+  thumbLine: { height: 2, borderRadius: 1, backgroundColor: 'rgba(110, 90, 80, 0.4)' },
 });

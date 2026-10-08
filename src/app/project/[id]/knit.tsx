@@ -1,12 +1,14 @@
 import { useKeepAwake } from 'expo-keep-awake';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/button';
+import { Icon } from '@/components/icon';
 import { haptic, KnitBar } from '@/components/knit-bar';
+import { Purl } from '@/components/purl';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
@@ -16,6 +18,7 @@ import { cheer } from '@/lib/cheers';
 import {
   currentLine,
   currentSide,
+  knitTime,
   projectTitle,
   useProject,
   useProjects,
@@ -27,10 +30,35 @@ const C = Colors.light;
 type Tab = 'counter' | 'steps';
 
 const SIDE_STYLE = {
-  RS: { bg: C.pink, short: 'RS', long: 'right side' },
-  WS: { bg: C.matcha, short: 'WS', long: 'wrong side' },
-  round: { bg: C.matchaMilk, short: 'RND', long: 'in the round' },
+  RS: { bg: C.red, fg: C.onRed, short: 'RS', long: 'right side' },
+  WS: { bg: C.primary, fg: C.onPrimary, short: 'WS', long: 'wrong side' },
+  round: { bg: C.beige, fg: C.text, short: 'RND', long: 'in the round' },
 } as const;
+
+/** "0:42" / "1:05:09" */
+function formatDuration(ms: number) {
+  const total = Math.floor(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = String(total % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+}
+
+/** The current time, ticking every second while `active`. */
+function useNow(active: boolean) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return;
+    const tick = () => setNow(Date.now());
+    const first = setTimeout(tick, 0);
+    const timer = setInterval(tick, 1000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [active]);
+  return now;
+}
 
 /** The current step: where you are in the pattern, which row and which side, plus the row buttons. */
 export default function KnitScreen() {
@@ -41,9 +69,17 @@ export default function KnitScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProject(id);
   const [tab, setTab] = useState<Tab>('counter');
-  const { completeStep, finishProject, updateStep } = useProjects(
-    useShallow((s) => ({ completeStep: s.completeStep, finishProject: s.finishProject, updateStep: s.updateStep }))
+  const { completeStep, finishProject, updateStep, startTimer, pauseTimer } = useProjects(
+    useShallow((s) => ({
+      completeStep: s.completeStep,
+      finishProject: s.finishProject,
+      updateStep: s.updateStep,
+      startTimer: s.startTimer,
+      pauseTimer: s.pauseTimer,
+    }))
   );
+  const running = !!project?.timerStartedAt;
+  const now = useNow(running);
 
   if (!project) return null;
 
@@ -126,8 +162,10 @@ export default function KnitScreen() {
       {tab === 'counter' ? (
         <ScrollView contentContainerStyle={styles.body}>
           <View style={styles.hero}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.number, done && { color: C.matcha }]}>{rowNow}</Text>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={[styles.number, rowNow >= 100 && styles.numberSmall, done && { color: C.primary }]}>
+                {rowNow}
+              </Text>
               <ThemedText style={styles.rowLabel}>
                 {done
                   ? `all ${target} ${unit}s done`
@@ -135,23 +173,44 @@ export default function KnitScreen() {
                     ? `${unit} ${rowNow} of ${target}`
                     : `${unit} ${rowNow}`}
               </ThemedText>
+              {step && !done && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    sideKey ? `This ${unit} is ${SIDE_STYLE[sideKey].long}. Tap to change.` : 'Set which side this row is on'
+                  }
+                  onPress={cycleSide}
+                  style={[
+                    styles.sideBadge,
+                    { backgroundColor: sideKey ? SIDE_STYLE[sideKey].bg : C.surface },
+                    !sideKey && styles.sideUnknown,
+                  ]}>
+                  <Text style={[styles.sideShort, { color: sideKey ? SIDE_STYLE[sideKey].fg : C.text }]}>
+                    {sideKey ? SIDE_STYLE[sideKey].short : '?'}
+                  </Text>
+                  <Text style={[styles.sideLong, { color: sideKey ? SIDE_STYLE[sideKey].fg : C.text }]}>
+                    {sideKey ? SIDE_STYLE[sideKey].long : 'tap to set side'}
+                  </Text>
+                </Pressable>
+              )}
             </View>
-            {step && !done && (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={
-                  sideKey ? `This ${unit} is ${SIDE_STYLE[sideKey].long}. Tap to change.` : 'Set which side this row is on'
-                }
-                onPress={cycleSide}
-                style={[styles.sideBadge, { backgroundColor: sideKey ? SIDE_STYLE[sideKey].bg : C.surface }, !sideKey && styles.sideUnknown]}>
-                <Text style={styles.sideShort}>{sideKey ? SIDE_STYLE[sideKey].short : '?'}</Text>
-                <Text style={styles.sideLong}>{sideKey ? SIDE_STYLE[sideKey].long : 'tap to set side'}</Text>
-              </Pressable>
-            )}
+            <Purl pose={running ? 'knitting' : 'asleep'} size={168} />
           </View>
 
-          <View style={styles.cheer}>
-            <Text style={styles.cheerText}>{cheer(project.currentStep, rowsDone, target)}</Text>
+          <View style={styles.timerRow}>
+            <View style={styles.cheer}>
+              <Text style={styles.cheerText} numberOfLines={2}>
+                {running ? cheer(project.currentStep, rowsDone, target) : 'shh… Purl dozed off'}
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={running ? 'Pause the knitting timer' : 'Start the knitting timer'}
+              onPress={() => (running ? pauseTimer(project.id) : startTimer(project.id))}
+              style={({ pressed }) => [styles.timer, running && styles.timerOn, { transform: [{ scale: pressed ? 0.96 : 1 }] }]}>
+              <Icon name={running ? 'pause' : 'play'} size={18} color={running ? C.onPrimary : C.text} strokeWidth={2.2} />
+              <Text style={[styles.timerText, running && { color: C.onPrimary }]}>{formatDuration(knitTime(project, now))}</Text>
+            </Pressable>
           </View>
 
           <View style={[styles.stepCard, CardShadow]}>
@@ -214,29 +273,53 @@ const styles = StyleSheet.create({
   where: { marginTop: 4, marginBottom: 4, fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, color: C.text },
   whereSmall: { fontFamily: Fonts.semibold, fontSize: 15, lineHeight: 22, color: C.textSecondary },
   body: { paddingHorizontal: Spacing.four, paddingBottom: 24 },
-  hero: { marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  number: { fontFamily: Fonts.display, fontSize: 120, lineHeight: 118, letterSpacing: -4, color: C.text },
+  hero: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  number: { fontFamily: Fonts.display, fontSize: 112, lineHeight: 110, letterSpacing: -4, color: C.text },
+  numberSmall: { fontSize: 84, lineHeight: 90 },
   rowLabel: { fontFamily: Fonts.bold, fontSize: 17, color: C.text },
-  sideBadge: { width: 128, paddingVertical: 18, borderRadius: 28, alignItems: 'center', gap: 2 },
+  sideBadge: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   sideUnknown: { borderWidth: 1.5, borderColor: C.border, borderStyle: 'dashed' },
-  sideShort: { fontFamily: Fonts.display, fontSize: 44, lineHeight: 48, color: C.text },
-  sideLong: { fontFamily: Fonts.bold, fontSize: 13, color: C.text },
-  cheer: { marginTop: 16, alignSelf: 'flex-start', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: C.matchaMilk },
+  sideShort: { fontFamily: Fonts.display, fontSize: 24, lineHeight: 30 },
+  sideLong: { fontFamily: Fonts.bold, fontSize: 14 },
+  timerRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  cheer: { flexShrink: 1, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 18, backgroundColor: C.beige },
+  timer: {
+    marginLeft: 'auto',
+    minHeight: 44,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: C.text,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  timerOn: { backgroundColor: C.primary, borderColor: C.primary },
+  timerText: { fontFamily: Fonts.bold, fontSize: 15, color: C.text, fontVariant: ['tabular-nums'] },
   cheerText: { fontFamily: Fonts.displayItalic, fontSize: 18, color: C.text },
   stepCard: { marginTop: 16, padding: 20, borderRadius: 24, backgroundColor: C.surface, gap: 12 },
   stepText: { fontSize: 17, lineHeight: 25, fontFamily: Fonts.medium },
-  thisRow: { padding: 14, borderRadius: 16, backgroundColor: C.pink, gap: 4 },
+  thisRow: { padding: 14, borderRadius: 16, backgroundColor: C.sky, gap: 4 },
   thisRowText: { fontFamily: Fonts.semibold, fontSize: 16, lineHeight: 23 },
-  repeatChip: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999, backgroundColor: C.matchaMilk },
+  repeatChip: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999, backgroundColor: C.beige },
   repeatText: { fontFamily: Fonts.bold, fontSize: 13, color: C.text },
-  track: { height: 4, borderRadius: 2, backgroundColor: 'rgba(137, 142, 70, 0.3)' },
-  fill: { height: 4, borderRadius: 2, backgroundColor: C.matcha },
+  track: { height: 4, borderRadius: 2, backgroundColor: 'rgba(3, 79, 201, 0.16)' },
+  fill: { height: 4, borderRadius: 2, backgroundColor: C.primary },
   linkButton: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
   link: {
     fontFamily: Fonts.semibold,
     fontSize: 15,
     color: C.text,
     textDecorationLine: 'underline',
-    textDecorationColor: C.primary,
+    textDecorationColor: C.red,
   },
 });

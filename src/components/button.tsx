@@ -5,7 +5,7 @@ import { Colors, Fonts, Spacing } from '@/constants/theme';
 
 const C = Colors.light;
 
-type Variant = 'primary' | 'secondary' | 'soft' | 'matcha' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'soft' | 'cocoa' | 'ghost' | 'danger';
 
 type ButtonProps = {
   label?: string;
@@ -23,13 +23,13 @@ type ButtonProps = {
 const VARIANTS: Record<Variant, { bg: string; fg: string; border?: string }> = {
   primary: { bg: C.primary, fg: C.onPrimary },
   secondary: { bg: 'transparent', fg: C.text, border: C.text },
-  soft: { bg: C.pink, fg: C.text },
-  matcha: { bg: C.matcha, fg: C.text },
+  soft: { bg: C.sky, fg: C.text },
+  cocoa: { bg: C.cocoa, fg: '#FFFFFF' },
   ghost: { bg: 'transparent', fg: C.text },
   danger: { bg: 'transparent', fg: C.danger, border: C.danger },
 };
 
-/** Pill button. Large primary buttons use 19px extra-bold capitals so blush-on-strawberry stays readable. */
+/** Pill button with extra-bold capitals: white on cobalt blue for the main action. */
 export function Button({
   label,
   icon,

@@ -17,7 +17,7 @@ type TabBarProps = {
   navigation: { navigate: (name: string) => void; emit: (e: { type: 'tabPress'; target: string; canPreventDefault: true }) => { defaultPrevented: boolean } };
 };
 
-/** Bottom menu: outline icons, no labels; the active one is strawberry with a matcha dot. */
+/** Bottom menu: outline icons, no labels; the active one is cobalt blue with a red dot. */
 export function TabBar({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
 
@@ -38,7 +38,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
             }}
             style={({ pressed }) => [styles.item, { transform: [{ scale: pressed ? 0.94 : 1 }] }]}>
             <Icon name={item.icon} size={26} strokeWidth={1.6} color={focused ? C.primary : C.text} />
-            <View style={[styles.dot, focused && { backgroundColor: C.matcha }]} />
+            <View style={[styles.dot, focused && { backgroundColor: C.red }]} />
           </Pressable>
         );
       })}

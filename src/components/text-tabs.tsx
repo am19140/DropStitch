@@ -8,7 +8,7 @@ type TextTabsProps<T extends string> = {
   onChange: (value: T) => void;
 };
 
-/** Text tabs with a short strawberry underline under the active one. */
+/** Text tabs with a short red underline under the active one. */
 export function TextTabs<T extends string>({ options, value, onChange }: TextTabsProps<T>) {
   return (
     <View accessibilityRole="tablist" style={styles.row}>

@@ -3,7 +3,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
-import { CarrierArt } from '@/components/illustrations';
 import { HeaderButton } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { YarnBall } from '@/components/yarn-ball';
@@ -36,7 +35,7 @@ export default function YarnScreen() {
             </ThemedText>
           </View>
           <View style={styles.art}>
-            <CarrierArt width={120} />
+            <YarnBall color={C.primary} size={96} />
           </View>
         </View>
 
@@ -107,13 +106,13 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.four, paddingTop: Spacing.three, paddingBottom: 40 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', marginRight: -10 },
   header: { flexDirection: 'row', alignItems: 'flex-start' },
-  art: { marginRight: -40, marginTop: -8 },
+  art: { marginTop: -4 },
   grid: { marginTop: 32, gap: 32 },
   gridRow: { flexDirection: 'row', gap: 16 },
   card: { flex: 1, paddingTop: 62, padding: 14, borderRadius: 24, backgroundColor: C.surface, gap: 3 },
   ball: { position: 'absolute', left: -8, top: -18 },
   cardTitle: { fontFamily: Fonts.semibold, fontSize: 16, color: C.text },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  chip: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, backgroundColor: C.pink },
+  chip: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, backgroundColor: C.sky },
   chipText: { fontFamily: Fonts.bold, fontSize: 12, color: C.text },
 });

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { ProjectBox } from '@/components/project-box';
+import { Purl } from '@/components/purl';
 import { HeaderButton } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Colors, Spacing } from '@/constants/theme';
@@ -35,7 +36,15 @@ export default function ProjectsScreen() {
           <View />
           <HeaderButton icon="add" label="Start a new project" onPress={() => router.push('/new')} />
         </View>
-        <ThemedText type="title">Your projects</ThemedText>
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <ThemedText type="title">Your projects</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: 6 }}>
+              Your pattern library, read along by Purl
+            </ThemedText>
+          </View>
+          <Purl pose="reading" size={132} />
+        </View>
 
         <Section title="Active now" count={active.length} />
         {active.length === 0 ? (
@@ -90,6 +99,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.light.background },
   content: { padding: Spacing.four, paddingTop: Spacing.three, paddingBottom: 40 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', marginRight: -10 },
-  section: { marginTop: 28, marginBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  section: { marginTop: 20, marginBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   emptyActive: { gap: 12, alignItems: 'flex-start' },
 });

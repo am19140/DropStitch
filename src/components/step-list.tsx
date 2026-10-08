@@ -61,8 +61,8 @@ export function StepList({ project }: { project: Project }) {
                 style={[
                   styles.row,
                   {
-                    backgroundColor: current ? theme.pink : theme.surface,
-                    borderColor: current ? theme.pink : "transparent",
+                    backgroundColor: current ? theme.sky : theme.surface,
+                    borderColor: current ? theme.sky : "transparent",
                   },
                 ]}
               >

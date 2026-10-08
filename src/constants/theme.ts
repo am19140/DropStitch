@@ -1,34 +1,39 @@
 /**
- * DropStitch "strawberry matcha" theme: pinks and matcha greens on very light beige.
- * The app is light-only for now (see app.json userInterfaceStyle).
+ * DropStitch theme, taken from Purl: cobalt blue and red as the main colours,
+ * with beige, light blue and chocolate as secondary colours. Light-only for now.
  */
 
 import '@/global.css';
 
 const palette = {
-  /** Page background: very light beige. */
-  background: '#FBF7F0',
+  /** Page background: light beige. */
+  background: '#F6F1E3',
   /** Cards and sheets. */
-  surface: '#FFFDF8',
-  text: '#1C1A17',
-  textSecondary: '#6F685E',
-  border: '#ECE3D5',
-  /** Strawberry (tomato): primary buttons, active tab. */
-  primary: '#C45F3F',
-  /** Text and icons on top of `primary` — only at 18px+ bold. */
-  onPrimary: '#FFE4DF',
-  /** Strawberry milk. */
-  pink: '#FFC0C0',
-  blush: '#FFE4DF',
-  /** Matcha. Text on matcha is always ink. */
-  matcha: '#898E46',
-  matchaMilk: '#E3E6C3',
-  danger: '#B3261E',
+  surface: '#FFFCF4',
+  /** Ink: Purl's dark brown face. */
+  text: '#2A1C18',
+  textSecondary: '#6E5A50',
+  border: '#E3D8C2',
+  /** Cobalt blue, from Purl's chair: primary buttons and the active tab. */
+  primary: '#034FC9',
+  /** Text and icons on top of `primary`. */
+  onPrimary: '#FFFFFF',
+  /** Red, from Purl's shawl and slippers: highlights. White text on it only at 18px+ bold. */
+  red: '#F51614',
+  onRed: '#FFFFFF',
+  /** Light blue. Takes ink text. */
+  sky: '#80ABD7',
+  skySoft: '#D7E5F4',
+  /** Beige. Takes ink text. */
+  beige: '#E2D9BC',
+  /** Chocolate. Takes white text. */
+  cocoa: '#683629',
+  danger: '#B20E19',
   // Kept for components written against the earlier theme names.
-  backgroundElement: '#FFFDF8',
-  backgroundSelected: '#FFC0C0',
-  primarySoft: '#FFE4DF',
-  success: '#898E46',
+  backgroundElement: '#FFFCF4',
+  backgroundSelected: '#80ABD7',
+  primarySoft: '#D7E5F4',
+  success: '#034FC9',
 } as const;
 
 export const Colors = { light: palette, dark: palette } as const;
@@ -36,7 +41,7 @@ export const Colors = { light: palette, dark: palette } as const;
 export type ThemeColor = keyof typeof palette;
 
 /** Box colours for projects, like paint-chip cards. All take ink text. */
-export const ProjectColors = ['#FFC0C0', '#898E46', '#E3E6C3', '#F29CC3', '#D6D35F', '#FFE4DF'];
+export const ProjectColors = ['#80ABD7', '#E2D9BC', '#D7E5F4', '#EAD9A8', '#B9CFEA', '#F3D2C8'];
 
 /** Font families, loaded in app/_layout.tsx. Custom fonts need one family per weight. */
 export const Fonts = {

@@ -100,7 +100,7 @@ export default function EditProjectScreen() {
               <Button
                 label="Mark finished"
                 icon="check"
-                variant="matcha"
+                variant="cocoa"
                 onPress={() => {
                   finishProject(project.id);
                   router.back();

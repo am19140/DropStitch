@@ -25,6 +25,16 @@ export function daysAgo(time: number, now = Date.now()) {
   return `${days} days ago`;
 }
 
+/** "2h 15m", "12 min", "under a minute" */
+export function knitDuration(ms: number) {
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 1) return 'under a minute';
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
+
 /** "THURSDAY, 1 OCTOBER" */
 export function todayEyebrow(now = Date.now()) {
   const d = new Date(now);

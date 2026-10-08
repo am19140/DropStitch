@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   pdfCard: {
     padding: Spacing.three,
     borderRadius: 22,
-    backgroundColor: Colors.light.matchaMilk,
+    backgroundColor: Colors.light.beige,
     gap: 14,
   },
   readingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipOn: { backgroundColor: Colors.light.pink, borderColor: Colors.light.pink },
+  chipOn: { backgroundColor: Colors.light.sky, borderColor: Colors.light.sky },
   chipText: { fontFamily: Fonts.bold, fontSize: 15, color: Colors.light.text },
   previewStep: { padding: 12, borderRadius: 14, backgroundColor: Colors.light.surface, gap: 2 },
 });
