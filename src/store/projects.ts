@@ -56,6 +56,8 @@ export type Project = {
   knitMs?: number;
   /** When the knitting timer was started, while it's running. */
   timerStartedAt?: number;
+  /** When a row was last counted. */
+  lastStitchAt?: number;
   /** Where the knitter left the row marker and scroll position in the pattern viewer. */
   viewer?: { markerY?: number; scrollY?: number };
 };
@@ -123,6 +125,9 @@ type ProjectsState = {
   yarns: Yarn[];
   seenWelcome: boolean;
   markWelcomeSeen: () => void;
+  /** The knitter's name, for the account button. Only kept on this phone. */
+  knitterName: string;
+  setKnitterName: (name: string) => void;
   addProject: (input: NewProject) => string;
   updateProject: (id: string, patch: Partial<Pick<Project, 'name' | 'notes' | 'files'>>) => void;
   deleteProject: (id: string) => void;
@@ -172,6 +177,8 @@ export const useProjects = create<ProjectsState>()(
         yarns: [],
         seenWelcome: false,
         markWelcomeSeen: () => set({ seenWelcome: true }),
+        knitterName: '',
+        setKnitterName: (knitterName) => set({ knitterName }),
 
         addProject: ({ name, files, steps, size }) => {
           const now = Date.now();
@@ -208,6 +215,7 @@ export const useProjects = create<ProjectsState>()(
         increment: (id) =>
           edit(id, (p) => ({
             timerStartedAt: p.timerStartedAt ?? Date.now(),
+            lastStitchAt: Date.now(),
             rowCount: p.rowCount + 1,
             steps: p.steps.map((s, i) =>
               i === p.currentStep ? { ...s, rowsDone: s.rowsDone + 1 } : s
@@ -296,6 +304,7 @@ export const useProjects = create<ProjectsState>()(
         projects: state.projects,
         yarns: state.yarns,
         seenWelcome: state.seenWelcome,
+        knitterName: state.knitterName,
       }),
       // v1 projects had no box colour.
       migrate: (persisted, version) => {
@@ -311,6 +320,17 @@ export const useProjects = create<ProjectsState>()(
     }
   )
 );
+
+/** "Mariana Petropoulou" → "MP"; empty when no name is set. */
+export function initials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0].toUpperCase())
+    .join('');
+}
 
 export function useProject(id: string | undefined) {
   return useProjects((state) => state.projects.find((p) => p.id === id));

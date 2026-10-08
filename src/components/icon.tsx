@@ -29,6 +29,7 @@ const ICONS = {
   calendar: ['M4 10h16', 'M9 3v4', 'M15 3v4'],
   play: ['M8 5.5l10 6.5-10 6.5z'],
   pause: ['M9 5v14', 'M15 5v14'],
+  user: ['M5 20c1.2-3.6 3.8-5.4 7-5.4s5.8 1.8 7 5.4'],
 } as const;
 
 export type IconName = keyof typeof ICONS;
@@ -58,6 +59,7 @@ export function Icon({ name, size = 22, color, strokeWidth = 1.8, style }: IconP
       ))}
       {name === 'yarn' && <Circle cx={12} cy={12} r={8} />}
       {name === 'search' && <Circle cx={11} cy={11} r={7} />}
+      {name === 'user' && <Circle cx={12} cy={8.5} r={3.8} />}
       {name === 'calendar' && <Rect x={4} y={5} width={16} height={15} rx={3} />}
       {name === 'more' && (
         <>

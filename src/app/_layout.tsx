@@ -59,6 +59,7 @@ export default function RootLayout() {
         <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
         <Stack.Screen name="new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="yarn/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="account" options={{ presentation: 'modal' }} />
         <Stack.Screen name="project/[id]/edit" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>

@@ -25,6 +25,16 @@ export function daysAgo(time: number, now = Date.now()) {
   return `${days} days ago`;
 }
 
+/** "just now", "12 min ago", "10h ago", "yesterday", "3 days ago" */
+export function timeAgo(time: number, now = Date.now()) {
+  const minutes = Math.floor((now - time) / 60_000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return daysAgo(time, now);
+}
+
 /** "2h 15m", "12 min", "under a minute" */
 export function knitDuration(ms: number) {
   const minutes = Math.floor(ms / 60_000);
