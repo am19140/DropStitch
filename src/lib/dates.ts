@@ -1,6 +1,19 @@
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+/** Local calendar day as "2026-10-08", for keying things by day. */
+export function dayKey(time: number) {
+  const d = new Date(time);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** The same time of day, `days` later (or earlier, when negative). DST-safe. */
+export function addDays(time: number, days: number) {
+  const d = new Date(time);
+  d.setDate(d.getDate() + days);
+  return d.getTime();
+}
+
 /** "14 September 2026" */
 export function longDate(time: number) {
   const d = new Date(time);
@@ -43,6 +56,14 @@ export function knitDuration(ms: number) {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return m ? `${h}h ${m}m` : `${h}h`;
+}
+
+/** "Good morning" / "Good afternoon" / "Good evening" */
+export function greeting(now = Date.now()) {
+  const hour = new Date(now).getHours();
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 18) return 'Good afternoon';
+  return 'Good evening';
 }
 
 /** "THURSDAY, 1 OCTOBER" */

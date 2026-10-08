@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { ProjectColors } from '@/constants/theme';
+import { dayKey } from '@/lib/dates';
 import type { ParsedStep } from '@/lib/parse-steps';
 
 export type PatternFile = {
@@ -128,6 +129,8 @@ type ProjectsState = {
   /** The knitter's name, for the account button. Only kept on this phone. */
   knitterName: string;
   setKnitterName: (name: string) => void;
+  /** Rows counted per day ("2026-10-08" → 14), across all projects. A day is listed once you knit on it. */
+  knitLog: Record<string, number>;
   addProject: (input: NewProject) => string;
   updateProject: (id: string, patch: Partial<Pick<Project, 'name' | 'notes' | 'files'>>) => void;
   deleteProject: (id: string) => void;
@@ -166,6 +169,21 @@ export const useProjects = create<ProjectsState>()(
           ),
         }));
 
+      /** Marks today as a knitting day, adding `rows` to today's count. */
+      const logKnitting = (rows: number) =>
+        set((state) => {
+          const today = dayKey(Date.now());
+          return { knitLog: { ...state.knitLog, [today]: (state.knitLog[today] ?? 0) + rows } };
+        });
+
+      /** Takes an undone row back off today's count (the day stays a knitting day). */
+      const unlogRow = () =>
+        set((state) => {
+          const today = dayKey(Date.now());
+          const rows = state.knitLog[today];
+          return rows ? { knitLog: { ...state.knitLog, [today]: rows - 1 } } : {};
+        });
+
       const editSteps = (id: string, change: (steps: Step[]) => Step[]) =>
         edit(id, (p) => {
           const steps = change(p.steps);
@@ -179,6 +197,7 @@ export const useProjects = create<ProjectsState>()(
         markWelcomeSeen: () => set({ seenWelcome: true }),
         knitterName: '',
         setKnitterName: (knitterName) => set({ knitterName }),
+        knitLog: {},
 
         addProject: ({ name, files, steps, size }) => {
           const now = Date.now();
@@ -208,11 +227,15 @@ export const useProjects = create<ProjectsState>()(
         finishProject: (id) =>
           edit(id, (p) => ({ finishedAt: Date.now(), ...stopTimer(p) })),
 
-        startTimer: (id) => edit(id, (p) => (p.timerStartedAt ? {} : { timerStartedAt: Date.now() })),
+        startTimer: (id) => {
+          logKnitting(0);
+          edit(id, (p) => (p.timerStartedAt ? {} : { timerStartedAt: Date.now() }));
+        },
         pauseTimer: (id) => edit(id, (p) => stopTimer(p)),
         reopenProject: (id) => edit(id, () => ({ finishedAt: undefined })),
 
-        increment: (id) =>
+        increment: (id) => {
+          logKnitting(1);
           edit(id, (p) => ({
             timerStartedAt: p.timerStartedAt ?? Date.now(),
             lastStitchAt: Date.now(),
@@ -220,13 +243,15 @@ export const useProjects = create<ProjectsState>()(
             steps: p.steps.map((s, i) =>
               i === p.currentStep ? { ...s, rowsDone: s.rowsDone + 1 } : s
             ),
-          })),
+          }));
+        },
 
         decrement: (id) =>
           edit(id, (p) => {
             const step = p.steps[p.currentStep];
             // Only undo rows that were counted, so the step and total counts stay in sync.
             if (step ? step.rowsDone === 0 : p.rowCount === 0) return {};
+            unlogRow();
             return {
               rowCount: Math.max(0, p.rowCount - 1),
               steps: p.steps.map((s, i) =>
@@ -305,6 +330,7 @@ export const useProjects = create<ProjectsState>()(
         yarns: state.yarns,
         seenWelcome: state.seenWelcome,
         knitterName: state.knitterName,
+        knitLog: state.knitLog,
       }),
       // v1 projects had no box colour.
       migrate: (persisted, version) => {
