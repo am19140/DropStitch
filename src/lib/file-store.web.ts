@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Pattern files in the browser version live in IndexedDB, which (unlike localStorage's
- * ~5 MB) has room for real PDFs. Files are kept as Blobs, so they aren't inflated by base64.
+ * ~5 MB) has room for real PDFs. Files are kept as raw bytes (ArrayBuffer): Safari can't store
+ * Blobs in IndexedDB reliably, and bytes aren't inflated the way base64 text is.
  */
 const DB_NAME = 'dropstitch';
 const STORE = 'pattern-files';
@@ -35,7 +36,8 @@ async function run<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) 
   });
 }
 
-function toBase64(blob: Blob) {
+function toBase64(data: Blob | ArrayBuffer) {
+  const blob = data instanceof Blob ? data : new Blob([data]);
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
@@ -45,17 +47,19 @@ function toBase64(blob: Blob) {
 }
 
 export async function storeFile(sourceUri: string, storedName: string) {
-  const blob = await (await fetch(sourceUri)).blob();
+  const bytes = await (await fetch(sourceUri)).arrayBuffer();
   try {
-    await run('readwrite', (store) => store.put(blob, storedName));
+    await run('readwrite', (store) => store.put(bytes, storedName));
   } catch {
     throw new Error('Your browser ran out of space for this file. Try freeing up space, or use the app instead.');
   }
 }
 
 export async function readStoredFile(storedName: string) {
-  const blob = await run<Blob | undefined>('readonly', (store) => store.get(storedName)).catch(() => undefined);
-  if (blob) return toBase64(blob);
+  const saved = await run<Blob | ArrayBuffer | undefined>('readonly', (store) => store.get(storedName)).catch(
+    () => undefined
+  );
+  if (saved) return toBase64(saved);
   const legacy = await AsyncStorage.getItem(LEGACY_KEY + storedName);
   if (legacy === null) throw new Error('File not found');
   return legacy;
