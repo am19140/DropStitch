@@ -1,5 +1,5 @@
 import { useIsFocused, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -9,6 +9,9 @@ import { HeaderButton } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Colors, Spacing } from '@/constants/theme';
 import { useProjects, type Project } from '@/store/projects';
+
+/** How far Purl turns her head while reading (1 = as painted). */
+const READING_MOTION = 1.8;
 
 /** Splits a list into rows of `size` (padding the last row so boxes keep their width). */
 function rows<T>(items: T[], size: number) {
@@ -24,6 +27,7 @@ function rows<T>(items: T[], size: number) {
 export default function ProjectsScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
+  const { width: screenWidth } = useWindowDimensions();
   const projects = useProjects((s) => s.projects);
   const active = projects.filter((p) => !p.finishedAt).sort((a, b) => b.updatedAt - a.updatedAt);
   const finished = projects
@@ -37,14 +41,12 @@ export default function ProjectsScreen() {
           <View />
           <HeaderButton icon="add" label="Start a new project" onPress={() => router.push('/new')} />
         </View>
-        <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <ThemedText type="title">Your projects</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: 6 }}>
-              Your pattern library, read along by Purl
-            </ThemedText>
-          </View>
-          <GrandmaReading width={132} active={isFocused} />
+        <ThemedText type="title">Your projects</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: 6 }}>
+          Your pattern library, read along by Purl
+        </ThemedText>
+        <View style={styles.reading}>
+          <GrandmaReading width={Math.min(screenWidth - 96, 300)} motion={READING_MOTION} active={isFocused} />
         </View>
 
         <Section title="Active now" count={active.length} />
@@ -100,7 +102,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.light.background },
   content: { padding: Spacing.four, paddingTop: Spacing.three, paddingBottom: 40 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', marginRight: -10 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  reading: { alignItems: 'center', marginTop: 4 },
   section: { marginTop: 20, marginBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   emptyActive: { gap: 12, alignItems: 'flex-start' },
 });

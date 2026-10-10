@@ -1,10 +1,11 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { Icon } from '@/components/icon';
 import { rowInfo } from '@/components/project-box';
+import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandma';
 import { Purl } from '@/components/purl';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -17,6 +18,7 @@ const C = Colors.light;
 /** A project's page: when it started, a jump to the current step, notes and the pattern file. */
 export default function ProjectScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProject(id);
   const updateProject = useProjects((s) => s.updateProject);
@@ -73,7 +75,9 @@ export default function ProjectScreen() {
               </ThemedText>
               <Text style={styles.title}>{projectTitle(project)}</Text>
             </View>
-            {!finished && <Purl pose="knitting" size={104} />}
+            {!finished && (
+              <PaintedKnittingGrandma paused={!project.timerStartedAt} width={140} active={isFocused} />
+            )}
           </View>
           <View style={styles.dateRow}>
             <Icon name="calendar" size={16} color={C.text} />

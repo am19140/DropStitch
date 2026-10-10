@@ -8,20 +8,28 @@
  * JS-thread prototype; transfer the same poses to Reanimated for demanding screens.
  */
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { AccessibilityInfo, AppState } from 'react-native';
+import { AccessibilityInfo, AppState, Platform } from 'react-native';
 import Svg, { G, Defs, Image as SvgImage, Path, ClipPath, Use, Mask, Rect, Ellipse } from 'react-native-svg';
-type Props={paused:boolean;width?:number;height?:number;active?:boolean};
+type Props={
+ paused:boolean;width?:number;height?:number;active?:boolean;
+ /** How much her hands and knitting move while she knits. 1 = as painted (try 0.5–2). */
+ motion?:number;
+ /** Knitting speed. 1 = as painted; 2 = twice as fast. */
+ speed?:number;
+};
 type Motion={sleep:number;velocity:number;phase:number};
+// `accessible` groups the picture for screen readers on phones; the web doesn't understand it.
+const a11yProps=Platform.OS==='web'?{role:'img' as const}:{accessible:true};
 const smooth=(a:number,b:number,x:number)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
 const f=(x:number)=>x.toFixed(3);
-function advance(m:Motion,target:number,dt:number,reduced:boolean){
+function advance(m:Motion,target:number,dt:number,reduced:boolean,speed:number){
  const w=reduced?13:4.3,y=m.sleep-target,j=m.velocity+w*y,c=Math.exp(-w*dt);
  m.sleep=target+(y+j*dt)*c;m.velocity=(m.velocity-w*j*dt)*c;
  if(Math.abs(m.sleep-target)<.00001&&Math.abs(m.velocity)<.00005){m.sleep=target;m.velocity=0;}
- m.phase+=dt*4.1*Math.pow(Math.max(0,1-m.sleep),1.6);
+ m.phase+=dt*4.1*speed*Math.pow(Math.max(0,1-m.sleep),1.6);
 }
-function makePose(m:Motion,reduced:boolean){
- const {sleep,phase}=m,a=reduced?0:1-sleep,wave=Math.sin(phase),h=smooth(.14,.98,sleep);
+function makePose(m:Motion,reduced:boolean,motion=1){
+ const {sleep,phase}=m,a=reduced?0:(1-sleep)*motion,wave=Math.sin(phase),h=smooth(.14,.98,sleep);
  const wx=1.5*wave*a,wy=2.5*Math.cos(phase)*a+25*sleep,wr=1.15*wave*a-3*sleep;
  const rad=wr*Math.PI/180,px=535+75*Math.cos(rad)-37*Math.sin(rad)+wx,py=610+75*Math.sin(rad)+37*Math.cos(rad)+wy;
  return {
@@ -31,12 +39,15 @@ function makePose(m:Motion,reduced:boolean){
   yarn:`M${f(px)} ${f(py)} C601 718 653 746 682 760 C727 779 756 849 809 869 C855 899 887 849 914 873`,
  };
 }
-export default function PaintedKnittingGrandma({paused,width=320,height,active=true}:Props){
+export default function PaintedKnittingGrandma({paused,width=320,height,active=true,motion:amount=1,speed=1}:Props){
  const id=useId().replace(/[^a-zA-Z0-9_-]/g,'');
  const target=useRef(paused?1:0);
  // Keep the animation loop's target in sync with the prop (set after render, not during it).
  useEffect(()=>{target.current=paused?1:0;},[paused]);
  const reduced=useRef(false);
+ // Read by the animation loop, so changing them doesn't restart it.
+ const settings=useRef({amount,speed});
+ useEffect(()=>{settings.current={amount,speed};},[amount,speed]);
  const motion=useRef<Motion>({sleep:paused?1:0,velocity:0,phase:0});
  const [pose,setPose]=useState(()=>makePose({sleep:paused?1:0,velocity:0,phase:0},false));
  const [foreground,setForeground]=useState(AppState.currentState!=='background'&&AppState.currentState!=='inactive');
@@ -53,15 +64,15 @@ export default function PaintedKnittingGrandma({paused,width=320,height,active=t
   const tick=(now:number)=>{
    if(cancelled)return;
    const dt=last?Math.min(.05,(now-last)/1000):0;last=now;
-   advance(motion.current,target.current,dt,reduced.current);
-   setPose(makePose(motion.current,reduced.current));
+   advance(motion.current,target.current,dt,reduced.current,settings.current.speed);
+   setPose(makePose(motion.current,reduced.current,settings.current.amount));
    frame=requestAnimationFrame(tick);
   };
   frame=requestAnimationFrame(tick);
   return()=>{cancelled=true;cancelAnimationFrame(frame);};
  },[active,foreground]);
  return (
-    <Svg width={width} height={height ?? width} viewBox="0 0 1254 1254" accessible={true} accessibilityLabel={paused ? "Grandma sheep resting" : "Grandma sheep knitting"}>
+    <Svg width={width} height={height ?? width} viewBox="0 0 1254 1254" {...a11yProps} accessibilityLabel={paused ? "Grandma sheep resting" : "Grandma sheep knitting"}>
       <Defs >
         <SvgImage id={`${id}-pg-original`} width="1254" height="1254" href={require("@/assets/images/grandma/knitting-original.png")} />
         <SvgImage id={`${id}-pg-body`} width="1254" height="1254" href={require("@/assets/images/grandma/knitting-body.png")} />

@@ -1,5 +1,5 @@
 import { Redirect, useIsFocused, useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -17,6 +17,7 @@ const C = Colors.light;
 export default function HomeScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
+  const { width: screenWidth } = useWindowDimensions();
   const seenWelcome = useProjects((s) => s.seenWelcome);
   const projects = useProjects((s) => s.projects);
   const knitterName = useProjects((s) => s.knitterName);
@@ -60,7 +61,7 @@ export default function HomeScreen() {
             <Text style={styles.bubbleText}>{purlSays(current, streak)}</Text>
           </View>
           <View style={styles.bubbleTail} />
-          <GrandmaTea width={280} active={isFocused} />
+          <GrandmaTea width={Math.min(screenWidth - 48, 420)} active={isFocused} />
         </View>
 
         {others.length > 0 && (

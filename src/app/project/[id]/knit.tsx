@@ -198,7 +198,7 @@ export default function KnitScreen() {
                 </Pressable>
               )}
             </View>
-            <PaintedKnittingGrandma paused={!running} width={168} active={isFocused} />
+            <PaintedKnittingGrandma paused={!running} width={200} active={isFocused} />
           </View>
 
           <View style={styles.timerRow}>
