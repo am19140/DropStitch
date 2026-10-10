@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandma';
+import { Purl } from '@/components/purl';
 import { WaveBand } from '@/components/wave-band';
-import { YarnBall } from '@/components/yarn-ball';
 import { Colors, Fonts } from '@/constants/theme';
 import { useProjects } from '@/store/projects';
 
@@ -23,7 +23,7 @@ export default function WelcomeScreen() {
     <View style={styles.screen}>
       <WaveBand style={{ paddingBottom: 84 }}>
         <View style={styles.brand}>
-          <YarnBall color={C.sky} size={34} />
+          <Purl pose="head" size={38} />
           <Text style={styles.brandText}>dropstitch</Text>
         </View>
         <Text style={styles.eyebrow}>Rows, steps, patterns and yarn</Text>

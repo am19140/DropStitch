@@ -20,6 +20,7 @@ import {
   knitTime,
   projectTitle,
   repeatInfo,
+  untilLength,
   useProject,
   useProjects,
   type Side,
@@ -149,6 +150,7 @@ export default function KnitScreen() {
     </Pressable>
   );
   const toGo = counting && target && !done ? target - rowsDone : 0;
+  const until = step && counting && !target ? untilLength(step) : undefined;
 
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
@@ -194,7 +196,7 @@ export default function KnitScreen() {
             </View>
             <View style={styles.heroLeft}>
               {step && repeat && counting ? (
-                <RepeatSide repeat={repeat} side={sideKey} unit={unit} done={done} onCycleSide={cycleSide} />
+                <RepeatSide repeat={repeat} side={sideKey} unit={unit} done={done} until={until} onCycleSide={cycleSide} />
               ) : counting ? (
                 <>
                   <Text style={[styles.number, (rowNow ?? 0) >= 100 && styles.numberSmall]}>{rowNow}</Text>
@@ -205,7 +207,7 @@ export default function KnitScreen() {
                         : `All ${target} ${unit}s done`
                       : target
                         ? `${unit[0].toUpperCase()}${unit.slice(1)} ${rowNow} of ${target}`
-                        : `${unit[0].toUpperCase()}${unit.slice(1)} ${rowNow}`}
+                        : `${unit[0].toUpperCase()}${unit.slice(1)} ${rowNow}${until ? `, until ${until}` : ''}`}
                   </Text>
                   {!done && sideKey && (
                     <Pressable
@@ -241,6 +243,14 @@ export default function KnitScreen() {
             {timerPill}
           </View>
 
+          {/* "Repeat rows 1–2 until it measures 26 cm": the rows keep flipping RS/WS above,
+              and this says when you've got there. */}
+          {step && counting && !target && (
+            <View style={{ marginTop: 12 }}>
+              <NextStepButton project={project} length={until} />
+            </View>
+          )}
+
           <View style={styles.stepCard}>
             {step && repeat && counting ? (
               <RepeatCard step={step} repeat={repeat} unit={unit} done={done} details={details} />
@@ -260,8 +270,6 @@ export default function KnitScreen() {
                     <View style={[styles.fill, { width: `${Math.min(100, Math.round((rowsDone / target) * 100))}%` }]} />
                   </View>
                 ) : null}
-                {/* Without a row count (e.g. "until it measures 30 cm") only you know when it's done. */}
-                {counting && !target && <NextStepButton project={project} />}
               </>
             ) : (
               <>

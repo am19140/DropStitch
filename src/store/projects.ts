@@ -149,6 +149,16 @@ export function currentLine(step: Step): string | undefined {
   return step.lines[step.rowsDone % step.lines.length];
 }
 
+/** "Repeat rows 1–2 until the back measures 26 cm" → "26 cm": the length a step knits up to, when it says. */
+export function untilLength(step: Step): string | undefined {
+  const m = step.text.match(
+    /\buntil\b[^.]*?\bmeasures?\s+(?:about\s+|approx\.?\s+)?(\d+(?:[.,]\d+)?)\s*(cm|mm|inches|inch|in\b|")/i
+  );
+  if (!m) return undefined;
+  const unit = m[2].toLowerCase();
+  return `${m[1]} ${unit === '"' || unit.startsWith('in') ? 'in' : unit}`;
+}
+
 /**
  * For steps that repeat a few rows ("Repeat rows 1–2 7 times", "RS and WS rows 7 times each"):
  * which repeat you're on (`now` of `of`, when the pattern says how many) and which row of it.

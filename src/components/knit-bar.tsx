@@ -36,10 +36,22 @@ function useNextStep(project: Project) {
   return { next, label: isLast ? 'Finish project' : 'Next step' };
 }
 
-/** "Next step" (or "Finish project" on the last step), for steps whose rows the app can't count down. */
-export function NextStepButton({ project }: { project: Project }) {
+/**
+ * For steps whose rows the app can't count down, like "until it measures 26 cm": you say when
+ * you've got there. "Reached 26 cm" when the step names a length, otherwise "Next step".
+ */
+export function NextStepButton({ project, length }: { project: Project; length?: string }) {
   const { next, label } = useNextStep(project);
-  return <Button label={label} icon="arrowRight" iconAfter variant="secondary" size="large" onPress={next} />;
+  return (
+    <Button
+      label={length ? `Reached ${length}` : label}
+      icon={length ? 'check' : 'arrowRight'}
+      iconAfter={!length}
+      variant="secondary"
+      size="large"
+      onPress={next}
+    />
+  );
 }
 
 /**

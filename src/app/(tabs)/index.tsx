@@ -5,6 +5,7 @@ import { Button } from '@/components/button';
 import { progressOf, rowInfo } from '@/components/project-box';
 import { GrandmaTea } from '@/components/grandma/grandma-scenes';
 import { Icon } from '@/components/icon';
+import { Purl } from '@/components/purl';
 import { WaveBand } from '@/components/wave-band';
 import { YarnBall } from '@/components/yarn-ball';
 import { Colors, Fonts } from '@/constants/theme';
@@ -38,7 +39,7 @@ export default function HomeScreen() {
         art={<GrandmaTea width={164} active={isFocused} />}
         artStyle={{ right: -16, bottom: 6 }}>
         <View style={styles.brand}>
-          <YarnBall color={C.sky} size={34} style={{ marginLeft: -4 }} />
+          <Purl pose="head" size={36} style={{ marginLeft: -4 }} />
           <Text style={styles.brandText}>dropstitch</Text>
         </View>
         <Text style={styles.date}>{todayLabel()}</Text>

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { YarnBall } from '@/components/yarn-ball';
 import { Colors, Fonts } from '@/constants/theme';
-import { countsRows, projectTitle, repeatInfo, type Project } from '@/store/projects';
+import { countsRows, projectTitle, repeatInfo, untilLength, type Project } from '@/store/projects';
 
 const C = Colors.light;
 
@@ -19,17 +19,25 @@ export function rowInfo(project: Project) {
   };
 }
 
-/** Where you are in a project, as one short line ("Repeat 6 of 11") and a fraction for a bar. */
+/**
+ * Where you are in a project: one short line about now ("Repeat 6 of 11"), and how far through
+ * the whole pattern you are (done steps, plus the rows counted on the current one).
+ */
 export function progressOf(project: Project) {
   const { step, row, target, counting } = rowInfo(project);
+  const total = project.steps.length;
   const stepsDone = project.steps.filter((s) => s.done).length;
+  const partial = step && !step.done && counting && target ? Math.min(1, row / target) : 0;
+  const fraction = total ? Math.min(1, (stepsDone + partial) / total) : undefined;
   const repeat = step ? repeatInfo(step) : undefined;
-  if (repeat?.of) return { label: `Repeat ${repeat.now} of ${repeat.of}`, fraction: Math.min(1, row / (target ?? 1)) };
-  if (counting && target) return { label: `Row ${Math.min(row + 1, target)} of ${target}`, fraction: Math.min(1, row / target) };
-  if (project.steps.length) {
-    return { label: `${stepsDone} of ${project.steps.length} steps done`, fraction: stepsDone / project.steps.length };
-  }
-  return { label: `${project.rowCount} rows`, fraction: undefined };
+  const length = step && counting && !target ? untilLength(step) : undefined;
+  let label: string;
+  if (repeat?.of) label = `Repeat ${repeat.now} of ${repeat.of}`;
+  else if (length) label = `${step?.inRound ? 'Round' : 'Row'} ${row + 1}, until ${length}`;
+  else if (counting && target) label = `Row ${Math.min(row + 1, target)} of ${target}`;
+  else if (total) label = `Step ${project.currentStep + 1} of ${total}`;
+  else label = `${project.rowCount} rows`;
+  return { label, fraction };
 }
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
@@ -57,7 +65,12 @@ export function ProjectBox({ project, size = 'large' }: { project: Project; size
       <View style={{ flex: 1 }} />
       {large ? (
         <>
-          <Text style={styles.meta}>{label}</Text>
+          <View style={styles.metaRow}>
+            <Text style={[styles.meta, { flex: 1 }]} numberOfLines={1}>
+              {label}
+            </Text>
+            {fraction !== undefined && <Text style={styles.percent}>{Math.round(fraction * 100)}%</Text>}
+          </View>
           <View style={styles.track}>
             <View style={[styles.fill, { width: `${Math.round((fraction ?? 0) * 100)}%` }]} />
           </View>
@@ -75,6 +88,8 @@ const styles = StyleSheet.create({
   nameLarge: { marginTop: 6, fontFamily: Fonts.display, fontSize: 18, lineHeight: 22, color: C.text },
   nameSmall: { marginTop: 4, fontFamily: Fonts.extrabold, fontSize: 13.5, lineHeight: 17, color: C.text },
   meta: { marginTop: 8, fontFamily: Fonts.bold, fontSize: 12.5, color: C.textSecondary },
+  metaRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  percent: { fontFamily: Fonts.display, fontSize: 15, color: C.text },
   track: { marginTop: 8, height: 6, borderRadius: 3, backgroundColor: C.cardLine, overflow: 'hidden' },
   fill: { height: 6, borderRadius: 3, backgroundColor: C.primary },
 });

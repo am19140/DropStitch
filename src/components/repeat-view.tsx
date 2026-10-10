@@ -37,12 +37,15 @@ export function RepeatSide({
   side,
   unit,
   done,
+  until,
   onCycleSide,
 }: {
   repeat: Repeat;
   side?: Side | 'round';
   unit: 'row' | 'round';
   done: boolean;
+  /** "26 cm" for "repeat until it measures 26 cm". */
+  until?: string;
   onCycleSide: () => void;
 }) {
   const s = side ? SIDES[side] : undefined;
@@ -63,7 +66,9 @@ export function RepeatSide({
         )}
       </Pressable>
       <Text style={styles.repeatText}>
-        {done ? `All ${repeat.of} repeats done` : `Repeat ${repeat.now}${repeat.of ? ` of ${repeat.of}` : ''}`}
+        {done
+          ? `All ${repeat.of} repeats done`
+          : `Repeat ${repeat.now}${repeat.of ? ` of ${repeat.of}` : until ? `, until ${until}` : ''}`}
       </Text>
       {repeat.of ? <Segments now={done ? repeat.of + 1 : repeat.now} of={repeat.of} /> : null}
     </View>
