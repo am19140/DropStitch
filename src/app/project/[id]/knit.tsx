@@ -8,6 +8,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { Icon } from '@/components/icon';
 import { KnitBar, NextStepButton } from '@/components/knit-bar';
 import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandma';
+import { RepeatView } from '@/components/repeat-view';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
@@ -30,9 +31,9 @@ const C = Colors.light;
 type Tab = 'counter' | 'steps';
 
 const SIDE_STYLE = {
-  RS: { bg: C.red, fg: C.onRed, short: 'RS', long: 'right side' },
-  WS: { bg: C.primary, fg: C.onPrimary, short: 'WS', long: 'wrong side' },
-  round: { bg: C.beige, fg: C.text, short: 'RND', long: 'in the round' },
+  RS: { short: 'RS', long: 'right side' },
+  WS: { short: 'WS', long: 'wrong side' },
+  round: { short: 'RND', long: 'in the round' },
 } as const;
 
 /** "0:42" / "1:05:09" */
@@ -100,6 +101,31 @@ export default function KnitScreen() {
   // "Knit and purl 11 times each": one screen for the whole step, counting repeats (6/11).
   const repeat = step ? repeatInfo(step) : undefined;
 
+  const grandma = <PaintedKnittingGrandma paused={!running} width={184} active={isFocused} />;
+  const details = step ? (
+    <>
+      {step.stitches ? (
+        <View style={[styles.repeatChip, { backgroundColor: C.skySoft }]}>
+          <Text style={styles.repeatText}>ends with {step.stitches} sts</Text>
+        </View>
+      ) : null}
+      {/* Repeating steps hide their sentence after the first repeat, so keep it one tap away. */}
+      {step.detail || repeat ? (
+        <View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showDetail }}
+            onPress={() => setDetailFor(showDetail ? null : step.id)}
+            style={styles.detailToggle}>
+            <Text style={styles.detailToggleText}>{showDetail ? 'Hide pattern text' : 'Full pattern text'}</Text>
+            <Icon name={showDetail ? 'up' : 'chevronDown'} size={16} color={C.textSecondary} strokeWidth={2} />
+          </Pressable>
+          {showDetail && <Text style={styles.detailText}>{step.detail ?? step.text}</Text>}
+        </View>
+      ) : null}
+    </>
+  ) : null;
+
   /** Tapping the side badge corrects it: right side → wrong side → in the round → right side. */
   const cycleSide = () => {
     if (!step) return;
@@ -165,26 +191,22 @@ export default function KnitScreen() {
 
       {tab === 'counter' ? (
         <ScrollView contentContainerStyle={styles.body}>
-          <View style={[styles.hero, !counting && { justifyContent: 'center' }]}>
-            {counting && (
-              <View style={{ flex: 1, gap: 4 }}>
-                {repeat ? (
-                  <>
-                    <Text
-                      style={[styles.number, repeat.now >= 10 && styles.numberSmall, done && { color: C.primary }]}>
-                      {repeat.now}
-                      {repeat.of ? <Text style={styles.numberOf}>/{repeat.of}</Text> : null}
-                    </Text>
-                    <ThemedText style={styles.rowLabel}>
-                      {done
-                        ? `all ${repeat.of} repeats done`
-                        : repeat.size > 1
-                          ? `${unit} ${repeat.row} of ${repeat.size}`
-                          : 'repeats'}
-                    </ThemedText>
-                  </>
-                ) : (
-                  <>
+          {step && repeat && counting ? (
+            <RepeatView
+              step={step}
+              repeat={repeat}
+              side={sideKey}
+              unit={unit}
+              done={done}
+              grandma={grandma}
+              onCycleSide={cycleSide}
+              details={details}
+            />
+          ) : (
+            <>
+              <View style={[styles.hero, !counting && { justifyContent: 'center' }]}>
+                {counting && (
+                  <View style={{ flex: 1, gap: 4 }}>
                     <Text style={[styles.number, rowNow >= 100 && styles.numberSmall, done && { color: C.primary }]}>
                       {rowNow}
                     </Text>
@@ -197,73 +219,54 @@ export default function KnitScreen() {
                           ? `${unit} ${rowNow} of ${target}`
                           : `${unit} ${rowNow}`}
                     </ThemedText>
+                    {!done && sideKey && (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`This ${unit} is ${SIDE_STYLE[sideKey].long}. Tap to change.`}
+                        onPress={cycleSide}
+                        style={styles.sideBadge}>
+                        <Text style={styles.sideShort}>{SIDE_STYLE[sideKey].short}</Text>
+                        <Text style={styles.sideLong}>{SIDE_STYLE[sideKey].long}</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                )}
+                {grandma}
+              </View>
+
+              <View style={[styles.stepCard, CardShadow]}>
+                {step ? (
+                  <>
+                    <ThemedText type="eyebrow" themeColor="textSecondary">CURRENT STEP</ThemedText>
+                    <ThemedText style={styles.stepText}>{step.text}</ThemedText>
+                    {line && (
+                      <View style={styles.thisRow}>
+                        <ThemedText type="eyebrow">{`THIS ${unit.toUpperCase()}`}</ThemedText>
+                        <ThemedText style={styles.thisRowText}>{line}</ThemedText>
+                      </View>
+                    )}
+                    {details}
+                    {counting && target ? (
+                      <View style={styles.track}>
+                        <View style={[styles.fill, { width: `${Math.min(100, Math.round((rowsDone / target) * 100))}%` }]} />
+                      </View>
+                    ) : null}
+                    {/* Without a row count (e.g. "until it measures 30 cm") only you know when it's done. */}
+                    {counting && !target && <NextStepButton project={project} />}
+                  </>
+                ) : (
+                  <>
+                    <ThemedText style={styles.stepText}>
+                      No steps yet. Add the pattern’s steps under “All steps” to tick them off as you go.
+                    </ThemedText>
+                    <Pressable accessibilityRole="button" onPress={() => setTab('steps')} style={styles.linkButton}>
+                      <Text style={styles.link}>Add steps</Text>
+                    </Pressable>
                   </>
                 )}
-                {!done && sideKey && (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`This ${unit} is ${SIDE_STYLE[sideKey].long}. Tap to change.`}
-                    onPress={cycleSide}
-                    style={[styles.sideBadge, { backgroundColor: SIDE_STYLE[sideKey].bg }]}>
-                    <Text style={[styles.sideShort, { color: SIDE_STYLE[sideKey].fg }]}>{SIDE_STYLE[sideKey].short}</Text>
-                    <Text style={[styles.sideLong, { color: SIDE_STYLE[sideKey].fg }]}>{SIDE_STYLE[sideKey].long}</Text>
-                  </Pressable>
-                )}
               </View>
-            )}
-            <PaintedKnittingGrandma paused={!running} width={184} active={isFocused} />
-          </View>
-
-          <View style={[styles.stepCard, CardShadow]}>
-            {step ? (
-              <>
-                <ThemedText type="eyebrow" themeColor="textSecondary">CURRENT STEP</ThemedText>
-                <ThemedText style={styles.stepText}>{step.text}</ThemedText>
-                {line && (
-                  <View style={styles.thisRow}>
-                    <ThemedText type="eyebrow">{`THIS ${unit.toUpperCase()}`}</ThemedText>
-                    <ThemedText style={styles.thisRowText}>{line}</ThemedText>
-                  </View>
-                )}
-                {step.stitches ? (
-                  <View style={[styles.repeatChip, { backgroundColor: C.skySoft }]}>
-                    <Text style={styles.repeatText}>ends with {step.stitches} sts</Text>
-                  </View>
-                ) : null}
-                {step.detail ? (
-                  <View>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityState={{ expanded: showDetail }}
-                      onPress={() => setDetailFor(showDetail ? null : step.id)}
-                      style={styles.detailToggle}>
-                      <Text style={styles.detailToggleText}>
-                        {showDetail ? 'Hide pattern text' : 'Full pattern text'}
-                      </Text>
-                      <Icon name={showDetail ? 'up' : 'chevronDown'} size={16} color={C.textSecondary} strokeWidth={2} />
-                    </Pressable>
-                    {showDetail && <Text style={styles.detailText}>{step.detail}</Text>}
-                  </View>
-                ) : null}
-                {counting && target ? (
-                  <View style={styles.track}>
-                    <View style={[styles.fill, { width: `${Math.min(100, Math.round((rowsDone / target) * 100))}%` }]} />
-                  </View>
-                ) : null}
-                {/* Without a row count (e.g. "until it measures 30 cm") only you know when it's done. */}
-                {counting && !target && <NextStepButton project={project} />}
-              </>
-            ) : (
-              <>
-                <ThemedText style={styles.stepText}>
-                  No steps yet. Add the pattern’s steps under “All steps” to tick them off as you go.
-                </ThemedText>
-                <Pressable accessibilityRole="button" onPress={() => setTab('steps')} style={styles.linkButton}>
-                  <Text style={styles.link}>Add steps</Text>
-                </Pressable>
-              </>
-            )}
-          </View>
+            </>
+          )}
         </ScrollView>
       ) : (
         <View style={{ flex: 1 }}>
@@ -285,7 +288,6 @@ const styles = StyleSheet.create({
   hero: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 },
   number: { fontFamily: Fonts.display, fontSize: 112, lineHeight: 110, letterSpacing: -4, color: C.text },
   numberSmall: { fontSize: 84, lineHeight: 90 },
-  numberOf: { fontSize: 40, letterSpacing: -1 },
   rowLabel: { fontFamily: Fonts.bold, fontSize: 17, color: C.text },
   sideBadge: {
     marginTop: 6,
@@ -293,12 +295,13 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: 12,
     borderRadius: 999,
+    backgroundColor: C.primary,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  sideShort: { fontFamily: Fonts.display, fontSize: 24, lineHeight: 30 },
-  sideLong: { fontFamily: Fonts.bold, fontSize: 14 },
+  sideShort: { fontFamily: Fonts.display, fontSize: 24, lineHeight: 30, color: C.onPrimary },
+  sideLong: { fontFamily: Fonts.bold, fontSize: 14, color: C.onPrimary },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   timer: {
     minHeight: 38,
