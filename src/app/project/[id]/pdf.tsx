@@ -18,7 +18,7 @@ export default function PatternScreen() {
   const project = useProject(id);
   if (!project) return null;
 
-  const { step, row, target } = rowInfo(project);
+  const { step, row, target, counting } = rowInfo(project);
   const file = project.files[0];
 
   return (
@@ -42,7 +42,7 @@ export default function PatternScreen() {
       <KnitBar
         project={project}
         label={step ? `STEP ${project.currentStep + 1} OF ${project.steps.length}` : 'ROWS'}
-        value={target ? `Row ${row} of ${target}` : `Row ${row}`}
+        value={!counting && step ? step.text : target ? `Row ${row} of ${target}` : `Row ${row}`}
       />
     </SafeAreaView>
   );

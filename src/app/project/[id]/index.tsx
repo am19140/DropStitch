@@ -33,7 +33,7 @@ export default function ProjectScreen() {
   }
 
   const finished = !!project.finishedAt;
-  const { step, row, target } = rowInfo(project);
+  const { step, row, target, counting } = rowInfo(project);
   const params = { id: project.id };
   const knitted = knitTime(project);
 
@@ -109,7 +109,7 @@ export default function ProjectScreen() {
             />
             <ThemedText type="small" themeColor="textSecondary" style={styles.caption} numberOfLines={1}>
               {step
-                ? `${step.text} · row ${row}${target ? ` of ${target}` : ''}`
+                ? `${step.text}${counting ? ` · row ${row}${target ? ` of ${target}` : ''}` : ''}`
                 : `${project.rowCount} rows counted`}
             </ThemedText>
           </>

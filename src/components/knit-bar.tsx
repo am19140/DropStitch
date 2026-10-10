@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
@@ -18,16 +19,44 @@ export function haptic(kind: 'tap' | 'undo' | 'success') {
   else Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 }
 
+/** Moves on to the next step; on the last step, finishes the project and shows it. */
+function useNextStep(project: Project) {
+  const router = useRouter();
+  const { completeStep, finishProject } = useProjects(
+    useShallow((s) => ({ completeStep: s.completeStep, finishProject: s.finishProject }))
+  );
+  const isLast = project.currentStep >= project.steps.length - 1;
+  const next = () => {
+    haptic('success');
+    completeStep(project.id);
+    if (isLast) {
+      finishProject(project.id);
+      router.replace({ pathname: '/project/[id]', params: { id: project.id } });
+    }
+  };
+  return { next, label: isLast ? 'Finish project' : 'Next step' };
+}
+
+/** "Next step" (or "Finish project" on the last step), for steps whose rows the app can't count down. */
+export function NextStepButton({ project }: { project: Project }) {
+  const { next, label } = useNextStep(project);
+  return <Button label={label} icon="arrowRight" iconAfter variant="secondary" size="large" onPress={next} />;
+}
+
 /**
  * Sticky bottom bar with the row controls. `label`/`value` sit on the left
  * (total rows on the counter screen, the current step on the pattern screen).
+ * Steps done once, like casting on, get a "Next step" button instead of the row buttons,
+ * and so does a step once all its rows are counted.
  */
 export function KnitBar({ project, label, value }: { project: Project; label: string; value: string }) {
   const insets = useSafeAreaInsets();
   const { increment, decrement } = useProjects(
     useShallow((s) => ({ increment: s.increment, decrement: s.decrement }))
   );
-  const { row, target } = rowInfo(project);
+  const { step, row, target, counting } = rowInfo(project);
+  const nextStep = useNextStep(project);
+  const rowsDone = !!target && row >= target;
 
   return (
     <View style={[styles.bar, CardShadow, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
@@ -39,26 +68,38 @@ export function KnitBar({ project, label, value }: { project: Project; label: st
           {value}
         </ThemedText>
       </View>
-      <Button
-        icon="remove"
-        variant="secondary"
-        size="large"
-        accessibilityLabel="Undo one row"
-        disabled={row === 0}
-        onPress={() => {
-          decrement(project.id);
-          haptic('undo');
-        }}
-      />
-      <Button
-        label="Row"
-        icon="add"
-        size="large"
-        onPress={() => {
-          increment(project.id);
-          haptic(target && row + 1 === target ? 'success' : 'tap');
-        }}
-      />
+      {counting && (
+        <Button
+          icon="remove"
+          variant="secondary"
+          size="large"
+          accessibilityLabel="Undo one row"
+          disabled={row === 0}
+          onPress={() => {
+            decrement(project.id);
+            haptic('undo');
+          }}
+        />
+      )}
+      {step && (!counting || rowsDone) ? (
+        // Next to the undo button there's no room for the arrow.
+        <Button
+          label={nextStep.label}
+          icon={counting ? undefined : 'arrowRight'}
+          iconAfter
+          size="large"
+          onPress={nextStep.next}
+        />
+      ) : (
+        <Button
+          label="Next row"
+          size="large"
+          onPress={() => {
+            increment(project.id);
+            haptic(target && row + 1 === target ? 'success' : 'tap');
+          }}
+        />
+      )}
     </View>
   );
 }

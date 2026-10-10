@@ -123,11 +123,11 @@ function AccountButton({ onPress }: { onPress: () => void }) {
 function NeedlesCard({ project }: { project: Project }) {
   const router = useRouter();
   const open = () => router.push({ pathname: '/project/[id]', params: { id: project.id } });
-  const { step, row, target } = rowInfo(project);
+  const { step, row, target, counting } = rowInfo(project);
   const stepsDone = project.steps.filter((s) => s.done).length;
 
   // Progress through the current step when it has a row count, otherwise through the pattern.
-  const fraction = target
+  const fraction = counting && target
     ? Math.min(1, row / target)
     : project.steps.length
       ? stepsDone / project.steps.length
@@ -155,7 +155,13 @@ function NeedlesCard({ project }: { project: Project }) {
           </View>
         )}
         <Text style={styles.progressText}>
-          {target ? `row ${row} of ${target}` : step ? `row ${row}` : `${project.rowCount} rows`}
+          {!counting
+            ? `${stepsDone} of ${project.steps.length} steps done`
+            : target
+              ? `row ${row} of ${target}`
+              : step
+                ? `row ${row}`
+                : `${project.rowCount} rows`}
         </Text>
       </View>
 
@@ -239,7 +245,7 @@ function StreakCard({ streak }: { streak: Streak }) {
 
 function SmallProjectRow({ project }: { project: Project }) {
   const router = useRouter();
-  const { step } = rowInfo(project);
+  const { step, counting } = rowInfo(project);
   return (
     <Pressable
       accessibilityRole="button"
@@ -253,7 +259,9 @@ function SmallProjectRow({ project }: { project: Project }) {
       <View style={{ flex: 1, gap: 2 }}>
         <ThemedText style={{ fontFamily: Fonts.semibold }}>{projectTitle(project)}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          {step ? `Step ${project.currentStep + 1} of ${project.steps.length} · row ${step.rowsDone}` : `${project.rowCount} rows`}
+          {step
+            ? `Step ${project.currentStep + 1} of ${project.steps.length}${counting ? ` · row ${step.rowsDone}` : ''}`
+            : `${project.rowCount} rows`}
         </ThemedText>
       </View>
       <Icon name="chevronRight" size={20} color={C.text} />

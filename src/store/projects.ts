@@ -105,10 +105,48 @@ export function currentSide(step: Step): Side | undefined {
   return even ? step.startSide : step.startSide === 'RS' ? 'WS' : 'RS';
 }
 
+/** Steps you do once rather than row by row: "Cast on 120 sts", "Place marker", "Weave in ends". */
+const ONE_OFF =
+  /^(?:cast\s+on|co|cast\s+off|bind\s+off|bo|pick\s+up|place|pm|break|cut|weave|block|wash|sew|seam|graft|put|transfer|move|hold|slip|divide|remove|insert|attach|fold|thread|leave|try|measure|change|switch|join|turn|start|begin|do\s+not|don['’]t)\b/i;
+/**
+ * …unless it goes on to knit rows: "Bind off 3 sts at the beg of the next 2 rows",
+ * "Change to 4.5 mm needles and work 10 cm in rib".
+ */
+const KNITS_ON =
+  /\b(?:\d+\s*(?:more\s+)?(?:rows?|rnds?|rounds?)|next\s+(?:\w+\s+)?(?:rows?|rnds?|rounds?)|until)\b|\band\s+(?:work|knit|purl|continue)\b/i;
+
+/** Whether a step is knitted row by row (and gets the row counter), or just done once. */
+export function countsRows(step: Step): boolean {
+  if (step.rows || step.lines?.length) return true;
+  const text = step.text
+    // "With RS facing, pick up…" / "RS facing, pick up…" is still a pick-up.
+    .replace(/^(?:(?:with|using)\b|(?:RS|WS)\s+facing\b)[^,]*,\s*/i, '')
+    // Picking up is done once, and "3 sts for every 4 rows" is a rate, not rows to knit.
+    .replace(/\bpick\s+up\s+and\s+knit\b/gi, 'pick up')
+    .replace(/\b(?:every|per|for each)\s+\d+(?:st|nd|rd|th)?\s*(?:rows?|rnds?|rounds?)\b/gi, '');
+  return !ONE_OFF.test(text) || KNITS_ON.test(text);
+}
+
 /** The row-specific instruction for the next row, when the step repeats a few rows. */
 export function currentLine(step: Step): string | undefined {
   if (!step.lines?.length) return undefined;
   return step.lines[step.rowsDone % step.lines.length];
+}
+
+/**
+ * For steps that repeat a few rows ("Repeat rows 1–2 7 times", "RS and WS rows 7 times each"):
+ * which repeat you're on (`now` of `of`, when the pattern says how many) and which row of it.
+ */
+export function repeatInfo(step: Step): { size: number; now: number; of?: number; row: number } | undefined {
+  const bothSides =
+    !!step.rows && step.rows % 2 === 0 && /\btimes\s+each\b|\b(?:RS and WS|WS and RS)\b/i.test(step.text);
+  const size = step.lines?.length || (bothSides ? 2 : 0);
+  if (!size) return undefined;
+  const of = step.rows ? Math.ceil(step.rows / size) : undefined;
+  if (of !== undefined && of < 2) return undefined;
+  // Once every row is counted, stay on the last one.
+  const at = step.rows ? Math.min(step.rowsDone, step.rows - 1) : step.rowsDone;
+  return { size, now: Math.floor(at / size) + 1, of, row: (at % size) + 1 };
 }
 
 export function projectTitle(project: Project) {

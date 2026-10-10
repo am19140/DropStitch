@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Colors, Fonts } from '@/constants/theme';
-import { projectTitle, type Project } from '@/store/projects';
+import { countsRows, projectTitle, type Project } from '@/store/projects';
 
 const C = Colors.light;
 
@@ -13,6 +13,8 @@ export function rowInfo(project: Project) {
     step,
     row: step ? step.rowsDone : project.rowCount,
     target: step?.rows,
+    /** False for steps done once, like casting on: they have no rows to count. */
+    counting: step ? countsRows(step) : true,
   };
 }
 
@@ -24,9 +26,11 @@ export function monthLabel(time: number) {
 
 /** A paint-chip style box for a project: name on top, progress at the bottom. */
 export function ProjectBox({ project, size = 'large' }: { project: Project; size?: 'large' | 'small' }) {
-  const { row, target } = rowInfo(project);
+  const { row, target, counting } = rowInfo(project);
   const large = size === 'large';
-  const fraction = target ? Math.min(1, row / target) : 0;
+  const stepsDone = project.steps.filter((s) => s.done).length;
+  // A step done once (like casting on) has no rows, so show the step instead.
+  const fraction = !counting ? stepsDone / project.steps.length : target ? Math.min(1, row / target) : 0;
   const router = useRouter();
 
   return (
@@ -45,16 +49,22 @@ export function ProjectBox({ project, size = 'large' }: { project: Project; size
       {large ? (
         <>
           <Text style={styles.count}>
-            {row}
-            {target ? <Text style={styles.countTarget}>/{target}</Text> : null}
+            {counting ? row : project.currentStep + 1}
+            {!counting ? (
+              <Text style={styles.countTarget}>/{project.steps.length}</Text>
+            ) : target ? (
+              <Text style={styles.countTarget}>/{target}</Text>
+            ) : null}
           </Text>
           <View style={styles.track}>
             <View style={[styles.fill, { width: `${Math.round(fraction * 100)}%` }]} />
           </View>
           <Text style={styles.meta}>
-            {project.steps.length
-              ? `STEP ${project.currentStep + 1} OF ${project.steps.length}`
-              : 'ROWS'}
+            {!counting
+              ? 'STEPS'
+              : project.steps.length
+                ? `STEP ${project.currentStep + 1} OF ${project.steps.length}`
+                : 'ROWS'}
           </Text>
         </>
       ) : (
