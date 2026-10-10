@@ -3,11 +3,11 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { useConfirm } from '@/components/confirm-dialog';
 import { HeaderButton } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { YarnBall } from '@/components/yarn-ball';
 import { CardShadow, Colors, Fonts, Spacing } from '@/constants/theme';
-import { confirm } from '@/lib/confirm';
 import { useProjects, type Yarn } from '@/store/projects';
 
 const C = Colors.light;
@@ -15,6 +15,14 @@ const C = Colors.light;
 export default function YarnScreen() {
   const router = useRouter();
   const yarns = useProjects((s) => s.yarns);
+  const deleteYarn = useProjects((s) => s.deleteYarn);
+  const { ask, dialog } = useConfirm();
+  const remove = async (yarn: Yarn) => {
+    const title = yarn.name.trim() || yarn.colorName;
+    if (await ask({ title: 'Remove yarn?', message: `“${title}” will be removed from your stash.`, confirmLabel: 'Remove' })) {
+      deleteYarn(yarn.id);
+    }
+  };
   const pairs: (Yarn | null)[][] = [];
   for (let i = 0; i < yarns.length; i += 2) pairs.push([yarns[i], yarns[i + 1] ?? null]);
 
@@ -42,7 +50,9 @@ export default function YarnScreen() {
         <View style={styles.grid}>
           {pairs.map((pair, i) => (
             <View key={i} style={styles.gridRow}>
-              {pair.map((y, j) => (y ? <YarnCard key={y.id} yarn={y} /> : <View key={j} style={{ flex: 1 }} />))}
+              {pair.map((y, j) =>
+                y ? <YarnCard key={y.id} yarn={y} onRemove={() => remove(y)} /> : <View key={j} style={{ flex: 1 }} />
+              )}
             </View>
           ))}
         </View>
@@ -55,12 +65,12 @@ export default function YarnScreen() {
           style={{ marginTop: 28 }}
         />
       </ScrollView>
+      {dialog}
     </SafeAreaView>
   );
 }
 
-function YarnCard({ yarn }: { yarn: Yarn }) {
-  const deleteYarn = useProjects((s) => s.deleteYarn);
+function YarnCard({ yarn, onRemove }: { yarn: Yarn; onRemove: () => void }) {
   const title = yarn.name.trim() || yarn.colorName;
 
   return (
@@ -68,11 +78,7 @@ function YarnCard({ yarn }: { yarn: Yarn }) {
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${yarn.material}`}
       accessibilityHint="Long press to remove from your stash"
-      onLongPress={async () => {
-        if (await confirm('Remove yarn?', `“${title}” will be removed from your stash.`, 'Remove')) {
-          deleteYarn(yarn.id);
-        }
-      }}
+      onLongPress={onRemove}
       style={[styles.card, CardShadow]}>
       <View style={styles.ball}>
         <YarnBall color={yarn.hex} size={76} />

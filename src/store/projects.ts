@@ -61,7 +61,7 @@ export type Project = {
   knitMs?: number;
   /** When the knitting timer was started, while it's running. */
   timerStartedAt?: number;
-  /** When a row was last counted. */
+  /** When a row was last counted or a step finished. */
   lastStitchAt?: number;
   /** Where the knitter left the row marker and scroll position in the pattern viewer. */
   viewer?: { markerY?: number; scrollY?: number };
@@ -125,6 +125,19 @@ export function countsRows(step: Step): boolean {
     .replace(/\bpick\s+up\s+and\s+knit\b/gi, 'pick up')
     .replace(/\b(?:every|per|for each)\s+\d+(?:st|nd|rd|th)?\s*(?:rows?|rnds?|rounds?)\b/gi, '');
   return !ONE_OFF.test(text) || KNITS_ON.test(text);
+}
+
+/**
+ * Which step "undo one row" takes a row from: the current one, or — right after counting a step's
+ * last row moved you on — the step before it. -1 when there are no steps (only the total counts);
+ * undefined when there's nothing to undo.
+ */
+export function undoStepIndex(p: Project): number | undefined {
+  const step = p.steps[p.currentStep];
+  if (!step) return p.rowCount > 0 ? -1 : undefined;
+  if (step.rowsDone > 0) return p.currentStep;
+  const previous = p.steps[p.currentStep - 1];
+  return previous && previous.rowsDone > 0 ? p.currentStep - 1 : undefined;
 }
 
 /** The row-specific instruction for the next row, when the step repeats a few rows. */
@@ -278,27 +291,38 @@ export const useProjects = create<ProjectsState>()(
 
         increment: (id) => {
           logKnitting(1);
-          edit(id, (p) => ({
-            timerStartedAt: p.timerStartedAt ?? Date.now(),
-            lastStitchAt: Date.now(),
-            rowCount: p.rowCount + 1,
-            steps: p.steps.map((s, i) =>
-              i === p.currentStep ? { ...s, rowsDone: s.rowsDone + 1 } : s
-            ),
-          }));
+          edit(id, (p) => {
+            const steps = p.steps.map((s, i) => (i === p.currentStep ? { ...s, rowsDone: s.rowsDone + 1 } : s));
+            const step = steps[p.currentStep];
+            let currentStep = p.currentStep;
+            // Counting a step's last row finishes it: go straight on to the next step instead of
+            // showing the finished one again. The last step waits for "Finish project".
+            if (step?.rows && step.rowsDone >= step.rows) {
+              const next = steps.findIndex((s, i) => i > p.currentStep && !s.done);
+              if (next !== -1) {
+                steps[p.currentStep] = { ...step, done: true };
+                currentStep = next;
+              }
+            }
+            return {
+              timerStartedAt: p.timerStartedAt ?? Date.now(),
+              lastStitchAt: Date.now(),
+              rowCount: p.rowCount + 1,
+              steps,
+              currentStep,
+            };
+          });
         },
 
         decrement: (id) =>
           edit(id, (p) => {
-            const step = p.steps[p.currentStep];
-            // Only undo rows that were counted, so the step and total counts stay in sync.
-            if (step ? step.rowsDone === 0 : p.rowCount === 0) return {};
+            const index = undoStepIndex(p);
+            if (index === undefined) return {};
             unlogRow();
             return {
               rowCount: Math.max(0, p.rowCount - 1),
-              steps: p.steps.map((s, i) =>
-                i === p.currentStep ? { ...s, rowsDone: s.rowsDone - 1 } : s
-              ),
+              currentStep: index === -1 ? p.currentStep : index,
+              steps: p.steps.map((s, i) => (i === index ? { ...s, rowsDone: s.rowsDone - 1, done: false } : s)),
             };
           }),
 
@@ -312,12 +336,20 @@ export const useProjects = create<ProjectsState>()(
         goToStep: (id, index) =>
           edit(id, (p) => ({ currentStep: clampIndex(index, p.steps.length) })),
 
-        completeStep: (id) =>
+        completeStep: (id) => {
+          // Moving on means you're knitting: start the timer if it isn't running.
+          logKnitting(0);
           edit(id, (p) => {
             const steps = p.steps.map((s, i) => (i === p.currentStep ? { ...s, done: true } : s));
             const next = steps.findIndex((s, i) => i > p.currentStep && !s.done);
-            return { steps, currentStep: next === -1 ? p.currentStep : next };
-          }),
+            return {
+              steps,
+              currentStep: next === -1 ? p.currentStep : next,
+              timerStartedAt: p.timerStartedAt ?? Date.now(),
+              lastStitchAt: Date.now(),
+            };
+          });
+        },
 
         toggleStepDone: (id, stepId) =>
           editSteps(id, (steps) =>

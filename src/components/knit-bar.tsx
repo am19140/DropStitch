@@ -8,7 +8,7 @@ import { Button } from '@/components/button';
 import { rowInfo } from '@/components/project-box';
 import { ThemedText } from '@/components/themed-text';
 import { CardShadow, Colors, Fonts } from '@/constants/theme';
-import { useProjects, type Project } from '@/store/projects';
+import { undoStepIndex, useProjects, type Project } from '@/store/projects';
 
 const C = Colors.light;
 
@@ -74,7 +74,7 @@ export function KnitBar({ project, label, value }: { project: Project; label: st
           variant="secondary"
           size="large"
           accessibilityLabel="Undo one row"
-          disabled={row === 0}
+          disabled={undoStepIndex(project) === undefined}
           onPress={() => {
             decrement(project.id);
             haptic('undo');

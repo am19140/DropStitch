@@ -6,7 +6,6 @@ import { Icon } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { notify } from '@/lib/confirm';
 import { pickPatternFiles, type FileSource } from '@/lib/pattern-files';
 import type { PatternFile } from '@/store/projects';
 
@@ -20,14 +19,16 @@ type FilePickerProps = {
 export function FilePicker({ files, onAdd, onRemove }: FilePickerProps) {
   const theme = useTheme();
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const pick = async (source: FileSource) => {
     setBusy(true);
+    setError(null);
     try {
       const picked = await pickPatternFiles(source);
       if (picked.length > 0) onAdd(picked);
-    } catch (error) {
-      notify('Couldn’t add the file', error instanceof Error ? error.message : String(error));
+    } catch (e) {
+      setError(`Couldn’t add the file. ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setBusy(false);
     }
@@ -80,6 +81,11 @@ export function FilePicker({ files, onAdd, onRemove }: FilePickerProps) {
         )}
         {busy && <ActivityIndicator color={theme.primary} />}
       </View>
+      {error && (
+        <ThemedText type="small" style={{ color: theme.danger }}>
+          {error}
+        </ThemedText>
+      )}
     </View>
   );
 }

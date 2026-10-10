@@ -4,13 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/button';
+import { useConfirm } from '@/components/confirm-dialog';
 import { FilePicker } from '@/components/file-picker';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { confirm } from '@/lib/confirm';
 import { deletePatternFiles } from '@/lib/pattern-files';
 import { projectTitle, useProject, useProjects, type PatternFile } from '@/store/projects';
 
@@ -19,6 +19,7 @@ export default function EditProjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProject(id);
   const insets = useSafeAreaInsets();
+  const { ask, dialog } = useConfirm();
   const { updateProject, deleteProject, resetProgress, finishProject, reopenProject } = useProjects(
     useShallow((s) => ({
       updateProject: s.updateProject,
@@ -35,18 +36,22 @@ export default function EditProjectScreen() {
     updateProject(project.id, { files: [...project.files, ...added] });
 
   const removeFile = async (file: PatternFile) => {
-    const ok = await confirm('Remove file?', `“${file.name}” will be removed from this pattern.`, 'Remove');
+    const ok = await ask({
+      title: 'Remove file?',
+      message: `“${file.name}” will be removed from this pattern.`,
+      confirmLabel: 'Remove',
+    });
     if (!ok) return;
     updateProject(project.id, { files: project.files.filter((f) => f.id !== file.id) });
     deletePatternFiles([file]);
   };
 
   const startOver = async () => {
-    const ok = await confirm(
-      'Start over?',
-      'All row counts go back to 0 and every step is unticked. Your steps and files stay.',
-      'Start over'
-    );
+    const ok = await ask({
+      title: 'Start over?',
+      message: 'All row counts go back to 0 and every step is unticked. Your steps and files stay.',
+      confirmLabel: 'Start over',
+    });
     if (ok) {
       resetProgress(project.id);
       router.back();
@@ -54,11 +59,11 @@ export default function EditProjectScreen() {
   };
 
   const remove = async () => {
-    const ok = await confirm(
-      'Delete pattern?',
-      `“${projectTitle(project)}” and its progress will be deleted. This can’t be undone.`,
-      'Delete'
-    );
+    const ok = await ask({
+      title: 'Delete pattern?',
+      message: `“${projectTitle(project)}” and its progress will be deleted. This can’t be undone.`,
+      confirmLabel: 'Delete',
+    });
     if (!ok) return;
     deletePatternFiles(project.files);
     deleteProject(project.id);
@@ -114,6 +119,7 @@ export default function EditProjectScreen() {
           <Button label="Delete pattern" icon="trash" variant="danger" onPress={remove} />
         </View>
       </ScrollView>
+      {dialog}
     </ThemedView>
   );
 }

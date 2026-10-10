@@ -13,7 +13,6 @@ import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
 import { ThemedText } from '@/components/themed-text';
 import { CardShadow, Colors, Fonts, Spacing } from '@/constants/theme';
-import { cheer } from '@/lib/cheers';
 import {
   countsRows,
   currentLine,
@@ -120,13 +119,23 @@ export default function KnitScreen() {
         <ScreenHeader
           back="back"
           right={
-            project.files.length > 0 ? (
-              <HeaderButton
-                icon="file"
-                label="View pattern"
-                onPress={() => router.push({ pathname: '/project/[id]/pdf', params: { id: project.id } })}
-              />
-            ) : null
+            <View style={styles.headerRight}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={running ? 'Pause the knitting timer' : 'Start the knitting timer'}
+                onPress={() => (running ? pauseTimer(project.id) : startTimer(project.id))}
+                style={({ pressed }) => [styles.timer, running && styles.timerOn, { transform: [{ scale: pressed ? 0.96 : 1 }] }]}>
+                <Icon name={running ? 'pause' : 'play'} size={16} color={running ? C.onPrimary : C.text} strokeWidth={2.2} />
+                <Text style={[styles.timerText, running && { color: C.onPrimary }]}>{formatDuration(knitTime(project, now))}</Text>
+              </Pressable>
+              {project.files.length > 0 ? (
+                <HeaderButton
+                  icon="file"
+                  label="View pattern"
+                  onPress={() => router.push({ pathname: '/project/[id]/pdf', params: { id: project.id } })}
+                />
+              ) : null}
+            </View>
           }
         />
         <ThemedText type="eyebrow" themeColor="textSecondary" numberOfLines={1} style={{ marginTop: 4 }}>
@@ -169,13 +178,10 @@ export default function KnitScreen() {
                     <ThemedText style={styles.rowLabel}>
                       {done
                         ? `all ${repeat.of} repeats done`
-                        : `repeat ${repeat.now}${repeat.of ? ` of ${repeat.of}` : ''}`}
+                        : repeat.size > 1
+                          ? `${unit} ${repeat.row} of ${repeat.size}`
+                          : 'repeats'}
                     </ThemedText>
-                    {!done && repeat.size > 1 && (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {`${unit} ${repeat.row} of ${repeat.size}`}
-                      </ThemedText>
-                    )}
                   </>
                 ) : (
                   <>
@@ -206,22 +212,6 @@ export default function KnitScreen() {
               </View>
             )}
             <PaintedKnittingGrandma paused={!running} width={184} active={isFocused} />
-          </View>
-
-          <View style={styles.timerRow}>
-            <View style={styles.cheer}>
-              <Text style={styles.cheerText} numberOfLines={2}>
-                {running ? cheer(project.currentStep, rowsDone, target) : 'shh… Purl dozed off'}
-              </Text>
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={running ? 'Pause the knitting timer' : 'Start the knitting timer'}
-              onPress={() => (running ? pauseTimer(project.id) : startTimer(project.id))}
-              style={({ pressed }) => [styles.timer, running && styles.timerOn, { transform: [{ scale: pressed ? 0.96 : 1 }] }]}>
-              <Icon name={running ? 'pause' : 'play'} size={18} color={running ? C.onPrimary : C.text} strokeWidth={2.2} />
-              <Text style={[styles.timerText, running && { color: C.onPrimary }]}>{formatDuration(knitTime(project, now))}</Text>
-            </Pressable>
           </View>
 
           <View style={[styles.stepCard, CardShadow]}>
@@ -309,12 +299,10 @@ const styles = StyleSheet.create({
   },
   sideShort: { fontFamily: Fonts.display, fontSize: 24, lineHeight: 30 },
   sideLong: { fontFamily: Fonts.bold, fontSize: 14 },
-  timerRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  cheer: { flexShrink: 1, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 18, backgroundColor: C.beige },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   timer: {
-    marginLeft: 'auto',
-    minHeight: 44,
-    paddingHorizontal: 14,
+    minHeight: 38,
+    paddingHorizontal: 12,
     borderRadius: 999,
     borderWidth: 1.5,
     borderColor: C.text,
@@ -324,7 +312,6 @@ const styles = StyleSheet.create({
   },
   timerOn: { backgroundColor: C.primary, borderColor: C.primary },
   timerText: { fontFamily: Fonts.bold, fontSize: 15, color: C.text, fontVariant: ['tabular-nums'] },
-  cheerText: { fontFamily: Fonts.displayItalic, fontSize: 18, color: C.text },
   stepCard: { marginTop: 16, padding: 20, borderRadius: 24, backgroundColor: C.surface, gap: 12 },
   stepText: { fontSize: 17, lineHeight: 25, fontFamily: Fonts.medium },
   thisRow: { padding: 14, borderRadius: 16, backgroundColor: C.sky, gap: 4 },
