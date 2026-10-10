@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.background },
   content: { paddingHorizontal: 24 },
   title: { marginTop: 18, fontFamily: Fonts.display, fontSize: 34, lineHeight: 38, color: C.text },
-  subtitle: { marginTop: 8, fontFamily: Fonts.semibold, fontSize: 14.5, color: C.text, opacity: 0.75 },
+  subtitle: { marginTop: 8, maxWidth: 170, fontFamily: Fonts.semibold, fontSize: 14.5, lineHeight: 20, color: C.text, opacity: 0.75 },
   grid: { marginTop: 4, gap: 14 },
   gridRow: { flexDirection: 'row', gap: 14 },
   card: { flex: 1, padding: 14, paddingTop: 8, borderRadius: 22, backgroundColor: C.card, borderWidth: 1.5, borderColor: C.cardLine, gap: 2 },

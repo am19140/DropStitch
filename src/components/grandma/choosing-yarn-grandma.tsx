@@ -6,6 +6,8 @@ export type ChoosingYarnGrandmaProps = {width?:number; active?:boolean};
 const ease=(x:number)=>x*x*(3-2*x);
 // `accessible` groups the picture for screen readers on phones; the web doesn't understand it.
 const a11yProps=Platform.OS==='web'?{role:'img' as const}:{accessible:true};
+/** How far each arm lifts its yarn, in degrees (the painting was tuned at 2; 10 reads clearly at phone size). */
+const ARM_SWING=10;
 export function makePose(time:number){
  const t=time%8;
  const q=t<1.4?0:t<3.6?ease((t-1.4)/2.2):t<5?1:t<7.2?1-ease((t-5)/2.2):0;
@@ -15,8 +17,8 @@ export function makePose(time:number){
   'eyes':`translate(${look*18} ${look*4})`,
   'left-ear':`rotate(${look*1.1} 514 184)`,
   'right-ear':`rotate(${-look*1.1} 685 278)`,
-  'left-arm':`rotate(${-look*2} 345 590)`,
-  'right-arm':`rotate(${-look*2} 860 650)`,
+  'left-arm':`rotate(${-look*ARM_SWING} 345 590)`,
+  'right-arm':`rotate(${-look*ARM_SWING} 860 650)`,
  };
 }
 
