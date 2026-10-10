@@ -12,13 +12,35 @@ export function pdfjsScript() {
   return `<script>window.__PDFJS_CODE__ = ${code};</script>`;
 }
 
+/**
+ * pdf.js loops over streams with `for await`, which Safari only supports from version 26. Older
+ * iPhones fail with "undefined is not a function (near '...t of e...')" unless streams get it here.
+ */
+const STREAM_ITERATION = `
+  if (typeof ReadableStream !== 'undefined' && !ReadableStream.prototype[Symbol.asyncIterator]) {
+    ReadableStream.prototype[Symbol.asyncIterator] = async function* () {
+      const reader = this.getReader();
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) return;
+          yield value;
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    };
+  }
+`;
+
 /** Page-side code defining `async function loadPdfjs()`, which returns the pdf.js module. */
 export const LOAD_PDFJS = `
   async function loadPdfjs() {
+    ${STREAM_ITERATION}
     const code = window.__PDFJS_CODE__;
     const url = (text) => URL.createObjectURL(new Blob([text], { type: 'text/javascript' }));
     const pdfjs = await import(url(code.lib));
-    pdfjs.GlobalWorkerOptions.workerSrc = url(code.worker);
+    pdfjs.GlobalWorkerOptions.workerSrc = url(${JSON.stringify(STREAM_ITERATION)} + code.worker);
     return pdfjs;
   }
 `;
