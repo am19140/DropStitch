@@ -1,19 +1,25 @@
 /**
- * DropStitch theme, taken from Purl: cobalt blue and red as the main colours,
- * with beige, light blue and chocolate as secondary colours. Light-only for now.
+ * DropStitch theme, taken from Purl: a sky-blue wave on top of cream paper, cobalt blue for
+ * progress and the side you're on, chocolate for buttons, and red only for small accents.
+ * Light-only for now.
  */
 
 import '@/global.css';
 
 const palette = {
-  /** Page background: light beige. */
-  background: '#F6F1E3',
-  /** Cards and sheets. */
+  /** Page background: cream paper. */
+  background: '#FFFCF4',
+  /** Bars and sheets that sit on the page. */
   surface: '#FFFCF4',
+  /** The wave band at the top of the main screens. */
+  band: '#80ABD7',
+  /** Calm cards on the page, with a hairline border. */
+  card: '#F3F6FB',
+  cardLine: '#E1E9F4',
   /** Ink: Purl's dark brown face. */
   text: '#2A1C18',
   textSecondary: '#6E5A50',
-  border: '#E3D8C2',
+  border: '#E1E9F4',
   /** Cobalt blue, from Purl's chair: primary buttons and the active tab. */
   primary: '#034FC9',
   /** Text and icons on top of `primary`. */
@@ -43,22 +49,22 @@ export type ThemeColor = keyof typeof palette;
 /** Box colours for projects, like paint-chip cards. All take ink text. */
 export const ProjectColors = ['#80ABD7', '#E2D9BC', '#D7E5F4', '#EAD9A8', '#B9CFEA', '#F3D2C8'];
 
-/** Font families, loaded in app/_layout.tsx. Custom fonts need one family per weight. */
+/** Font families, loaded in app/_layout.tsx: Nunito throughout. Custom fonts need one family per weight. */
 export const Fonts = {
-  display: 'Fraunces-Black',
-  displayItalic: 'Fraunces-BlackItalic',
-  regular: 'Manrope_400Regular',
-  medium: 'Manrope_500Medium',
-  semibold: 'Manrope_600SemiBold',
-  bold: 'Manrope_700Bold',
-  extrabold: 'Manrope_800ExtraBold',
-  /** Little notes and messages: straight Fraunces italic. */
-  note: 'Fraunces-BlackItalic',
+  display: 'Nunito_900Black',
+  displayItalic: 'Nunito_900Black_Italic',
+  regular: 'Nunito_400Regular',
+  medium: 'Nunito_500Medium',
+  semibold: 'Nunito_600SemiBold',
+  bold: 'Nunito_700Bold',
+  extrabold: 'Nunito_800ExtraBold',
+  /** Little notes and messages. */
+  note: 'Nunito_800ExtraBold_Italic',
   // Older names still used by a few components.
-  sans: 'Manrope_500Medium',
+  sans: 'Nunito_500Medium',
   mono: 'monospace',
-  rounded: 'Manrope_500Medium',
-  serif: 'Fraunces-Black',
+  rounded: 'Nunito_500Medium',
+  serif: 'Nunito_900Black',
 } as const;
 
 export const Spacing = {

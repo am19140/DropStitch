@@ -26,11 +26,11 @@ export default function AccountScreen() {
   const letters = initials(name);
 
   const stats = [
-    { label: 'on the needles', value: String(active), bg: C.sky, fg: C.text },
-    { label: 'finished', value: String(finished), bg: C.beige, fg: C.text },
-    { label: 'rows counted', value: String(rows), bg: C.primary, fg: C.beige },
-    { label: 'knitting time', value: knitted ? knitDuration(knitted) : '—', bg: C.cocoa, fg: C.beige },
-    { label: yarnCount === 1 ? 'yarn ball' : 'yarn balls', value: String(yarnCount), bg: C.skySoft, fg: C.text },
+    { label: 'on the needles', value: String(active) },
+    { label: 'finished', value: String(finished) },
+    { label: 'rows counted', value: String(rows) },
+    { label: 'knitting time', value: knitted ? knitDuration(knitted) : '—' },
+    { label: yarnCount === 1 ? 'yarn ball' : 'yarn balls', value: String(yarnCount) },
   ];
 
   return (
@@ -45,7 +45,7 @@ export default function AccountScreen() {
             {letters ? (
               <Text style={styles.avatarText}>{letters}</Text>
             ) : (
-              <Icon name="user" size={44} color={C.beige} strokeWidth={1.8} />
+              <Icon name="user" size={44} color={C.text} strokeWidth={1.8} />
             )}
           </View>
           <ThemedText type="title" style={{ textAlign: 'center' }}>
@@ -69,11 +69,9 @@ export default function AccountScreen() {
         </ThemedText>
         <View style={styles.grid}>
           {stats.map((s) => (
-            <View key={s.label} style={[styles.stat, { backgroundColor: s.bg }]}>
-              <Text style={[styles.statValue, { color: s.fg }]}>
-                {s.value}
-              </Text>
-              <Text style={[styles.statLabel, { color: s.fg }]}>{s.label}</Text>
+            <View key={s.label} style={styles.stat}>
+              <Text style={styles.statValue}>{s.value}</Text>
+              <Text style={styles.statLabel}>{s.label}</Text>
             </View>
           ))}
         </View>
@@ -90,13 +88,23 @@ const styles = StyleSheet.create({
     width: 104,
     height: 104,
     borderRadius: 52,
-    backgroundColor: C.primary,
+    backgroundColor: C.band,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontFamily: Fonts.extrabold, fontSize: 36, letterSpacing: 1, color: C.beige },
+  avatarText: { fontFamily: Fonts.display, fontSize: 38, color: C.text },
   grid: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  stat: { flexGrow: 1, flexBasis: '40%', minHeight: 96, padding: 16, borderRadius: 22, justifyContent: 'space-between' },
-  statValue: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 34 },
-  statLabel: { fontFamily: Fonts.semibold, fontSize: 13 },
+  stat: {
+    flexGrow: 1,
+    flexBasis: '40%',
+    minHeight: 96,
+    padding: 16,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: C.cardLine,
+    backgroundColor: C.card,
+    justifyContent: 'space-between',
+  },
+  statValue: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 34, color: C.text },
+  statLabel: { fontFamily: Fonts.semibold, fontSize: 13, color: C.textSecondary },
 });

@@ -26,7 +26,7 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 
 const styles = StyleSheet.create({
   default: { fontFamily: Fonts.regular, fontSize: 16, lineHeight: 24 },
-  /** Fraunces Black for big titles. */
+  /** Nunito Black for big titles. */
   display: { fontFamily: Fonts.display, fontSize: 46, lineHeight: 48, letterSpacing: -1 },
   title: { fontFamily: Fonts.display, fontSize: 32, lineHeight: 38, letterSpacing: -0.4 },
   subtitle: { fontFamily: Fonts.display, fontSize: 26, lineHeight: 32 },

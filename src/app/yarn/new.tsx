@@ -8,7 +8,8 @@ import { Icon } from '@/components/icon';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
-import { YarnBall } from '@/components/yarn-ball';
+import { WaveBand } from '@/components/wave-band';
+import { YarnBall, type YarnAppearance } from '@/components/yarn-ball';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { useProjects } from '@/store/projects';
 
@@ -51,6 +52,11 @@ const YARN_COLOURS = [
   { name: 'Silver', hex: '#BDBAB4' },
   { name: 'Ink', hex: '#1F2430' },
 ];
+const LOOKS: { value: YarnAppearance; label: string }[] = [
+  { value: 'fine', label: 'Fine' },
+  { value: 'smooth', label: 'Smooth' },
+  { value: 'chunky', label: 'Chunky' },
+];
 const MATERIALS = ['Wool', 'Merino', 'Cotton', 'Alpaca', 'Acrylic', 'Blend'];
 const NEEDLES = ['2.5 mm', '3 mm', '3.5 mm', '4 mm', '4.5 mm', '5 mm', '6 mm'];
 
@@ -58,90 +64,110 @@ export default function NewYarnScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const addYarn = useProjects((s) => s.addYarn);
-  const [colour, setColour] = useState(2);
+  const [colour, setColour] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [name, setName] = useState('');
   const [material, setMaterial] = useState('');
   const [needles, setNeedles] = useState<string[]>([]);
+  const [appearance, setAppearance] = useState<YarnAppearance>('smooth');
 
   const selected = YARN_COLOURS[colour];
   const visible = expanded ? YARN_COLOURS : YARN_COLOURS.slice(0, 12);
   const canSave = material.trim().length > 0;
 
   const save = () => {
-    addYarn({ name: name.trim(), colorName: selected.name, hex: selected.hex, material: material.trim(), needles });
+    addYarn({ name: name.trim(), colorName: selected.name, hex: selected.hex, material: material.trim(), needles, appearance });
     router.back();
   };
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.two }]}>
-        <ScreenHeader back="close" />
-        <ThemedText type="title">New yarn ball</ThemedText>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 32 }}>
+        {/* The yarn as it will look in your stash, updating as you choose. */}
+        <WaveBand
+          style={{ paddingBottom: 26 }}
+          art={<YarnBall color={selected.hex} appearance={appearance} size={170} />}
+          artStyle={{ right: 6, bottom: -4 }}>
+          <ScreenHeader back="close" round />
+          <Text style={styles.title}>New yarn{'\n'}ball</Text>
+          <Text style={styles.subtitle} numberOfLines={2}>
+            {selected.name}
+            {'\n'}
+            {(name.trim() || 'Unnamed yarn') + (material.trim() ? ` · ${material.trim()}` : '')}
+          </Text>
+        </WaveBand>
 
-        <View style={styles.preview}>
-          <YarnBall color={selected.hex} size={84} id="new-yarn-preview" />
-          <View style={{ flex: 1, gap: 2 }}>
-            <ThemedText type="note">{selected.name.toLowerCase()}</ThemedText>
-            <ThemedText type="small" numberOfLines={1}>
-              {(name.trim() || 'Unnamed yarn') + (material.trim() ? ` · ${material.trim()}` : '')}
-            </ThemedText>
-          </View>
-        </View>
-
-        <TextField
-          label="Name · optional"
-          value={name}
-          onChangeText={setName}
-          placeholder="e.g. Drops Merino Extra Fine"
-        />
-
-        <View style={{ gap: 10 }}>
-          <View style={styles.labelRow}>
-            <ThemedText type="eyebrow" themeColor="textSecondary">COLOUR</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
-              {visible.length} of {YARN_COLOURS.length}
-            </ThemedText>
-          </View>
-          <View style={styles.swatches}>
-            {visible.map((c, i) => (
-              <Pressable
-                key={c.hex}
-                accessibilityRole="button"
-                accessibilityLabel={c.name}
-                accessibilityState={{ selected: i === colour }}
-                onPress={() => setColour(i)}
-                style={[styles.swatchRing, i === colour && { borderColor: C.text }]}>
-                <View style={[styles.swatch, { backgroundColor: c.hex }]} />
-              </Pressable>
-            ))}
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ expanded }}
-            onPress={() => setExpanded(!expanded)}
-            style={styles.more}>
-            <Text style={styles.moreText}>{expanded ? 'Fewer colours' : 'More colours'}</Text>
-            <View style={{ transform: [{ rotate: expanded ? '180deg' : '0deg' }] }}>
-              <Icon name="chevronDown" size={16} color={C.text} strokeWidth={2} />
-            </View>
-          </Pressable>
-        </View>
-
-        <View style={{ gap: 10 }}>
-          <TextField label="Material" value={material} onChangeText={setMaterial} placeholder="e.g. merino wool" />
-          <Chips options={MATERIALS} isOn={(m) => material === m} onPress={setMaterial} />
-        </View>
-
-        <View style={{ gap: 10 }}>
-          <ThemedText type="eyebrow" themeColor="textSecondary">NEEDLES THAT FIT · OPTIONAL</ThemedText>
-          <Chips
-            options={NEEDLES}
-            isOn={(n) => needles.includes(n)}
-            onPress={(n) => setNeedles(needles.includes(n) ? needles.filter((x) => x !== n) : [...needles, n])}
+        <View style={styles.content}>
+          <TextField
+            label="Name · optional"
+            value={name}
+            onChangeText={setName}
+            placeholder="e.g. Drops Merino Extra Fine"
           />
+
+          <View style={{ gap: 10 }}>
+            <View style={styles.labelRow}>
+              <ThemedText type="eyebrow" themeColor="textSecondary">COLOUR</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
+                {visible.length} of {YARN_COLOURS.length}
+              </ThemedText>
+            </View>
+            <View style={styles.swatches}>
+              {visible.map((c, i) => (
+                <Pressable
+                  key={c.hex}
+                  accessibilityRole="button"
+                  accessibilityLabel={c.name}
+                  accessibilityState={{ selected: i === colour }}
+                  onPress={() => setColour(i)}
+                  style={[styles.swatchRing, i === colour && { borderColor: C.text }]}>
+                  <View style={[styles.swatch, { backgroundColor: c.hex }]} />
+                </Pressable>
+              ))}
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded }}
+              onPress={() => setExpanded(!expanded)}
+              style={styles.more}>
+              <Text style={styles.moreText}>{expanded ? 'Fewer colours' : 'More colours'}</Text>
+              <View style={{ transform: [{ rotate: expanded ? '180deg' : '0deg' }] }}>
+                <Icon name="chevronDown" size={16} color={C.text} strokeWidth={2} />
+              </View>
+            </Pressable>
+          </View>
+
+          <View style={{ gap: 10 }}>
+            <ThemedText type="eyebrow" themeColor="textSecondary">LOOKS LIKE</ThemedText>
+            <View style={styles.looks}>
+              {LOOKS.map((l) => (
+                <Pressable
+                  key={l.value}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${l.label} yarn`}
+                  accessibilityState={{ selected: appearance === l.value }}
+                  onPress={() => setAppearance(l.value)}
+                  style={[styles.look, appearance === l.value && styles.lookOn]}>
+                  <YarnBall color={selected.hex} appearance={l.value} size={64} />
+                  <Text style={styles.chipText}>{l.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={{ gap: 10 }}>
+            <TextField label="Material" value={material} onChangeText={setMaterial} placeholder="e.g. merino wool" />
+            <Chips options={MATERIALS} isOn={(m) => material === m} onPress={setMaterial} />
+          </View>
+
+          <View style={{ gap: 10 }}>
+            <ThemedText type="eyebrow" themeColor="textSecondary">NEEDLES THAT FIT · OPTIONAL</ThemedText>
+            <Chips
+              options={NEEDLES}
+              isOn={(n) => needles.includes(n)}
+              onPress={(n) => setNeedles(needles.includes(n) ? needles.filter((x) => x !== n) : [...needles, n])}
+            />
+          </View>
         </View>
       </ScrollView>
 
@@ -174,8 +200,12 @@ function Chips({ options, isOn, onPress }: { options: string[]; isOn: (o: string
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.background },
-  content: { paddingHorizontal: Spacing.four, paddingBottom: 32, gap: 22 },
-  preview: { padding: 14, paddingHorizontal: 16, borderRadius: 22, backgroundColor: C.beige, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  content: { paddingHorizontal: Spacing.four, gap: 22 },
+  title: { marginTop: 10, fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, color: C.text },
+  subtitle: { marginTop: 8, maxWidth: 190, fontFamily: Fonts.semibold, fontSize: 14, lineHeight: 19, color: C.text, opacity: 0.75 },
+  looks: { flexDirection: 'row', gap: 10 },
+  look: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 18, borderWidth: 1.5, borderColor: C.cardLine, backgroundColor: C.card },
+  lookOn: { borderColor: C.text, backgroundColor: C.surface },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
   swatchRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useShallow } from "zustand/react/shallow";
 
 import { Button } from "@/components/button";
@@ -7,16 +7,17 @@ import { Icon } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
 import { TextField } from "@/components/text-field";
 import { ThemedText } from "@/components/themed-text";
-import { Spacing } from "@/constants/theme";
-import { useTheme } from "@/hooks/use-theme";
+import { Colors, Fonts, Spacing } from "@/constants/theme";
 import { detectRows, parseSteps } from "@/lib/parse-steps";
 import { useProjects, type Project, type Step } from "@/store/projects";
 
 type Editing =
   { mode: "edit"; step: Step } | { mode: "add" } | { mode: "paste" } | null;
 
+const C = Colors.light;
+
+/** The pattern's steps as a thread of beads: done ones checked, the current one ringed in blue. */
 export function StepList({ project }: { project: Project }) {
-  const theme = useTheme();
   const [editing, setEditing] = useState<Editing>(null);
   const { goToStep, toggleStepDone } = useProjects(
     useShallow((s) => ({
@@ -44,28 +45,24 @@ export function StepList({ project }: { project: Project }) {
 
         {project.steps.map((step, index) => {
           const current = index === project.currentStep;
+          const last = index === project.steps.length - 1;
           const newSection =
             step.section && step.section !== project.steps[index - 1]?.section;
           return (
-            <View key={step.id} style={styles.item}>
+            <View key={step.id}>
               {newSection ? (
-                <ThemedText
-                  type="eyebrow"
-                  themeColor="textSecondary"
-                  style={styles.sectionLabel}
-                >
-                  {step.section!.toUpperCase()}
-                </ThemedText>
+                <Text style={styles.sectionLabel}>{step.section}</Text>
               ) : null}
-              <View
-                style={[
-                  styles.row,
-                  {
-                    backgroundColor: current ? theme.sky : theme.surface,
-                    borderColor: current ? theme.sky : "transparent",
-                  },
-                ]}
-              >
+              <View style={[styles.row, current && styles.rowCurrent]}>
+                {/* The thread down the side, dark where the knitting is done. */}
+                {!last && (
+                  <View
+                    style={[
+                      styles.thread,
+                      { backgroundColor: step.done ? C.text : C.cardLine },
+                    ]}
+                  />
+                )}
                 <Pressable
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked: step.done }}
@@ -76,19 +73,15 @@ export function StepList({ project }: { project: Project }) {
                   onPress={() => toggleStepDone(project.id, step.id)}
                   style={[
                     styles.check,
-                    {
-                      borderColor: step.done
-                        ? theme.success
-                        : theme.textSecondary,
-                      backgroundColor: step.done
-                        ? theme.success
-                        : "transparent",
-                    },
+                    step.done && styles.checkDone,
+                    current && !step.done && styles.checkCurrent,
                   ]}
                 >
-                  {step.done && (
-                    <Icon name="check" size={16} color={theme.onPrimary} />
-                  )}
+                  {step.done ? (
+                    <Icon name="check" size={15} color={C.surface} strokeWidth={2.6} />
+                  ) : current ? (
+                    <View style={styles.currentDot} />
+                  ) : null}
                 </Pressable>
 
                 <Pressable
@@ -101,19 +94,23 @@ export function StepList({ project }: { project: Project }) {
                     { opacity: pressed ? 0.6 : 1 },
                   ]}
                 >
-                  <ThemedText style={step.done && styles.doneText}>
-                    <ThemedText themeColor="textSecondary">
-                      {index + 1}.{" "}
-                    </ThemedText>
-                    {step.text}
-                  </ThemedText>
+                  <Text
+                    style={[
+                      styles.stepText,
+                      current && styles.stepTextCurrent,
+                      !step.done && !current && { color: C.textSecondary },
+                    ]}
+                    numberOfLines={3}
+                  >
+                    {index + 1}. {step.text}
+                  </Text>
                   {(step.rows || current || step.rowsDone > 0) && (
-                    <ThemedText type="small" themeColor="textSecondary">
+                    <Text style={styles.stepSub}>
                       {step.rows
                         ? `${step.rowsDone} / ${step.rows} rows`
                         : `${step.rowsDone} rows`}
-                      {current ? "  ·  CURRENT" : ""}
-                    </ThemedText>
+                      {current ? " · current" : ""}
+                    </Text>
                   )}
                 </Pressable>
 
@@ -303,15 +300,18 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  item: {
-    gap: Spacing.two,
-  },
   sectionLabel: {
     marginTop: Spacing.three,
+    marginBottom: Spacing.one,
+    marginLeft: 44,
+    fontFamily: Fonts.display,
+    fontSize: 16,
+    color: C.text,
   },
   list: {
-    padding: Spacing.three,
-    gap: Spacing.two,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.four,
   },
   empty: {
     alignItems: "center",
@@ -324,29 +324,66 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.three,
-    paddingLeft: Spacing.three,
-    paddingRight: Spacing.one,
-    borderRadius: 14,
-    borderWidth: 2,
+    alignItems: "flex-start",
+    gap: 14,
+    marginHorizontal: -8,
+    paddingLeft: 8,
+    paddingTop: 10,
+    borderRadius: 16,
+  },
+  rowCurrent: {
+    backgroundColor: C.skySoft,
+  },
+  thread: {
+    position: "absolute",
+    left: 21,
+    top: 40,
+    bottom: -10,
+    width: 2,
   },
   check: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: C.cardLine,
+    backgroundColor: C.surface,
     alignItems: "center",
     justifyContent: "center",
   },
+  checkDone: {
+    backgroundColor: C.text,
+    borderColor: C.text,
+  },
+  checkCurrent: {
+    borderWidth: 2.5,
+    borderColor: C.primary,
+  },
+  currentDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: C.primary,
+  },
   rowBody: {
     flex: 1,
-    gap: Spacing.half,
-    paddingVertical: Spacing.three,
+    gap: 2,
+    paddingTop: 3,
+    paddingBottom: 12,
   },
-  doneText: {
-    textDecorationLine: "line-through",
-    opacity: 0.6,
+  stepText: {
+    fontFamily: Fonts.bold,
+    fontSize: 15,
+    lineHeight: 21,
+    color: C.text,
+  },
+  stepTextCurrent: {
+    fontFamily: Fonts.extrabold,
+  },
+  stepSub: {
+    fontFamily: Fonts.semibold,
+    fontSize: 12.5,
+    color: C.textSecondary,
   },
   footer: {
     flexDirection: "row",

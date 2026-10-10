@@ -3,6 +3,7 @@ import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import type { YarnAppearance } from '@/components/yarn-ball';
 import { ProjectColors } from '@/constants/theme';
 import { dayKey } from '@/lib/dates';
 import type { ParsedStep } from '@/lib/parse-steps';
@@ -76,6 +77,8 @@ export type Yarn = {
   material: string;
   /** Needle sizes that fit, e.g. ["4 mm"]. Optional. */
   needles: string[];
+  /** How the painted yarn ball looks: thin and fuzzy, smooth, or chunky. */
+  appearance?: YarnAppearance;
   createdAt: number;
 };
 

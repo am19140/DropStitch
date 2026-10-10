@@ -41,7 +41,7 @@ export default function PatternScreen() {
       </View>
       <KnitBar
         project={project}
-        label={step ? `STEP ${project.currentStep + 1} OF ${project.steps.length}` : 'ROWS'}
+        label={step ? `Step ${project.currentStep + 1} of ${project.steps.length}` : 'Rows'}
         value={!counting && step ? step.text : target ? `Row ${row} of ${target}` : `Row ${row}`}
       />
     </SafeAreaView>

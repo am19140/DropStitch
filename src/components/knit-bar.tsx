@@ -1,13 +1,12 @@
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/button';
 import { rowInfo } from '@/components/project-box';
-import { ThemedText } from '@/components/themed-text';
-import { CardShadow, Colors, Fonts } from '@/constants/theme';
+import { Colors, Fonts } from '@/constants/theme';
 import { undoStepIndex, useProjects, type Project } from '@/store/projects';
 
 const C = Colors.light;
@@ -59,14 +58,14 @@ export function KnitBar({ project, label, value }: { project: Project; label: st
   const rowsDone = !!target && row >= target;
 
   return (
-    <View style={[styles.bar, CardShadow, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
+    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 16) + 10 }]}>
       <View style={styles.left}>
-        <ThemedText type="eyebrow" themeColor="textSecondary" numberOfLines={1}>
+        <Text style={styles.label} numberOfLines={1}>
           {label}
-        </ThemedText>
-        <ThemedText style={styles.value} numberOfLines={1}>
+        </Text>
+        <Text style={styles.value} numberOfLines={1}>
           {value}
-        </ThemedText>
+        </Text>
       </View>
       {counting && (
         <Button
@@ -109,12 +108,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingTop: 16,
+    paddingTop: 14,
     paddingHorizontal: 24,
     backgroundColor: C.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderTopColor: C.cardLine,
   },
-  left: { flex: 1, gap: 2 },
-  value: { fontFamily: Fonts.semibold, fontSize: 20, lineHeight: 26 },
+  left: { flex: 1 },
+  label: { fontFamily: Fonts.bold, fontSize: 12.5, color: C.textSecondary },
+  value: { fontFamily: Fonts.display, fontSize: 22, lineHeight: 28, color: C.text },
 });

@@ -9,8 +9,9 @@ import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandm
 import { Purl } from '@/components/purl';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
-import { CardShadow, Colors, Fonts, Spacing } from '@/constants/theme';
-import { daysAgo, knitDuration, longDate } from '@/lib/dates';
+import { WaveBand } from '@/components/wave-band';
+import { Colors, Fonts } from '@/constants/theme';
+import { daysAgo, knitDuration, longDate, shortDate } from '@/lib/dates';
 import { knitTime, projectTitle, useProject, useProjects } from '@/store/projects';
 
 const C = Colors.light;
@@ -38,66 +39,60 @@ export default function ProjectScreen() {
   const knitted = knitTime(project);
 
   return (
-    <SafeAreaView edges={['top']} style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+      <WaveBand
+        style={{ paddingBottom: 22 }}
+        art={
+          finished ? (
+            <Purl pose="proud" size={196} />
+          ) : (
+            <PaintedKnittingGrandma paused={!project.timerStartedAt} width={196} active={isFocused} />
+          )
+        }
+        artStyle={{ right: -10, bottom: 4 }}>
         <ScreenHeader
           back="back"
+          round
           right={
             <HeaderButton
               icon="edit"
               label="Edit project"
+              round
               onPress={() => router.push({ pathname: '/project/[id]/edit', params })}
             />
           }
         />
-
-        {finished && (
-          <View style={styles.proud}>
-            <Purl pose="proud" size={220} />
-            <Text style={styles.proudTitle}>
-              You <Text style={styles.proudItalic}>made</Text> this!
-            </Text>
-            <ThemedText type="note" style={styles.proudNote}>
-              Purl is showing it off to the whole flock
-            </ThemedText>
+        <Text style={styles.eyebrow}>
+          {finished
+            ? 'Finished'
+            : project.steps.length
+              ? `On the needles · step ${project.currentStep + 1} of ${project.steps.length}`
+              : 'On the needles'}
+        </Text>
+        <Text style={styles.title}>{projectTitle(project)}</Text>
+        <View style={styles.metaRow}>
+          <Icon name="calendar" size={16} color={C.text} />
+          <Text style={styles.meta}>
+            {finished
+              ? `Finished ${longDate(project.finishedAt!)}`
+              : `Started ${shortDate(project.createdAt)} · ${daysAgo(project.createdAt)}`}
+          </Text>
+        </View>
+        {knitted > 0 && (
+          <View style={styles.metaRow}>
+            <Icon name={project.timerStartedAt ? 'pause' : 'play'} size={16} color={C.text} />
+            <Text style={styles.meta}>{knitDuration(knitted)} of knitting</Text>
           </View>
         )}
+      </WaveBand>
 
-        <View style={[styles.header, { backgroundColor: finished ? C.sky : C.beige }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <View style={{ flex: 1, gap: 4 }}>
-              <ThemedText type="eyebrow">
-                {finished
-                  ? 'FINISHED'
-                  : project.steps.length
-                    ? `ON THE NEEDLES · STEP ${project.currentStep + 1} OF ${project.steps.length}`
-                    : 'ON THE NEEDLES'}
-              </ThemedText>
-              <Text style={styles.title}>{projectTitle(project)}</Text>
-            </View>
-            {!finished && (
-              <PaintedKnittingGrandma paused={!project.timerStartedAt} width={140} active={isFocused} />
-            )}
+      <View style={styles.content}>
+        {finished ? (
+          <View style={{ marginTop: 6 }}>
+            <Text style={styles.proudTitle}>You made this!</Text>
+            <Text style={styles.proudNote}>Purl is showing it off to the whole flock.</Text>
           </View>
-          <View style={styles.dateRow}>
-            <Icon name="calendar" size={16} color={C.text} />
-            <ThemedText type="small" style={{ flex: 1 }}>
-              {finished
-                ? `Started ${longDate(project.createdAt)} · finished ${longDate(project.finishedAt!)}`
-                : `Started ${longDate(project.createdAt)} · ${daysAgo(project.createdAt)}`}
-            </ThemedText>
-          </View>
-          {knitted > 0 && (
-            <View style={styles.dateRow}>
-              <Icon name="play" size={16} color={C.text} />
-              <ThemedText type="small" style={{ flex: 1 }}>
-                {knitDuration(knitted)} of knitting{project.timerStartedAt ? ' · timer running' : ''}
-              </ThemedText>
-            </View>
-          )}
-        </View>
-
-        {!finished && (
+        ) : (
           <>
             <Button
               label="Go to current step"
@@ -105,21 +100,18 @@ export default function ProjectScreen() {
               iconAfter
               size="large"
               onPress={() => router.push({ pathname: '/project/[id]/knit', params })}
-              style={{ marginTop: 24 }}
             />
-            <ThemedText type="small" themeColor="textSecondary" style={styles.caption} numberOfLines={1}>
+            <Text style={styles.caption} numberOfLines={1}>
               {step
                 ? `${step.text}${counting ? ` · row ${row}${target ? ` of ${target}` : ''}` : ''}`
                 : `${project.rowCount} rows counted`}
-            </ThemedText>
+            </Text>
           </>
         )}
 
         <View style={styles.sectionRow}>
-          <ThemedText type="section">Notes</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
-            {finished ? 'Written while you knitted' : 'Saved as you type'}
-          </ThemedText>
+          <Text style={styles.section}>Notes</Text>
+          <Text style={styles.sectionHint}>{finished ? 'Written while you knitted' : 'Saved as you type'}</Text>
         </View>
         <TextInput
           accessibilityLabel={`Notes for ${projectTitle(project)}`}
@@ -132,102 +124,98 @@ export default function ProjectScreen() {
           style={styles.notes}
         />
 
-        <ThemedText type="section" style={{ marginTop: 32 }}>
-          Pattern
-        </ThemedText>
-        <View style={[styles.fileCard, CardShadow]}>
-          <View style={styles.thumb}>
-            <View style={[styles.thumbLine, { width: '70%', height: 3, backgroundColor: C.text }]} />
-            <View style={styles.thumbLine} />
-            <View style={styles.thumbLine} />
-            <View style={[styles.thumbLine, { height: 7, backgroundColor: C.sky }]} />
-            <View style={styles.thumbLine} />
-            <View style={[styles.thumbLine, { width: '80%' }]} />
+        <Text style={[styles.section, { marginTop: 28 }]}>Pattern</Text>
+        <View style={styles.fileCard}>
+          <View style={styles.fileIcon}>
+            <Icon name="file" size={22} color={C.text} strokeWidth={1.7} />
           </View>
-          <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flex: 1, gap: 1 }}>
             {project.files.length > 0 ? (
               <>
-                <ThemedText style={{ fontFamily: Fonts.semibold }} numberOfLines={1}>
+                <Text style={styles.fileName} numberOfLines={1}>
                   {project.files[0].name}
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
+                </Text>
+                <Text style={styles.sectionHint}>
                   {project.files.length === 1 ? '1 file' : `${project.files.length} files`}
-                </ThemedText>
-                <Button
-                  label={project.files[0].kind === 'pdf' ? 'View PDF' : 'View pattern'}
-                  variant="secondary"
-                  size="small"
-                  onPress={() => router.push({ pathname: '/project/[id]/pdf', params })}
-                  style={{ alignSelf: 'flex-start', marginTop: 8 }}
-                />
+                  {project.size ? ` · size ${project.size}` : ''}
+                </Text>
               </>
             ) : (
               <>
-                <ThemedText style={{ fontFamily: Fonts.semibold }}>No pattern file yet</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Add a PDF or photos of the pattern.
-                </ThemedText>
-                <Button
-                  label="Add a file"
-                  variant="secondary"
-                  size="small"
-                  onPress={() => router.push({ pathname: '/project/[id]/edit', params })}
-                  style={{ alignSelf: 'flex-start', marginTop: 8 }}
-                />
+                <Text style={styles.fileName}>No pattern file yet</Text>
+                <Text style={styles.sectionHint}>Add a PDF or photos of the pattern.</Text>
               </>
             )}
           </View>
+          {project.files.length > 0 ? (
+            <Button
+              label={project.files[0].kind === 'pdf' ? 'View PDF' : 'View'}
+              variant="secondary"
+              size="small"
+              onPress={() => router.push({ pathname: '/project/[id]/pdf', params })}
+            />
+          ) : (
+            <Button
+              label="Add a file"
+              variant="secondary"
+              size="small"
+              onPress={() => router.push({ pathname: '/project/[id]/edit', params })}
+            />
+          )}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.background },
   missing: { alignItems: 'center', justifyContent: 'center', gap: 16 },
-  content: { padding: Spacing.four, paddingTop: Spacing.three, paddingBottom: 48 },
-  header: { marginTop: 8, padding: 18, borderRadius: 22, gap: 4 },
-  title: { fontFamily: Fonts.display, fontSize: 32, lineHeight: 37, color: C.text },
-  proud: { alignItems: 'center', marginTop: 4, marginBottom: 16 },
-  proudTitle: { marginTop: 4, fontFamily: Fonts.display, fontSize: 40, lineHeight: 44, color: C.text, textAlign: 'center' },
-  proudItalic: { fontFamily: Fonts.displayItalic, color: C.red },
-  proudNote: { marginTop: 6, textAlign: 'center', color: C.primary },
-  dateRow: { marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  caption: { marginTop: 8, textAlign: 'center' },
-  sectionRow: { marginTop: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  content: { paddingHorizontal: 24 },
+  eyebrow: { marginTop: 14, fontFamily: Fonts.bold, fontSize: 13.5, color: C.text, opacity: 0.75 },
+  title: { marginTop: 4, maxWidth: 200, fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, color: C.text },
+  metaRow: { marginTop: 10, maxWidth: 200, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  meta: { flex: 1, fontFamily: Fonts.semibold, fontSize: 14, color: C.text },
+  proudTitle: { fontFamily: Fonts.display, fontSize: 30, color: C.text },
+  proudNote: { marginTop: 2, fontFamily: Fonts.semibold, fontSize: 15, color: C.textSecondary },
+  caption: { marginTop: 10, fontFamily: Fonts.semibold, fontSize: 13.5, color: C.textSecondary },
+  sectionRow: { marginTop: 26, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  section: { fontFamily: Fonts.display, fontSize: 20, color: C.text },
+  sectionHint: { fontFamily: Fonts.semibold, fontSize: 13, color: C.textSecondary },
   notes: {
-    marginTop: 12,
+    marginTop: 10,
     minHeight: 120,
     padding: 16,
     paddingTop: 14,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: C.sky,
-    backgroundColor: C.skySoft,
+    borderColor: C.cardLine,
+    backgroundColor: C.card,
     color: C.text,
-    fontFamily: Fonts.regular,
+    fontFamily: Fonts.semibold,
     fontSize: 15,
     lineHeight: 22,
   },
   fileCard: {
-    marginTop: 12,
-    padding: 16,
-    borderRadius: 24,
-    backgroundColor: C.surface,
-    flexDirection: 'row',
-    gap: 16,
-  },
-  thumb: {
-    width: 76,
-    height: 98,
-    padding: 12,
-    paddingHorizontal: 10,
-    borderRadius: 8,
+    marginTop: 10,
+    padding: 14,
+    borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: C.text,
-    backgroundColor: C.surface,
-    gap: 7,
+    borderColor: C.cardLine,
+    backgroundColor: C.card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  thumbLine: { height: 2, borderRadius: 1, backgroundColor: 'rgba(110, 90, 80, 0.4)' },
+  fileIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: C.cardLine,
+    backgroundColor: C.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fileName: { fontFamily: Fonts.extrabold, fontSize: 15, color: C.text },
 });

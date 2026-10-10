@@ -66,8 +66,8 @@ export function greeting(now = Date.now()) {
   return 'Good evening';
 }
 
-/** "THURSDAY, 1 OCTOBER" */
-export function todayEyebrow(now = Date.now()) {
+/** "Saturday, 10 October" */
+export function todayLabel(now = Date.now()) {
   const d = new Date(now);
-  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`.toUpperCase();
+  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }

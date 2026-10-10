@@ -1,13 +1,12 @@
 import { useIsFocused, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ProjectBox } from '@/components/project-box';
 import { GrandmaReading } from '@/components/grandma/grandma-scenes';
-import { HeaderButton } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
-import { Colors, Spacing } from '@/constants/theme';
+import { WaveBand } from '@/components/wave-band';
+import { Colors, Fonts } from '@/constants/theme';
 import { useProjects, type Project } from '@/store/projects';
 
 /** How far Purl turns her head while reading (1 = as painted). */
@@ -27,7 +26,6 @@ function rows<T>(items: T[], size: number) {
 export default function ProjectsScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
-  const { width: screenWidth } = useWindowDimensions();
   const projects = useProjects((s) => s.projects);
   const active = projects.filter((p) => !p.finishedAt).sort((a, b) => b.updatedAt - a.updatedAt);
   const finished = projects
@@ -35,20 +33,16 @@ export default function ProjectsScreen() {
     .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0));
 
   return (
-    <SafeAreaView edges={['top']} style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.topRow}>
-          <View />
-          <HeaderButton icon="add" label="Start a new project" onPress={() => router.push('/new')} />
-        </View>
-        <ThemedText type="title">Your projects</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: 6 }}>
-          Your pattern library, read along by Purl
-        </ThemedText>
-        <View style={styles.reading}>
-          <GrandmaReading width={Math.min(screenWidth - 96, 300)} motion={READING_MOTION} active={isFocused} />
-        </View>
+    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
+      <WaveBand
+        style={{ paddingBottom: 30 }}
+        art={<GrandmaReading width={190} motion={READING_MOTION} active={isFocused} />}
+        artStyle={{ right: -12, bottom: -6 }}>
+        <Text style={styles.title}>Your{'\n'}projects</Text>
+        <Text style={styles.subtitle}>Your pattern library,{'\n'}read along by Purl</Text>
+      </WaveBand>
 
+      <View style={styles.content}>
         <Section title="Active now" count={active.length} />
         {active.length === 0 ? (
           <View style={styles.emptyActive}>
@@ -67,15 +61,15 @@ export default function ProjectsScreen() {
         ) : (
           <Grid items={finished} columns={3} size="small" />
         )}
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </ScrollView>
   );
 }
 
 function Section({ title, count }: { title: string; count: number }) {
   return (
     <View style={styles.section}>
-      <ThemedText type="section">{title}</ThemedText>
+      <Text style={styles.sectionTitle}>{title}</Text>
       <ThemedText type="small" themeColor="textSecondary">
         {count} {count === 1 ? 'project' : 'projects'}
       </ThemedText>
@@ -98,11 +92,14 @@ function Grid({ items, columns, size }: { items: Project[]; columns: number; siz
   );
 }
 
+const C = Colors.light;
+
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
-  content: { padding: Spacing.four, paddingTop: Spacing.three, paddingBottom: 40 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', marginRight: -10 },
-  reading: { alignItems: 'center', marginTop: 4 },
-  section: { marginTop: 20, marginBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  screen: { flex: 1, backgroundColor: C.background },
+  content: { paddingHorizontal: 24 },
+  title: { marginTop: 18, fontFamily: Fonts.display, fontSize: 34, lineHeight: 38, color: C.text },
+  subtitle: { marginTop: 8, fontFamily: Fonts.semibold, fontSize: 14.5, lineHeight: 20, color: C.text, opacity: 0.75 },
+  section: { marginTop: 14, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  sectionTitle: { fontFamily: Fonts.display, fontSize: 19, color: C.text },
   emptyActive: { gap: 12, alignItems: 'flex-start' },
 });

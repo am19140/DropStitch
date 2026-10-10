@@ -21,7 +21,7 @@ type ButtonProps = {
 };
 
 const VARIANTS: Record<Variant, { bg: string; fg: string; border?: string }> = {
-  primary: { bg: C.primary, fg: C.onPrimary },
+  primary: { bg: C.text, fg: C.surface },
   secondary: { bg: 'transparent', fg: C.text, border: C.text },
   soft: { bg: C.sky, fg: C.text },
   cocoa: { bg: C.cocoa, fg: '#FFFFFF' },
@@ -29,7 +29,7 @@ const VARIANTS: Record<Variant, { bg: string; fg: string; border?: string }> = {
   danger: { bg: 'transparent', fg: C.danger, border: C.danger },
 };
 
-/** Pill button with extra-bold capitals: white on cobalt blue for the main action. */
+/** Pill button: cream on chocolate for the main action. */
 export function Button({
   label,
   icon,
@@ -43,7 +43,7 @@ export function Button({
 }: ButtonProps) {
   const v = VARIANTS[variant];
   const height = { small: 44, medium: 48, large: 56 }[size];
-  const fontSize = variant === 'primary' && size !== 'small' ? 18 : size === 'small' ? 13 : 15;
+  const fontSize = size === 'large' ? 17 : size === 'small' ? 14 : 16;
   const iconEl = icon ? <Icon name={icon} color={v.fg} size={fontSize + 4} /> : null;
 
   return (
@@ -70,9 +70,7 @@ export function Button({
       <View style={styles.content}>
         {!iconAfter && iconEl}
         {label && (
-          <Text style={[styles.label, { color: v.fg, fontSize, letterSpacing: fontSize * 0.08 }]}>
-            {label.toUpperCase()}
-          </Text>
+          <Text style={[styles.label, { color: v.fg, fontSize }]}>{label}</Text>
         )}
         {iconAfter && iconEl}
       </View>

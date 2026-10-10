@@ -1,10 +1,13 @@
 import {
-  Manrope_400Regular,
-  Manrope_500Medium,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-  Manrope_800ExtraBold,
-} from '@expo-google-fonts/manrope';
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_800ExtraBold_Italic,
+  Nunito_900Black,
+  Nunito_900Black_Italic,
+} from '@expo-google-fonts/nunito';
 import { useFonts } from 'expo-font';
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -23,14 +26,14 @@ const C = Colors.light;
 export default function RootLayout() {
   const hydrated = useProjectsHydrated();
   const [fontsLoaded, fontError] = useFonts({
-    // Fraunces Black with the "soft" and "wonky" options switched on, baked into the files.
-    'Fraunces-Black': require('@/assets/fonts/Fraunces-BlackSoftWonk.ttf'),
-    'Fraunces-BlackItalic': require('@/assets/fonts/Fraunces-BlackSoftWonkItalic.ttf'),
-    Manrope_400Regular,
-    Manrope_500Medium,
-    Manrope_600SemiBold,
-    Manrope_700Bold,
-    Manrope_800ExtraBold,
+    Nunito_400Regular,
+    Nunito_500Medium,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_800ExtraBold_Italic,
+    Nunito_900Black,
+    Nunito_900Black_Italic,
   });
   const ready = hydrated && (fontsLoaded || !!fontError);
 

@@ -5,11 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { FilePicker } from '@/components/file-picker';
+import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandma';
 import { PdfTextReader } from '@/components/pdf-text-reader';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { WaveBand } from '@/components/wave-band';
 import { Colors, Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
 import { parseSteps, type ParsedStep } from '@/lib/parse-steps';
 import { parsePattern, type ParsedPattern } from '@/lib/pattern-parser';
@@ -79,137 +81,140 @@ export default function NewPatternScreen() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[styles.form, { paddingTop: insets.top + Spacing.two, paddingBottom: insets.bottom + Spacing.four }]}>
-          <View>
-            <ScreenHeader back="close" />
-            <ThemedText type="title">New project</ThemedText>
-          </View>
-          <TextField
-            label="Name"
-            value={name}
-            onChangeText={setName}
-            placeholder="e.g. Cozy winter socks"
-            returnKeyType="done"
-          />
-
-          <View style={styles.section}>
-            <ThemedText type="section">Pattern file</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              A PDF, a screenshot or photos of a paper pattern. You can add more later.
-            </ThemedText>
-            <FilePicker files={files} onAdd={addFiles} onRemove={removeFile} />
-          </View>
-
-          {reading && (
-            <PdfTextReader
-              file={reading}
-              onText={(text) => {
-                const parsed = parsePattern(text);
-                setReading(null);
-                setSizeIndex(null);
-                if (parsed.stepsFor(0).length === 0)
-                  setReadFailed(`no steps found in ${text.length.toLocaleString()} characters of text`);
-                else setPattern(parsed);
-              }}
-              onError={(reason) => {
-                setReading(null);
-                setReadFailed(reason);
-              }}
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.four }}>
+          <WaveBand
+            style={{ paddingBottom: 18 }}
+            art={<PaintedKnittingGrandma paused={false} width={150} />}
+            artStyle={{ right: -4, bottom: 2 }}>
+            <ScreenHeader back="close" round />
+            <Text style={styles.title}>New{'\n'}project</Text>
+          </WaveBand>
+          <View style={styles.form}>
+            <TextField
+              label="Name"
+              value={name}
+              onChangeText={setName}
+              placeholder="e.g. Cozy winter socks"
+              returnKeyType="done"
             />
-          )}
-          {(reading || pattern || readFailed) && (
-            <View style={styles.pdfCard}>
-              {reading ? (
-                <View style={styles.readingRow}>
-                  <ActivityIndicator color={Colors.light.text} />
-                  <ThemedText type="smallBold">Reading your pattern…</ThemedText>
-                </View>
-              ) : readFailed ? (
-                <View style={{ gap: 6 }}>
-                  <ThemedText type="small">
-                    {readFailed.startsWith('no steps')
-                      ? 'Couldn’t find written instructions in this PDF (it may be a scan). You can type the steps below.'
-                      : 'Couldn’t read this PDF here. You can type the steps below, or try the app.'}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
-                    Details: {readFailed}
-                  </ThemedText>
-                </View>
-              ) : pattern ? (
-                <>
-                  {pattern.sizes.length > 1 && (
-                    <View style={{ gap: 10 }}>
-                      <ThemedText type="section">Which size are you knitting?</ThemedText>
-                      <View style={styles.chips}>
-                        {pattern.sizes.map((label, i) => (
-                          <Pressable
-                            key={label + i}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Size ${label}`}
-                            accessibilityState={{ selected: sizeIndex === i }}
-                            onPress={() => setSizeIndex(i)}
-                            style={[styles.chip, sizeIndex === i && styles.chipOn]}>
-                            <Text style={styles.chipText}>{label}</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    </View>
-                  )}
-                  {needsSize ? (
-                    <ThemedText type="small">Pick a size and you’ll only see the numbers for that size.</ThemedText>
-                  ) : (
-                    <View style={{ gap: 8 }}>
-                      <ThemedText type="smallBold">
-                        Found {pdfSteps.length} {pdfSteps.length === 1 ? 'step' : 'steps'}
-                        {sections.length ? ` in ${sections.join(' · ')}` : ''}
-                      </ThemedText>
-                      {pdfSteps.slice(0, 4).map((step, i) => (
-                        <View key={i} style={styles.previewStep}>
-                          {step.section ? (
-                            <ThemedText type="eyebrow" themeColor="textSecondary">
-                              {step.section.toUpperCase()}
-                            </ThemedText>
-                          ) : null}
-                          <ThemedText type="small" numberOfLines={2}>
-                            {step.text}
-                          </ThemedText>
-                        </View>
-                      ))}
-                      {pdfSteps.length > 4 && (
-                        <ThemedText type="small" themeColor="textSecondary">
-                          …and {pdfSteps.length - 4} more. You can edit them anytime.
-                        </ThemedText>
-                      )}
-                    </View>
-                  )}
-                </>
-              ) : null}
+
+            <View style={styles.section}>
+              <ThemedText type="section">Pattern file</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                A PDF, a screenshot or photos of a paper pattern. You can add more later.
+              </ThemedText>
+              <FilePicker files={files} onAdd={addFiles} onRemove={removeFile} />
             </View>
-          )}
 
-          <TextField
-            label={pattern ? 'Extra steps (optional)' : 'Steps (optional)'}
-            value={instructions}
-            onChangeText={setInstructions}
-            placeholder={'Cast on 60 sts\nRows 1-10: k2, p2 rib\nKnit 40 rows in stockinette\nBind off'}
-            multiline
-            style={styles.instructions}
-            hint={
-              typedSteps.length > 0
-                ? `${typedSteps.length} ${typedSteps.length === 1 ? 'step' : 'steps'} found` +
-                  (withRows ? ` · ${withRows} with a row count` : '')
-                : 'Paste or type the pattern instructions. Each line becomes a step you can tick off.'
-            }
-          />
+            {reading && (
+              <PdfTextReader
+                file={reading}
+                onText={(text) => {
+                  const parsed = parsePattern(text);
+                  setReading(null);
+                  setSizeIndex(null);
+                  if (parsed.stepsFor(0).length === 0)
+                    setReadFailed(`no steps found in ${text.length.toLocaleString()} characters of text`);
+                  else setPattern(parsed);
+                }}
+                onError={(reason) => {
+                  setReading(null);
+                  setReadFailed(reason);
+                }}
+              />
+            )}
+            {(reading || pattern || readFailed) && (
+              <View style={styles.pdfCard}>
+                {reading ? (
+                  <View style={styles.readingRow}>
+                    <ActivityIndicator color={Colors.light.text} />
+                    <ThemedText type="smallBold">Reading your pattern…</ThemedText>
+                  </View>
+                ) : readFailed ? (
+                  <View style={{ gap: 6 }}>
+                    <ThemedText type="small">
+                      {readFailed.startsWith('no steps')
+                        ? 'Couldn’t find written instructions in this PDF (it may be a scan). You can type the steps below.'
+                        : 'Couldn’t read this PDF here. You can type the steps below, or try the app.'}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
+                      Details: {readFailed}
+                    </ThemedText>
+                  </View>
+                ) : pattern ? (
+                  <>
+                    {pattern.sizes.length > 1 && (
+                      <View style={{ gap: 10 }}>
+                        <ThemedText type="section">Which size are you knitting?</ThemedText>
+                        <View style={styles.chips}>
+                          {pattern.sizes.map((label, i) => (
+                            <Pressable
+                              key={label + i}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Size ${label}`}
+                              accessibilityState={{ selected: sizeIndex === i }}
+                              onPress={() => setSizeIndex(i)}
+                              style={[styles.chip, sizeIndex === i && styles.chipOn]}>
+                              <Text style={[styles.chipText, sizeIndex === i && styles.chipTextOn]}>{label}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+                    {needsSize ? (
+                      <ThemedText type="small">Pick a size and you’ll only see the numbers for that size.</ThemedText>
+                    ) : (
+                      <View style={{ gap: 8 }}>
+                        <ThemedText type="smallBold">
+                          Found {pdfSteps.length} {pdfSteps.length === 1 ? 'step' : 'steps'}
+                          {sections.length ? ` in ${sections.join(' · ')}` : ''}
+                        </ThemedText>
+                        {pdfSteps.slice(0, 4).map((step, i) => (
+                          <View key={i} style={styles.previewStep}>
+                            {step.section ? (
+                              <ThemedText type="eyebrow" themeColor="textSecondary">
+                                {step.section.toUpperCase()}
+                              </ThemedText>
+                            ) : null}
+                            <ThemedText type="small" numberOfLines={2}>
+                              {step.text}
+                            </ThemedText>
+                          </View>
+                        ))}
+                        {pdfSteps.length > 4 && (
+                          <ThemedText type="small" themeColor="textSecondary">
+                            …and {pdfSteps.length - 4} more. You can edit them anytime.
+                          </ThemedText>
+                        )}
+                      </View>
+                    )}
+                  </>
+                ) : null}
+              </View>
+            )}
 
-          <Button
-            label="Start knitting"
-            size="large"
-            disabled={!canCreate}
-            onPress={create}
-          />
+            <TextField
+              label={pattern ? 'Extra steps (optional)' : 'Steps (optional)'}
+              value={instructions}
+              onChangeText={setInstructions}
+              placeholder={'Cast on 60 sts\nRows 1-10: k2, p2 rib\nKnit 40 rows in stockinette\nBind off'}
+              multiline
+              style={styles.instructions}
+              hint={
+                typedSteps.length > 0
+                  ? `${typedSteps.length} ${typedSteps.length === 1 ? 'step' : 'steps'} found` +
+                    (withRows ? ` · ${withRows} with a row count` : '')
+                  : 'Paste or type the pattern instructions. Each line becomes a step you can tick off.'
+              }
+            />
+
+            <Button
+              label="Start knitting"
+              size="large"
+              disabled={!canCreate}
+              onPress={create}
+            />
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </ThemedView>
@@ -220,8 +225,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  title: { marginTop: 10, fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, color: Colors.light.text },
   form: {
-    padding: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
     gap: Spacing.four,
     width: '100%',
     maxWidth: MaxContentWidth,
@@ -236,7 +243,9 @@ const styles = StyleSheet.create({
   pdfCard: {
     padding: Spacing.three,
     borderRadius: 22,
-    backgroundColor: Colors.light.beige,
+    borderWidth: 1.5,
+    borderColor: Colors.light.cardLine,
+    backgroundColor: Colors.light.card,
     gap: 14,
   },
   readingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -252,7 +261,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipOn: { backgroundColor: Colors.light.sky, borderColor: Colors.light.sky },
+  chipOn: { backgroundColor: Colors.light.text, borderColor: Colors.light.text },
+  chipTextOn: { color: Colors.light.surface },
   chipText: { fontFamily: Fonts.bold, fontSize: 15, color: Colors.light.text },
   previewStep: { padding: 12, borderRadius: 14, backgroundColor: Colors.light.surface, gap: 2 },
 });

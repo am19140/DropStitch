@@ -1,23 +1,22 @@
 import { Redirect, useIsFocused, useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Icon } from '@/components/icon';
-import { rowInfo } from '@/components/project-box';
+import { Button } from '@/components/button';
+import { progressOf, rowInfo } from '@/components/project-box';
 import { GrandmaTea } from '@/components/grandma/grandma-scenes';
-import { ThemedText } from '@/components/themed-text';
+import { Icon } from '@/components/icon';
+import { WaveBand } from '@/components/wave-band';
 import { YarnBall } from '@/components/yarn-ball';
-import { CardShadow, Colors, Fonts, Spacing } from '@/constants/theme';
-import { daysAgo, greeting, timeAgo, todayEyebrow } from '@/lib/dates';
-import { streakInfo } from '@/lib/streak';
-import { initials, projectTitle, useProjects, type Project } from '@/store/projects';
+import { Colors, Fonts } from '@/constants/theme';
+import { daysAgo, greeting, timeAgo, todayLabel } from '@/lib/dates';
+import { streakInfo, type StreakDay } from '@/lib/streak';
+import { projectTitle, useProjects, type Project } from '@/store/projects';
 
 const C = Colors.light;
 
 export default function HomeScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
-  const { width: screenWidth } = useWindowDimensions();
   const seenWelcome = useProjects((s) => s.seenWelcome);
   const projects = useProjects((s) => s.projects);
   const knitterName = useProjects((s) => s.knitterName);
@@ -33,89 +32,81 @@ export default function HomeScreen() {
   const firstName = knitterName.trim().split(/\s+/)[0];
 
   return (
-    <SafeAreaView edges={['top']} style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.topRow}>
-          <BrandMark />
-          <AccountButton onPress={() => router.push('/account')} />
+    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
+      <WaveBand
+        style={{ paddingBottom: 6 }}
+        art={<GrandmaTea width={164} active={isFocused} />}
+        artStyle={{ right: -16, bottom: 6 }}>
+        <View style={styles.brand}>
+          <YarnBall color={C.sky} size={34} style={{ marginLeft: -4 }} />
+          <Text style={styles.brandText}>dropstitch</Text>
         </View>
-
-        <ThemedText type="eyebrow" themeColor="textSecondary" style={{ marginTop: 22 }}>
-          {todayEyebrow()}
-        </ThemedText>
+        <Text style={styles.date}>{todayLabel()}</Text>
         <Text style={styles.greeting}>
           {greeting()}
-          {firstName ? (
-            <>
-              , <Text style={styles.greetingName}>{firstName}</Text>
-            </>
-          ) : null}
+          {firstName ? `,\n${firstName}` : ''}
         </Text>
-
-        {current ? <NeedlesCard project={current} /> : <StartCard onPress={() => router.push('/new')} />}
-
-        <StreakCard streak={streak} />
-
-        <View style={styles.illustration}>
-          <View style={styles.bubble}>
-            <Text style={styles.bubbleText}>{purlSays(current, streak)}</Text>
-          </View>
-          <View style={styles.bubbleTail} />
-          <GrandmaTea width={Math.min(screenWidth - 48, 420)} active={isFocused} />
+        <View style={styles.todayPill}>
+          <View style={styles.dot} />
+          <Text style={styles.todayText}>
+            {streak.rowsToday > 0
+              ? `${streak.rowsToday} ${streak.rowsToday === 1 ? 'row' : 'rows'} today`
+              : 'No rows yet today'}
+          </Text>
         </View>
+      </WaveBand>
+
+      <View style={styles.content}>
+        <StreakWeek streak={streak} />
+        {current ? <NeedlesCard project={current} /> : <StartCard onPress={() => router.push('/new')} />}
 
         {others.length > 0 && (
           <>
-            <ThemedText type="section" style={{ marginTop: 12 }}>
-              Also on the needles
-            </ThemedText>
+            <Text style={styles.section}>Also on the needles</Text>
             {others.map((p) => (
               <SmallProjectRow key={p.id} project={p} />
             ))}
           </>
         )}
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </ScrollView>
   );
 }
 
 type Streak = ReturnType<typeof streakInfo>;
 
-/** What Purl has to say, depending on how today's knitting is going. */
-function purlSays(project: Project | undefined, streak: Streak) {
-  if (!project) return 'Shall we cast on something cosy, dear?';
-  if (streak.rowsToday > 0) {
-    return `${streak.rowsToday} ${streak.rowsToday === 1 ? 'row' : 'rows'} today! I’ll put the kettle on.`;
-  }
-  if (streak.current > 0) return `Don’t let the yarn get cold, dear. One row keeps your streak.`;
-  return `Your ${projectTitle(project).toLowerCase()} misses you, dear.`;
-}
-
-function BrandMark() {
+/** The last seven days as numbered beads on a thread: knitted days filled in, today dark. */
+function StreakWeek({ streak }: { streak: Streak }) {
+  const { week, current, rowsThisWeek } = streak;
   return (
-    <View style={styles.brand}>
-      <YarnBall color={C.sky} size={34} />
-      <Text style={styles.brandText}>dropstitch</Text>
+    <View accessible accessibilityLabel={`${current}-day knitting streak, ${rowsThisWeek} rows this week`}>
+      <View style={styles.streakTop}>
+        <Text style={styles.streakTitle}>{current ? `${current}-day streak` : 'No streak yet'}</Text>
+        <Text style={styles.muted}>
+          {rowsThisWeek} {rowsThisWeek === 1 ? 'row' : 'rows'} this week
+        </Text>
+      </View>
+      <View style={styles.week}>
+        <View style={styles.thread} />
+        {week.map((day) => (
+          <Day key={day.key} day={day} />
+        ))}
+      </View>
     </View>
   );
 }
 
-/** Round account button with the knitter's initials. */
-function AccountButton({ onPress }: { onPress: () => void }) {
-  const name = useProjects((s) => s.knitterName);
-  const letters = initials(name);
+function Day({ day }: { day: StreakDay }) {
+  const knitted = day.knitted;
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="Your account"
-      onPress={onPress}
-      style={({ pressed }) => [styles.avatar, { transform: [{ scale: pressed ? 0.94 : 1 }] }]}>
-      {letters ? (
-        <Text style={styles.avatarText}>{letters}</Text>
-      ) : (
-        <Icon name="user" size={24} color={C.beige} strokeWidth={2} />
-      )}
-    </Pressable>
+    <View style={styles.day}>
+      <Text style={styles.dayLetter}>{day.letter}</Text>
+      <View style={[styles.bead, knitted && styles.beadKnitted, day.isToday && knitted && styles.beadToday]}>
+        <Text style={[styles.beadText, !knitted && { color: C.textSecondary }, day.isToday && knitted && { color: C.surface }]}>
+          {Number(day.key.slice(8))}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -123,57 +114,45 @@ function AccountButton({ onPress }: { onPress: () => void }) {
 function NeedlesCard({ project }: { project: Project }) {
   const router = useRouter();
   const open = () => router.push({ pathname: '/project/[id]', params: { id: project.id } });
-  const { step, row, target, counting } = rowInfo(project);
-  const stepsDone = project.steps.filter((s) => s.done).length;
-
-  // Progress through the current step when it has a row count, otherwise through the pattern.
-  const fraction = counting && target
-    ? Math.min(1, row / target)
-    : project.steps.length
-      ? stepsDone / project.steps.length
-      : undefined;
-  const where = [step?.section?.toLowerCase(), step && `step ${project.currentStep + 1} of ${project.steps.length}`]
-    .filter(Boolean)
-    .join(' · ');
+  const { step } = rowInfo(project);
+  const { label, fraction } = progressOf(project);
+  const where = [step?.section, step && `step ${project.currentStep + 1} of ${project.steps.length}`].filter(Boolean).join(' · ');
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Continue ${projectTitle(project)}`}
       onPress={open}
-      style={({ pressed }) => [styles.card, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}>
-      <Text style={styles.cardSmall}>on the needles</Text>
-      <Text style={styles.cardTitle} numberOfLines={2}>
-        {projectTitle(project)}
-      </Text>
-      {where ? <Text style={styles.cardSmall}>{where}</Text> : null}
-
-      <View style={styles.progressRow}>
-        {fraction !== undefined && (
-          <View style={styles.track}>
-            <View style={[styles.fill, { width: `${Math.round(fraction * 100)}%` }]} />
-          </View>
-        )}
-        <Text style={styles.progressText}>
-          {!counting
-            ? `${stepsDone} of ${project.steps.length} steps done`
-            : target
-              ? `row ${row} of ${target}`
-              : step
-                ? `row ${row}`
-                : `${project.rowCount} rows`}
-        </Text>
+      style={({ pressed }) => [styles.card, { marginTop: 22, transform: [{ scale: pressed ? 0.99 : 1 }] }]}>
+      <View style={styles.cardTop}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.muted}>On the needles</Text>
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {projectTitle(project)}
+          </Text>
+          {where ? <Text style={[styles.muted, { marginTop: 2 }]}>{where.charAt(0).toUpperCase() + where.slice(1)}</Text> : null}
+        </View>
+        <YarnBall color={project.color} size={58} style={{ marginTop: -8, marginRight: -6 }} />
       </View>
 
+      <View style={styles.progressTop}>
+        <Text style={styles.progressLabel}>{label}</Text>
+        {fraction !== undefined && <Text style={styles.muted}>{Math.round(fraction * 100)}%</Text>}
+      </View>
+      {fraction !== undefined && (
+        <View style={styles.track}>
+          <View style={[styles.fill, { width: `${Math.round(fraction * 100)}%` }]} />
+        </View>
+      )}
+
       <View style={styles.cardBottom}>
-        <Text style={[styles.cardSmall, { flex: 1 }]}>
-          {project.lastStitchAt
-            ? `last stitch: ${timeAgo(project.lastStitchAt)}`
-            : `cast on ${daysAgo(project.createdAt)}`}
+        <Text style={[styles.muted, { flex: 1 }]}>
+          {project.lastStitchAt ? `Last stitch ${timeAgo(project.lastStitchAt)}` : `Cast on ${daysAgo(project.createdAt)}`}
         </Text>
-        <View style={styles.pill}>
-          <Text style={styles.pillText}>continue</Text>
-          <Icon name="arrowRight" size={18} color={C.text} strokeWidth={2.2} />
+        {/* The whole card is the button; this is just its label. */}
+        <View style={styles.go}>
+          <Text style={styles.goText}>Continue</Text>
+          <Icon name="arrowRight" size={18} color={C.surface} strokeWidth={2.4} />
         </View>
       </View>
     </Pressable>
@@ -183,86 +162,36 @@ function NeedlesCard({ project }: { project: Project }) {
 /** Shown when nothing is on the needles. */
 function StartCard({ onPress }: { onPress: () => void }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="Start a project"
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}>
-      <Text style={styles.cardSmall}>nothing on the needles</Text>
-      <Text style={styles.cardTitle}>Your first project</Text>
-      <Text style={styles.cardSmall}>add a pattern as a PDF or photos, and we’ll count the rows</Text>
-      <View style={[styles.cardBottom, { justifyContent: 'flex-end' }]}>
-        <View style={styles.pill}>
-          <Text style={styles.pillText}>start</Text>
-          <Icon name="add" size={18} color={C.text} strokeWidth={2.2} />
+    <View style={[styles.card, { marginTop: 22 }]}>
+      <View style={styles.cardTop}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.muted}>Nothing on the needles</Text>
+          <Text style={styles.cardTitle}>Your first project</Text>
+          <Text style={[styles.muted, { marginTop: 2 }]}>Add a pattern as a PDF or photos, and we’ll count the rows.</Text>
         </View>
+        <YarnBall color={C.sky} size={58} style={{ marginTop: -8, marginRight: -6 }} />
       </View>
-    </Pressable>
-  );
-}
-
-/** The last seven days, with a yarn ball on every day you knitted. */
-function StreakCard({ streak }: { streak: Streak }) {
-  const { week, current, best, knittedToday, rowsThisWeek } = streak;
-  const message = knittedToday
-    ? current === 1
-      ? 'Day one! Knit tomorrow to grow your streak.'
-      : best > current
-        ? `You knitted today. Best streak: ${best} days.`
-        : 'You knitted today. Your best streak yet!'
-    : current > 0
-      ? 'Count a row today to keep it going.'
-      : 'Count a row to start a streak.';
-
-  return (
-    <View style={styles.streak} accessible accessibilityLabel={`${current}-day knitting streak. ${message}`}>
-      <View style={styles.streakTop}>
-        <YarnBall color={current ? C.red : C.beige} size={34} />
-        <Text style={styles.streakTitle}>{current ? `${current}-day streak` : 'No streak yet'}</Text>
-        <Text style={styles.streakWeek}>
-          {rowsThisWeek} {rowsThisWeek === 1 ? 'row' : 'rows'}
-          {'\n'}this week
-        </Text>
+      <View style={[styles.cardBottom, { justifyContent: 'flex-end' }]}>
+        <Button label="Start a project" icon="add" size="small" onPress={onPress} />
       </View>
-
-      <View style={styles.week}>
-        {week.map((day) => (
-          <View key={day.key} style={styles.day}>
-            <Text style={[styles.dayLetter, day.isToday && styles.dayToday]}>{day.letter}</Text>
-            {day.knitted ? (
-              <YarnBall color={C.red} size={34} />
-            ) : (
-              <View style={[styles.emptyDay, day.isToday && { backgroundColor: C.skySoft }]} />
-            )}
-          </View>
-        ))}
-      </View>
-
-      <Text style={styles.streakMessage}>{message}</Text>
     </View>
   );
 }
 
 function SmallProjectRow({ project }: { project: Project }) {
   const router = useRouter();
-  const { step, counting } = rowInfo(project);
+  const { label } = progressOf(project);
   return (
     <Pressable
       accessibilityRole="button"
       onPress={() => router.push({ pathname: '/project/[id]', params: { id: project.id } })}
-      style={({ pressed }) => [styles.smallRow, CardShadow, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}>
-      <View style={[styles.miniBox, { backgroundColor: project.color }]}>
-        <Text style={styles.miniBoxText} numberOfLines={3}>
-          {projectTitle(project).toUpperCase()}
+      style={({ pressed }) => [styles.card, styles.smallRow, { transform: [{ scale: pressed ? 0.99 : 1 }] }]}>
+      <YarnBall color={project.color} size={48} />
+      <View style={{ flex: 1, gap: 1 }}>
+        <Text style={styles.smallTitle} numberOfLines={1}>
+          {projectTitle(project)}
         </Text>
-      </View>
-      <View style={{ flex: 1, gap: 2 }}>
-        <ThemedText style={{ fontFamily: Fonts.semibold }}>{projectTitle(project)}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {step
-            ? `Step ${project.currentStep + 1} of ${project.steps.length}${counting ? ` · row ${step.rowsDone}` : ''}`
-            : `${project.rowCount} rows`}
-        </ThemedText>
+        <Text style={styles.muted}>{label}</Text>
       </View>
       <Icon name="chevronRight" size={20} color={C.text} />
     </Pressable>
@@ -271,88 +200,58 @@ function SmallProjectRow({ project }: { project: Project }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.background },
-  content: { padding: Spacing.four, paddingTop: Spacing.three, paddingBottom: 40 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandText: { fontFamily: Fonts.display, fontSize: 24, lineHeight: 30, color: C.text },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: C.primary,
+  content: { paddingHorizontal: 24, paddingTop: 2 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  brandText: { fontFamily: Fonts.display, fontSize: 20, color: C.text },
+  date: { marginTop: 18, fontFamily: Fonts.bold, fontSize: 14, color: C.text, opacity: 0.75 },
+  greeting: { marginTop: 2, maxWidth: 236, fontFamily: Fonts.display, fontSize: 28, lineHeight: 33, color: C.text },
+  todayPill: {
+    marginTop: 14,
+    alignSelf: 'flex-start',
+    height: 34,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: C.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.red },
+  todayText: { fontFamily: Fonts.extrabold, fontSize: 14, color: C.text },
+
+  muted: { fontFamily: Fonts.semibold, fontSize: 14, color: C.textSecondary },
+  streakTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  streakTitle: { fontFamily: Fonts.display, fontSize: 21, color: C.text },
+  week: { marginTop: 12, flexDirection: 'row', justifyContent: 'space-between' },
+  thread: { position: 'absolute', left: 18, right: 18, top: 39, height: 2, backgroundColor: C.skySoft },
+  day: { alignItems: 'center', gap: 6 },
+  dayLetter: { fontFamily: Fonts.extrabold, fontSize: 12, color: C.textSecondary },
+  bead: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: C.surface,
+    borderWidth: 1.5,
+    borderColor: C.cardLine,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontFamily: Fonts.extrabold, fontSize: 16, letterSpacing: 0.5, color: C.beige },
-  greeting: { marginTop: 4, fontFamily: Fonts.display, fontSize: 30, lineHeight: 36, color: C.text },
-  greetingName: { fontFamily: Fonts.displayItalic, color: C.red },
+  beadKnitted: { backgroundColor: C.skySoft, borderColor: C.skySoft },
+  beadToday: { backgroundColor: C.text, borderColor: C.text },
+  beadText: { fontFamily: Fonts.extrabold, fontSize: 15, color: C.text },
 
-  card: { marginTop: 18, padding: 20, borderRadius: 26, backgroundColor: C.primary, gap: 6 },
-  cardSmall: { fontFamily: Fonts.semibold, fontSize: 14, lineHeight: 19, color: C.beige },
-  cardTitle: {
-    marginBottom: 2,
-    fontFamily: Fonts.extrabold,
-    fontSize: 24,
-    lineHeight: 29,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    color: C.beige,
-  },
-  progressRow: { marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  track: { flex: 1, height: 8, borderRadius: 4, backgroundColor: 'rgba(226, 217, 188, 0.28)' },
-  fill: { height: 8, borderRadius: 4, backgroundColor: C.beige },
-  progressText: { fontFamily: Fonts.extrabold, fontSize: 14, color: C.beige, fontVariant: ['tabular-nums'] },
-  cardBottom: { marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  pill: {
-    minHeight: 44,
-    paddingHorizontal: 18,
-    borderRadius: 999,
-    backgroundColor: C.sky,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  pillText: { fontFamily: Fonts.extrabold, fontSize: 16, color: C.text },
+  card: { backgroundColor: C.card, borderWidth: 1.5, borderColor: C.cardLine, borderRadius: 22, padding: 18 },
+  cardTop: { flexDirection: 'row', gap: 8 },
+  cardTitle: { marginTop: 3, fontFamily: Fonts.display, fontSize: 23, lineHeight: 28, color: C.text },
+  progressTop: { marginTop: 16, flexDirection: 'row', justifyContent: 'space-between' },
+  progressLabel: { fontFamily: Fonts.extrabold, fontSize: 15, color: C.text },
+  track: { marginTop: 8, height: 8, borderRadius: 4, backgroundColor: C.cardLine, overflow: 'hidden' },
+  fill: { height: 8, borderRadius: 4, backgroundColor: C.primary },
+  cardBottom: { marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
 
-  streak: { marginTop: 14, padding: 18, borderRadius: 26, backgroundColor: C.surface, gap: 14 },
-  streakTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  streakTitle: { flex: 1, fontFamily: Fonts.display, fontSize: 26, lineHeight: 32, color: C.text },
-  streakWeek: { fontFamily: Fonts.semibold, fontSize: 13, lineHeight: 17, color: C.textSecondary, textAlign: 'right' },
-  week: { flexDirection: 'row', justifyContent: 'space-between' },
-  day: { alignItems: 'center', gap: 6 },
-  dayLetter: { fontFamily: Fonts.bold, fontSize: 12, color: C.textSecondary },
-  dayToday: { color: C.red, fontFamily: Fonts.extrabold },
-  emptyDay: { width: 34, height: 34, borderRadius: 17, backgroundColor: C.beige },
-  streakMessage: { fontFamily: Fonts.medium, fontSize: 14, color: C.text },
-
-  illustration: { marginTop: 24, alignItems: 'center' },
-  bubble: {
-    maxWidth: 320,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 22,
-    backgroundColor: C.surface,
-  },
-  bubbleText: { fontFamily: Fonts.note, fontSize: 18, lineHeight: 24, color: C.cocoa, textAlign: 'center' },
-  bubbleTail: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 10,
-    borderRightWidth: 10,
-    borderTopWidth: 12,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: C.surface,
-  },
-  smallRow: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 20,
-    backgroundColor: C.surface,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  miniBox: { width: 60, height: 60, borderRadius: 14, padding: 8 },
-  miniBoxText: { fontFamily: Fonts.extrabold, fontSize: 9, lineHeight: 11, letterSpacing: 0.4, color: C.text },
+  go: { height: 44, paddingHorizontal: 18, borderRadius: 999, backgroundColor: C.text, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  goText: { fontFamily: Fonts.extrabold, fontSize: 15, color: C.surface },
+  section: { marginTop: 26, marginBottom: 10, fontFamily: Fonts.display, fontSize: 19, color: C.text },
+  smallRow: { marginBottom: 10, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  smallTitle: { fontFamily: Fonts.extrabold, fontSize: 16, color: C.text },
 });

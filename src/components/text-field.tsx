@@ -25,8 +25,8 @@ export function TextField({ label, hint, style, multiline, ...rest }: TextFieldP
           multiline && styles.multiline,
           {
             color: theme.text,
-            backgroundColor: theme.surface,
-            borderColor: theme.border,
+            backgroundColor: theme.card,
+            borderColor: theme.cardLine,
           },
           style,
         ]}
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderRadius: 16,
     borderWidth: 1.5,
-    fontFamily: Fonts.regular,
+    fontFamily: Fonts.semibold,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
