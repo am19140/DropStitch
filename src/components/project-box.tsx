@@ -50,7 +50,12 @@ export function monthLabel(time: number) {
 export function ProjectBox({ project, size = 'large' }: { project: Project; size?: 'large' | 'small' }) {
   const router = useRouter();
   const large = size === 'large';
-  const { label, fraction } = progressOf(project);
+  const progress = progressOf(project);
+  const { fraction } = progress;
+  // The card's percentage covers the whole pattern, so it says which step you're on.
+  const label = project.steps.length
+    ? `Step ${project.currentStep + 1} of ${project.steps.length}`
+    : progress.label;
 
   return (
     <Pressable

@@ -1,8 +1,9 @@
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { useConfirm } from '@/components/confirm-dialog';
+import ChoosingYarnGrandma from '@/components/grandma/choosing-yarn-grandma';
 import { WaveBand } from '@/components/wave-band';
 import { YarnBall } from '@/components/yarn-ball';
 import { Colors, Fonts } from '@/constants/theme';
@@ -10,21 +11,9 @@ import { useProjects, type Yarn } from '@/store/projects';
 
 const C = Colors.light;
 
-/** The little pile of yarn in the header: your own yarns' colours, or the app's when the stash is empty. */
-function pileOf(yarns: Yarn[]) {
-  const fallback = [
-    { hex: C.primary, appearance: 'chunky' as const },
-    { hex: C.red, appearance: 'smooth' as const },
-    { hex: C.beige, appearance: 'fine' as const },
-  ];
-  return [0, 1, 2].map((i) => {
-    const y = yarns[i];
-    return y ? { hex: y.hex, appearance: y.appearance ?? 'smooth' } : fallback[i];
-  });
-}
-
 export default function YarnScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const yarns = useProjects((s) => s.yarns);
   const deleteYarn = useProjects((s) => s.deleteYarn);
   const { ask, dialog } = useConfirm();
@@ -36,21 +25,14 @@ export default function YarnScreen() {
   };
   const pairs: (Yarn | null)[][] = [];
   for (let i = 0; i < yarns.length; i += 2) pairs.push([yarns[i], yarns[i + 1] ?? null]);
-  const pile = pileOf(yarns);
 
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <WaveBand
           style={{ paddingBottom: 34 }}
-          art={
-            <View style={styles.pile}>
-              <YarnBall color={pile[2].hex} appearance={pile[2].appearance} size={92} style={{ position: 'absolute', right: 108, bottom: 2 }} />
-              <YarnBall color={pile[1].hex} appearance={pile[1].appearance} size={104} style={{ position: 'absolute', right: 0, bottom: 0 }} />
-              <YarnBall color={pile[0].hex} appearance={pile[0].appearance} size={118} style={{ position: 'absolute', right: 40, bottom: 34 }} />
-            </View>
-          }
-          artStyle={{ right: 14, bottom: 6 }}>
+          art={<ChoosingYarnGrandma width={176} active={isFocused} />}
+          artStyle={{ right: 0, bottom: -2 }}>
           <Text style={styles.title}>Your{'\n'}yarn</Text>
           <Text style={styles.subtitle}>
             {yarns.length === 0
@@ -121,7 +103,6 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 24 },
   title: { marginTop: 18, fontFamily: Fonts.display, fontSize: 34, lineHeight: 38, color: C.text },
   subtitle: { marginTop: 8, fontFamily: Fonts.semibold, fontSize: 14.5, color: C.text, opacity: 0.75 },
-  pile: { width: 210, height: 150 },
   grid: { marginTop: 4, gap: 14 },
   gridRow: { flexDirection: 'row', gap: 14 },
   card: { flex: 1, padding: 14, paddingTop: 8, borderRadius: 22, backgroundColor: C.card, borderWidth: 1.5, borderColor: C.cardLine, gap: 2 },
