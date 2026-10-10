@@ -87,7 +87,7 @@ export default function NewYarnScreen() {
         <WaveBand
           style={{ paddingBottom: 26 }}
           art={<YarnBall color={selected.hex} appearance={appearance} size={170} />}
-          artStyle={{ right: 6, bottom: -4 }}>
+          artStyle={{ right: 6, bottom: -2 }}>
           <ScreenHeader back="close" round />
           <Text style={styles.title}>New yarn{'\n'}ball</Text>
           <Text style={styles.subtitle} numberOfLines={2}>

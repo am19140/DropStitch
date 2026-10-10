@@ -44,12 +44,12 @@ export default function ProjectScreen() {
         style={{ paddingBottom: 22 }}
         art={
           finished ? (
-            <Purl pose="proud" size={196} />
+            <Purl pose="proud" size={222} />
           ) : (
-            <PaintedKnittingGrandma paused={!project.timerStartedAt} width={196} active={isFocused} />
+            <PaintedKnittingGrandma paused={!project.timerStartedAt} width={222} active={isFocused} />
           )
         }
-        artStyle={{ right: -10, bottom: 4 }}>
+        artStyle={{ right: -16, bottom: -4 }}>
         <ScreenHeader
           back="back"
           round
@@ -173,8 +173,8 @@ const styles = StyleSheet.create({
   missing: { alignItems: 'center', justifyContent: 'center', gap: 16 },
   content: { paddingHorizontal: 24 },
   eyebrow: { marginTop: 14, fontFamily: Fonts.bold, fontSize: 13.5, color: C.text, opacity: 0.75 },
-  title: { marginTop: 4, maxWidth: 200, fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, color: C.text },
-  metaRow: { marginTop: 10, maxWidth: 200, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  title: { marginTop: 4, maxWidth: 190, fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, color: C.text },
+  metaRow: { marginTop: 10, maxWidth: 190, flexDirection: 'row', alignItems: 'center', gap: 8 },
   meta: { flex: 1, fontFamily: Fonts.semibold, fontSize: 14, color: C.text },
   proudTitle: { fontFamily: Fonts.display, fontSize: 30, color: C.text },
   proudNote: { marginTop: 2, fontFamily: Fonts.semibold, fontSize: 15, color: C.textSecondary },

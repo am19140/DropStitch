@@ -84,8 +84,8 @@ export default function NewPatternScreen() {
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.four }}>
           <WaveBand
             style={{ paddingBottom: 18 }}
-            art={<PaintedKnittingGrandma paused={false} width={150} />}
-            artStyle={{ right: -4, bottom: 2 }}>
+            art={<PaintedKnittingGrandma paused={false} width={182} />}
+            artStyle={{ right: -8, bottom: -4 }}>
             <ScreenHeader back="close" round />
             <Text style={styles.title}>New{'\n'}project</Text>
           </WaveBand>

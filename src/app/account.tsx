@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icon';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
-import { ThemedText } from '@/components/themed-text';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { knitDuration } from '@/lib/dates';
 import { initials, knitTime, useProjects } from '@/store/projects';
@@ -25,12 +24,12 @@ export default function AccountScreen() {
   const knitted = projects.reduce((sum, p) => sum + knitTime(p), 0);
   const letters = initials(name);
 
+  // Solid blocks in the palette, two by two; the yarn stash gets the full width underneath.
   const stats = [
-    { label: 'on the needles', value: String(active) },
-    { label: 'finished', value: String(finished) },
-    { label: 'rows counted', value: String(rows) },
-    { label: 'knitting time', value: knitted ? knitDuration(knitted) : '—' },
-    { label: yarnCount === 1 ? 'yarn ball' : 'yarn balls', value: String(yarnCount) },
+    { label: 'on the needles', value: String(active), bg: C.sky, fg: C.text },
+    { label: 'finished', value: String(finished), bg: C.beige, fg: C.text },
+    { label: 'rows counted', value: rows.toLocaleString(), bg: C.primary, fg: C.beige },
+    { label: 'knitting time', value: !knitted ? '—' : knitted < 60_000 ? '< 1 min' : knitDuration(knitted), bg: C.cocoa, fg: C.beige },
   ];
 
   return (
@@ -45,12 +44,10 @@ export default function AccountScreen() {
             {letters ? (
               <Text style={styles.avatarText}>{letters}</Text>
             ) : (
-              <Icon name="user" size={44} color={C.text} strokeWidth={1.8} />
+              <Icon name="user" size={44} color={C.beige} strokeWidth={1.8} />
             )}
           </View>
-          <ThemedText type="title" style={{ textAlign: 'center' }}>
-            {name.trim() || 'Hello, knitter'}
-          </ThemedText>
+          <Text style={styles.name}>{name.trim() || 'Hello, knitter'}</Text>
         </View>
 
         <TextField
@@ -61,19 +58,21 @@ export default function AccountScreen() {
           autoCapitalize="words"
           autoComplete="name"
           returnKeyType="done"
-          hint="Shown as your initials on the home page. Everything stays on this phone."
+          hint="Shown as your initials. Everything stays on this phone."
         />
 
-        <ThemedText type="section" style={{ marginTop: 32 }}>
-          Your knitting so far
-        </ThemedText>
+        <Text style={styles.section}>Your knitting so far</Text>
         <View style={styles.grid}>
           {stats.map((s) => (
-            <View key={s.label} style={styles.stat}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
+            <View key={s.label} style={[styles.stat, { backgroundColor: s.bg }]}>
+              <Text style={[styles.statValue, { color: s.fg }]}>{s.value}</Text>
+              <Text style={[styles.statLabel, { color: s.fg }]}>{s.label}</Text>
             </View>
           ))}
+          <View style={[styles.stat, styles.statWide]}>
+            <Text style={styles.statValue}>{yarnCount}</Text>
+            <Text style={styles.statLabel}>{yarnCount === 1 ? 'yarn ball' : 'yarn balls'} in your stash</Text>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -83,28 +82,29 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.background },
   content: { padding: Spacing.four, paddingBottom: 48 },
-  hero: { alignItems: 'center', gap: 14, marginTop: 8, marginBottom: 28 },
+  hero: { alignItems: 'center', gap: 12, marginTop: 4, marginBottom: 24 },
   avatar: {
     width: 104,
     height: 104,
     borderRadius: 52,
-    backgroundColor: C.band,
+    backgroundColor: C.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontFamily: Fonts.display, fontSize: 38, color: C.text },
-  grid: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  stat: {
-    flexGrow: 1,
-    flexBasis: '40%',
-    minHeight: 96,
-    padding: 16,
-    borderRadius: 22,
-    borderWidth: 1.5,
-    borderColor: C.cardLine,
-    backgroundColor: C.card,
-    justifyContent: 'space-between',
+  avatarText: { fontFamily: Fonts.display, fontSize: 36, color: C.beige },
+  name: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 34, color: C.text, textAlign: 'center' },
+  section: { marginTop: 26, fontFamily: Fonts.display, fontSize: 20, color: C.text },
+  grid: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  stat: { flexGrow: 1, flexBasis: '40%', minHeight: 96, padding: 16, borderRadius: 24, justifyContent: 'space-between' },
+  statWide: {
+    flexBasis: '100%',
+    minHeight: 72,
+    backgroundColor: C.skySoft,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 12,
   },
-  statValue: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 34, color: C.text },
-  statLabel: { fontFamily: Fonts.semibold, fontSize: 13, color: C.textSecondary },
+  statValue: { fontFamily: Fonts.display, fontSize: 30, lineHeight: 36, color: C.text },
+  statLabel: { fontFamily: Fonts.bold, fontSize: 13.5, color: C.text },
 });

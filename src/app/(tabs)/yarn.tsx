@@ -31,8 +31,8 @@ export default function YarnScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <WaveBand
           style={{ paddingBottom: 34 }}
-          art={<ChoosingYarnGrandma width={176} active={isFocused} />}
-          artStyle={{ right: 0, bottom: -2 }}>
+          art={<ChoosingYarnGrandma width={206} active={isFocused} />}
+          artStyle={{ right: -4, bottom: -4 }}>
           <Text style={styles.title}>Your{'\n'}yarn</Text>
           <Text style={styles.subtitle}>
             {yarns.length === 0

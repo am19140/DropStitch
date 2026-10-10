@@ -36,8 +36,8 @@ export default function HomeScreen() {
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
       <WaveBand
         style={{ paddingBottom: 6 }}
-        art={<GrandmaTea width={164} active={isFocused} />}
-        artStyle={{ right: -16, bottom: 6 }}>
+        art={<GrandmaTea width={198} active={isFocused} />}
+        artStyle={{ right: -18, bottom: 0 }}>
         <View style={styles.brand}>
           <Purl pose="head" size={36} style={{ marginLeft: -4 }} />
           <Text style={styles.brandText}>dropstitch</Text>

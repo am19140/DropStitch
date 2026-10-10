@@ -7,10 +7,12 @@ import { Colors, Fonts } from '@/constants/theme';
 import { initials, useProjects } from '@/store/projects';
 
 const C = Colors.light;
+/** Soft grey for the tabs you're not on. */
+const IDLE = '#A19BAA';
 
 const ICON_FOR: Record<string, { icon: IconName; label: string }> = {
   index: { icon: 'home', label: 'Home' },
-  projects: { icon: 'layers', label: 'Projects' },
+  projects: { icon: 'notes', label: 'Projects' },
   yarn: { icon: 'yarn', label: 'Yarn' },
 };
 
@@ -41,7 +43,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
           if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
         }}
         style={({ pressed }) => [styles.item, { transform: [{ scale: pressed ? 0.94 : 1 }] }]}>
-        <Icon name={item.icon} size={24} strokeWidth={focused ? 2 : 1.7} color={focused ? C.text : C.textSecondary} />
+        <Icon name={item.icon} size={26} strokeWidth={focused ? 2.3 : 1.9} color={focused ? C.text : IDLE} />
         <Text style={[styles.label, focused && styles.labelOn]}>{item.label}</Text>
       </Pressable>
     );
@@ -82,21 +84,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     backgroundColor: C.surface,
     borderTopWidth: 1,
-    borderTopColor: C.cardLine,
+    borderTopColor: '#EFF1F8',
   },
-  item: { width: 64, minHeight: 48, alignItems: 'center', justifyContent: 'center', gap: 3 },
-  label: { fontFamily: Fonts.bold, fontSize: 11.5, color: C.textSecondary },
+  item: { width: 64, minHeight: 50, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  label: { fontFamily: Fonts.bold, fontSize: 12, color: IDLE },
   labelOn: { color: C.text, fontFamily: Fonts.extrabold },
+  // A dark circle sitting up out of the bar, with a ring of the bar's colour that breaks its top line.
   fab: {
-    width: 58,
-    height: 58,
-    marginTop: -26,
-    borderRadius: 29,
+    width: 70,
+    height: 70,
+    marginTop: -35,
+    borderRadius: 35,
+    borderWidth: 5,
+    borderColor: C.surface,
     backgroundColor: C.text,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 8px 18px rgba(42, 28, 24, 0.25)',
   },
-  avatar: { width: 26, height: 26, borderRadius: 13, backgroundColor: C.skySoft, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: Fonts.extrabold, fontSize: 10.5, color: C.text },
+  avatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#F2F4FD', alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontFamily: Fonts.extrabold, fontSize: 11.5, color: C.text },
 });

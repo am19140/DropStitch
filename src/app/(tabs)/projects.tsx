@@ -36,8 +36,8 @@ export default function ProjectsScreen() {
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
       <WaveBand
         style={{ paddingBottom: 30 }}
-        art={<GrandmaReading width={190} motion={READING_MOTION} active={isFocused} />}
-        artStyle={{ right: -12, bottom: -6 }}>
+        art={<GrandmaReading width={226} motion={READING_MOTION} active={isFocused} />}
+        artStyle={{ right: -14, bottom: -8 }}>
         <Text style={styles.title}>Your{'\n'}projects</Text>
         <Text style={styles.subtitle}>Your pattern library,{'\n'}read along by Purl</Text>
       </WaveBand>
