@@ -13,6 +13,7 @@ import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
+import { ScreenTransition } from '@/components/screen-transition';
 import { Colors } from '@/constants/theme';
 import { useProjectsHydrated } from '@/store/projects';
 
@@ -57,7 +58,20 @@ export default function RootLayout() {
           border: C.border,
         },
       }}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.background } }}>
+      <Stack
+        // Screens slide in from the right on phones (iOS style on Android too); in the browser,
+        // ScreenTransition eases them in. Sheets (modals) already slide up, so they're left alone.
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: C.background },
+          animation: 'ios_from_right',
+          animationDuration: 300,
+        }}
+        screenLayout={({ children, options }) => (
+          <ScreenTransition enabled={options.presentation !== 'modal' && options.animation !== 'fade'}>
+            {children}
+          </ScreenTransition>
+        )}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
         <Stack.Screen name="new" options={{ presentation: 'modal' }} />

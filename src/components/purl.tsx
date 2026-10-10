@@ -11,6 +11,8 @@ const POSES = {
   asleep: require('@/assets/images/purl/asleep.webp'),
   /** Proudly holding up a finished sweater: completed projects. */
   proud: require('@/assets/images/purl/proud.webp'),
+  /** Sitting among her yarn, winding a thread: the bottom of the edit page. */
+  yarnPile: require('@/assets/images/purl/yarn-pile.webp'),
   /** Just her head: the logo next to the app's name. */
   head: require('@/assets/images/purl/head.png'),
 } as const;
@@ -22,6 +24,7 @@ const LABELS: Record<PurlPose, string> = {
   reading: 'Purl the sheep, reading a knitting pattern',
   asleep: 'Purl the sheep, asleep in her chair',
   proud: 'Purl the sheep, proudly holding up a finished sweater',
+  yarnPile: 'Purl the sheep sitting among balls of yarn',
   head: 'Purl the sheep',
 };
 

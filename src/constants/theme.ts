@@ -7,10 +7,10 @@
 import '@/global.css';
 
 const palette = {
-  /** Page background: cream paper. */
-  background: '#FFFCF4',
+  /** Page background: linen, a warm off-white. */
+  background: '#FAF6EC',
   /** Bars and sheets that sit on the page. */
-  surface: '#FFFCF4',
+  surface: '#FAF6EC',
   /** The wave band at the top of the main screens. */
   band: '#80ABD7',
   /** Calm cards on the page, with a hairline border. */
@@ -36,7 +36,7 @@ const palette = {
   cocoa: '#683629',
   danger: '#B20E19',
   // Kept for components written against the earlier theme names.
-  backgroundElement: '#FFFCF4',
+  backgroundElement: '#F3F6FB',
   backgroundSelected: '#80ABD7',
   primarySoft: '#D7E5F4',
   success: '#034FC9',

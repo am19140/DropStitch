@@ -99,8 +99,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.two,
     paddingLeft: Spacing.three,
-    borderRadius: 12,
-    minHeight: 48,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#E1E9F4',
+    minHeight: 52,
   },
   fileName: {
     flex: 1,
