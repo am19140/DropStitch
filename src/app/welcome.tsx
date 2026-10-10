@@ -43,7 +43,7 @@ export default function WelcomeScreen() {
           size="large"
           onPress={() => {
             markWelcomeSeen();
-            router.replace('/');
+            router.replace({ pathname: '/login', params: { mode: 'signUp' } });
           }}
         />
       </View>
@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
   eyebrow: { marginTop: 40, textAlign: 'center', fontFamily: Fonts.bold, fontSize: 14, color: C.text, opacity: 0.75 },
   title: { marginTop: 8, textAlign: 'center', fontFamily: Fonts.display, fontSize: 46, lineHeight: 50, color: C.text },
   subtitle: { marginTop: 12, textAlign: 'center', fontFamily: Fonts.semibold, fontSize: 16, color: C.text, opacity: 0.85 },
-  purl: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', marginTop: -120 },
+  // Purl reaches up into the band, so she's drawn in front of it.
+  purl: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', marginTop: -120, zIndex: 2 },
   bottom: { paddingHorizontal: 24 },
 });

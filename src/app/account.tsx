@@ -1,11 +1,14 @@
+import { useRouter } from 'expo-router';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { Icon } from '@/components/icon';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { knitDuration } from '@/lib/dates';
+import { signOut, useSession } from '@/lib/auth';
 import { initials, knitTime, useProjects } from '@/store/projects';
 
 const C = Colors.light;
@@ -13,6 +16,8 @@ const C = Colors.light;
 /** The knitter's corner: their name (shown as initials on Home) and a few totals. */
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const session = useSession();
   const name = useProjects((s) => s.knitterName);
   const setName = useProjects((s) => s.setKnitterName);
   const projects = useProjects((s) => s.projects);
@@ -58,8 +63,24 @@ export default function AccountScreen() {
           autoCapitalize="words"
           autoComplete="name"
           returnKeyType="done"
-          hint="Shown as your initials. Everything stays on this phone."
+          hint="Shown as your initials."
         />
+
+        <View style={styles.account}>
+          {session ? (
+            <>
+              <Text style={styles.accountText}>
+                Signed in as <Text style={{ fontFamily: Fonts.extrabold }}>{session.user.email}</Text>
+              </Text>
+              <Button label="Sign out" variant="secondary" size="small" onPress={() => signOut()} />
+            </>
+          ) : (
+            <>
+              <Text style={styles.accountText}>Not signed in. Your knitting is kept on this phone.</Text>
+              <Button label="Sign in" size="small" onPress={() => router.push('/login')} />
+            </>
+          )}
+        </View>
 
         <Text style={styles.section}>Your knitting so far</Text>
         <View style={styles.grid}>
@@ -93,6 +114,18 @@ const styles = StyleSheet.create({
   },
   avatarText: { fontFamily: Fonts.display, fontSize: 36, color: C.beige },
   name: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 34, color: C.text, textAlign: 'center' },
+  account: {
+    marginTop: 18,
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: C.cardLine,
+    backgroundColor: C.card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  accountText: { flex: 1, fontFamily: Fonts.semibold, fontSize: 14, lineHeight: 20, color: C.text },
   section: { marginTop: 26, fontFamily: Fonts.display, fontSize: 20, color: C.text },
   grid: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   stat: { flexGrow: 1, flexBasis: '40%', minHeight: 96, padding: 16, borderRadius: 24, justifyContent: 'space-between' },

@@ -7,10 +7,10 @@
 import '@/global.css';
 
 const palette = {
-  /** Page background: linen, a warm off-white. */
-  background: '#FAF6EC',
+  /** Page background: cream paper. */
+  background: '#FFFCF4',
   /** Bars and sheets that sit on the page. */
-  surface: '#FAF6EC',
+  surface: '#FFFCF4',
   /** The wave band at the top of the main screens. */
   band: '#80ABD7',
   /** Calm cards on the page, with a hairline border. */
