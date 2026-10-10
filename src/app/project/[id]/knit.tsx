@@ -1,5 +1,5 @@
 import { useKeepAwake } from 'expo-keep-awake';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +8,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { Button } from '@/components/button';
 import { Icon } from '@/components/icon';
 import { haptic, KnitBar } from '@/components/knit-bar';
-import { Purl } from '@/components/purl';
+import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandma';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
@@ -66,6 +66,7 @@ export default function KnitScreen() {
   useKeepAwake(undefined, { suppressDeactivateWarnings: true });
 
   const router = useRouter();
+  const isFocused = useIsFocused();
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProject(id);
   const [tab, setTab] = useState<Tab>('counter');
@@ -197,7 +198,7 @@ export default function KnitScreen() {
                 </Pressable>
               )}
             </View>
-            <Purl pose={running ? 'knitting' : 'asleep'} size={168} />
+            <PaintedKnittingGrandma paused={!running} width={168} active={isFocused} />
           </View>
 
           <View style={styles.timerRow}>

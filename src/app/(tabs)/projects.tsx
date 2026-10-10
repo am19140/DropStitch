@@ -1,10 +1,10 @@
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { ProjectBox } from '@/components/project-box';
-import { Purl } from '@/components/purl';
+import { GrandmaReading } from '@/components/grandma/grandma-scenes';
 import { HeaderButton } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { Colors, Spacing } from '@/constants/theme';
@@ -23,6 +23,7 @@ function rows<T>(items: T[], size: number) {
 
 export default function ProjectsScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const projects = useProjects((s) => s.projects);
   const active = projects.filter((p) => !p.finishedAt).sort((a, b) => b.updatedAt - a.updatedAt);
   const finished = projects
@@ -43,7 +44,7 @@ export default function ProjectsScreen() {
               Your pattern library, read along by Purl
             </ThemedText>
           </View>
-          <Purl pose="reading" size={132} />
+          <GrandmaReading width={132} active={isFocused} />
         </View>
 
         <Section title="Active now" count={active.length} />

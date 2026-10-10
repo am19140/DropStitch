@@ -1,10 +1,10 @@
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useIsFocused, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
 import { rowInfo } from '@/components/project-box';
-import { Purl } from '@/components/purl';
+import { GrandmaTea } from '@/components/grandma/grandma-scenes';
 import { ThemedText } from '@/components/themed-text';
 import { YarnBall } from '@/components/yarn-ball';
 import { CardShadow, Colors, Fonts, Spacing } from '@/constants/theme';
@@ -16,6 +16,7 @@ const C = Colors.light;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const seenWelcome = useProjects((s) => s.seenWelcome);
   const projects = useProjects((s) => s.projects);
   const knitterName = useProjects((s) => s.knitterName);
@@ -59,7 +60,7 @@ export default function HomeScreen() {
             <Text style={styles.bubbleText}>{purlSays(current, streak)}</Text>
           </View>
           <View style={styles.bubbleTail} />
-          <Purl pose="proud" size={280} />
+          <GrandmaTea width={280} active={isFocused} />
         </View>
 
         {others.length > 0 && (
