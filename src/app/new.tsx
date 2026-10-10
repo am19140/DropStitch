@@ -26,7 +26,8 @@ export default function NewPatternScreen() {
   // Reading the first PDF: its text becomes steps, for the size the knitter picks.
   const [reading, setReading] = useState<PatternFile | null>(null);
   const [pattern, setPattern] = useState<ParsedPattern | null>(null);
-  const [readFailed, setReadFailed] = useState(false);
+  /** Why reading the PDF failed, shown so problems can be tracked down; null when it didn't fail. */
+  const [readFailed, setReadFailed] = useState<string | null>(null);
   const [sizeIndex, setSizeIndex] = useState<number | null>(null);
 
   // Files are copied into app storage as soon as they're picked. If the screen closes
@@ -55,7 +56,7 @@ export default function NewPatternScreen() {
     if (!name.trim()) setName(added[0].name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '));
     const pdf = added.find((f) => f.kind === 'pdf');
     if (pdf && !pattern && !reading) {
-      setReadFailed(false);
+      setReadFailed(null);
       setReading(pdf);
     }
   };
@@ -108,12 +109,13 @@ export default function NewPatternScreen() {
                 const parsed = parsePattern(text);
                 setReading(null);
                 setSizeIndex(null);
-                if (parsed.stepsFor(0).length === 0) setReadFailed(true);
+                if (parsed.stepsFor(0).length === 0)
+                  setReadFailed(`no steps found in ${text.length.toLocaleString()} characters of text`);
                 else setPattern(parsed);
               }}
-              onError={() => {
+              onError={(reason) => {
                 setReading(null);
-                setReadFailed(true);
+                setReadFailed(reason);
               }}
             />
           )}
@@ -125,9 +127,16 @@ export default function NewPatternScreen() {
                   <ThemedText type="smallBold">Reading your pattern…</ThemedText>
                 </View>
               ) : readFailed ? (
-                <ThemedText type="small">
-                  Couldn’t find written instructions in this PDF (it may be a scan). You can type the steps below.
-                </ThemedText>
+                <View style={{ gap: 6 }}>
+                  <ThemedText type="small">
+                    {readFailed.startsWith('no steps')
+                      ? 'Couldn’t find written instructions in this PDF (it may be a scan). You can type the steps below.'
+                      : 'Couldn’t read this PDF here. You can type the steps below, or try the app.'}
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
+                    Details: {readFailed}
+                  </ThemedText>
+                </View>
               ) : pattern ? (
                 <>
                   {pattern.sizes.length > 1 && (

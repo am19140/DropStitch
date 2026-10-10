@@ -11,6 +11,12 @@ function extractorHtml(base64: string) {
   const data = JSON.stringify(base64);
   return `<!doctype html><html><head><meta charset="utf-8"></head><body>
 ${pdfjsScript()}
+<script>
+  window.addEventListener('error', (e) => {
+    const text = JSON.stringify({ type: 'pdf-text-error', message: 'page error: ' + (e.message || e) });
+    if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(text); else window.parent.postMessage(text, '*');
+  });
+</script>
 <script type="module">
   ${LOAD_PDFJS}
   const post = (msg) => {
@@ -48,7 +54,8 @@ ${pdfjsScript()}
 type PdfTextReaderProps = {
   file: PatternFile;
   onText: (text: string) => void;
-  onError: () => void;
+  /** Why reading failed, in a few words, for the screen to show. */
+  onError: (reason: string) => void;
 };
 
 /** Invisible helper: reads the text of a PDF pattern and hands it back. */
@@ -59,9 +66,12 @@ export function PdfTextReader({ file, onText, onError }: PdfTextReaderProps) {
     let cancelled = false;
     readPatternFile(file)
       .then((base64) => !cancelled && setHtml(extractorHtml(base64)))
-      .catch(() => !cancelled && onError());
+      .catch((e) => !cancelled && onError(`the file couldn't be loaded (${String(e?.message ?? e)})`));
+    // If the reader never answers (e.g. it crashed while loading), say so instead of waiting forever.
+    const timer = setTimeout(() => !cancelled && onError('the PDF reader timed out'), 60_000);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
     // Only re-read when a different file is passed in.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -77,7 +87,7 @@ export function PdfTextReader({ file, onText, onError }: PdfTextReaderProps) {
           try {
             const msg = JSON.parse(data);
             if (msg.type === 'pdf-text') onText(msg.text);
-            else if (msg.type === 'pdf-text-error') onError();
+            else if (msg.type === 'pdf-text-error') onError(`the PDF reader failed (${msg.message})`);
           } catch {
             // Not one of ours.
           }
