@@ -1,0 +1,29 @@
+<!doctype html>
+<!-- Source for the email banner pictures (rendered to /img/email-*.png). Open with ?pose=proud or ?pose=reading. -->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/style.css">
+<style>
+  html, body { margin: 0; background: transparent; }
+  .banner { position: relative; width: 600px; height: 230px; overflow: hidden; background: #FFFCF4; }
+  .sky { position: absolute; inset: 0 0 auto 0; height: 170px; background: #80ABD7; }
+  .wave { position: absolute; left: 0; top: 168px; width: 600px; height: 46px; }
+  .logo { position: absolute; left: 32px; top: 28px; display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 26px; color: #2A1C18; }
+  .logo img { width: 46px; height: 46px; }
+  .purl { position: absolute; right: 18px; bottom: -6px; width: 230px; }
+</style>
+</head>
+<body>
+  <div class="banner" id="banner">
+    <div class="sky"></div>
+    <svg class="wave" viewBox="0 0 390 46" preserveAspectRatio="none"><path d="M0,0 H390 V18 C330,48 270,44 205,26 C140,8 80,10 0,34 Z" fill="#80ABD7"/></svg>
+    <div class="logo"><img src="/img/head.png" alt="">dropstitch</div>
+    <img class="purl" id="purl" src="/img/proud.webp" alt="">
+  </div>
+  <script>
+    var pose = new URLSearchParams(location.search).get('pose') || 'proud';
+    document.getElementById('purl').src = '/img/' + pose + '.webp';
+  </script>
+</body>
+</html>
