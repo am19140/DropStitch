@@ -12,6 +12,15 @@ export async function storeFile(sourceUri: string, storedName: string) {
   await new File(sourceUri).copy(new File(patternsDir(), storedName), { overwrite: true });
 }
 
+/** Saves a file that arrived as base64 (e.g. downloaded from your account). */
+export async function storeBase64(base64: string, storedName: string) {
+  new File(patternsDir(), storedName).write(base64, { encoding: 'base64' });
+}
+
+export async function hasStoredFile(storedName: string) {
+  return new File(patternsDir(), storedName).exists;
+}
+
 export function readStoredFile(storedName: string): Promise<string> {
   return new File(patternsDir(), storedName).base64();
 }

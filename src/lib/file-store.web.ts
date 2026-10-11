@@ -55,6 +55,20 @@ export async function storeFile(sourceUri: string, storedName: string) {
   }
 }
 
+/** Saves a file that arrived as base64 (e.g. downloaded from your account). */
+export async function storeBase64(base64: string, storedName: string) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  await run('readwrite', (store) => store.put(bytes.buffer, storedName));
+}
+
+export async function hasStoredFile(storedName: string) {
+  const key = await run<IDBValidKey | undefined>('readonly', (store) => store.getKey(storedName)).catch(() => undefined);
+  if (key !== undefined) return true;
+  return (await AsyncStorage.getItem(LEGACY_KEY + storedName)) !== null;
+}
+
 export async function readStoredFile(storedName: string) {
   const saved = await run<Blob | ArrayBuffer | undefined>('readonly', (store) => store.get(storedName)).catch(
     () => undefined

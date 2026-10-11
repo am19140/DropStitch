@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 
 import { ScreenTransition } from '@/components/screen-transition';
 import { Colors } from '@/constants/theme';
+import { useAccountSync } from '@/lib/sync';
 import { useProjectsHydrated } from '@/store/projects';
 
 SplashScreen.preventAutoHideAsync();
@@ -26,6 +27,8 @@ const C = Colors.light;
 
 export default function RootLayout() {
   const hydrated = useProjectsHydrated();
+  // Saves the knitting to your account in the background while you're signed in.
+  useAccountSync();
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_500Medium,

@@ -2,7 +2,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 
 import { deleteStoredFile, readStoredFile, storeFile } from '@/lib/file-store';
-import { newId, type PatternFile } from '@/store/projects';
+import { newId, useProjects, type PatternFile } from '@/store/projects';
 
 export type FileSource = 'files' | 'photos' | 'camera';
 
@@ -91,5 +91,7 @@ export function readPatternFile(file: PatternFile) {
 }
 
 export async function deletePatternFiles(files: PatternFile[]) {
+  // Also remove any copies saved to the account (done the next time the phone saves).
+  useProjects.getState().queueRemoteFileDelete(files.map((f) => f.storedName));
   await Promise.all(files.map((f) => deleteStoredFile(f.storedName).catch(() => {})));
 }

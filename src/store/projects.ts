@@ -80,7 +80,28 @@ export type Yarn = {
   /** How the painted yarn ball looks: thin and fuzzy, smooth, or chunky. */
   appearance?: YarnAppearance;
   createdAt: number;
+  /** When it was last changed; older yarns only have createdAt. */
+  updatedAt?: number;
 };
+
+/** Something deleted on this phone, remembered until the account has been told. */
+export type Tombstone = { at: number; files?: string[] };
+
+/** What this phone knows about the account it saves to. */
+export type SyncMeta = {
+  /** Whose account the knitting on this phone belongs to; null before the first sign-in. */
+  userId: string | null;
+  /** The server time of the newest change already fetched from the account. */
+  pulledAt: string | null;
+  /** `project:abc` → the change time the account has, so unchanged things aren't sent again. */
+  versions: Record<string, number>;
+  /** Pattern files already in the account, by stored name. */
+  uploaded: Record<string, true>;
+  /** Pattern files to remove from the account (their project or file was deleted). */
+  removeFiles: string[];
+};
+
+export const emptySync: SyncMeta = { userId: null, pulledAt: null, versions: {}, uploaded: {}, removeFiles: [] };
 
 /** Stops a running timer, adding the session to the project's knitting time. */
 function stopTimer(p: Project): Partial<Project> {
@@ -199,6 +220,15 @@ type ProjectsState = {
   setKnitterName: (name: string) => void;
   /** Rows counted per day ("2026-10-08" → 14), across all projects. A day is listed once you knit on it. */
   knitLog: Record<string, number>;
+  /** When the name or the knitting log last changed, for saving them to the account. */
+  profileUpdatedAt: number;
+  /** Projects and yarns deleted here, keyed `project:id` / `yarn:id`, until the account knows. */
+  deleted: Record<string, Tombstone>;
+  sync: SyncMeta;
+  /** Pattern files to remove from the account later. */
+  queueRemoteFileDelete: (storedNames: string[]) => void;
+  /** Removes everyone's knitting from this phone (after signing out); the welcome stays seen. */
+  clearLocalData: () => void;
   addProject: (input: NewProject) => string;
   updateProject: (id: string, patch: Partial<Pick<Project, 'name' | 'notes' | 'files'>>) => void;
   deleteProject: (id: string) => void;
@@ -241,7 +271,10 @@ export const useProjects = create<ProjectsState>()(
       const logKnitting = (rows: number) =>
         set((state) => {
           const today = dayKey(Date.now());
-          return { knitLog: { ...state.knitLog, [today]: (state.knitLog[today] ?? 0) + rows } };
+          return {
+            knitLog: { ...state.knitLog, [today]: (state.knitLog[today] ?? 0) + rows },
+            profileUpdatedAt: Date.now(),
+          };
         });
 
       /** Takes an undone row back off today's count (the day stays a knitting day). */
@@ -249,7 +282,7 @@ export const useProjects = create<ProjectsState>()(
         set((state) => {
           const today = dayKey(Date.now());
           const rows = state.knitLog[today];
-          return rows ? { knitLog: { ...state.knitLog, [today]: rows - 1 } } : {};
+          return rows ? { knitLog: { ...state.knitLog, [today]: rows - 1 }, profileUpdatedAt: Date.now() } : {};
         });
 
       const editSteps = (id: string, change: (steps: Step[]) => Step[]) =>
@@ -264,8 +297,15 @@ export const useProjects = create<ProjectsState>()(
         seenWelcome: false,
         markWelcomeSeen: () => set({ seenWelcome: true }),
         knitterName: '',
-        setKnitterName: (knitterName) => set({ knitterName }),
+        setKnitterName: (knitterName) => set({ knitterName, profileUpdatedAt: Date.now() }),
         knitLog: {},
+        profileUpdatedAt: 0,
+        deleted: {},
+        sync: emptySync,
+        queueRemoteFileDelete: (storedNames) =>
+          set((state) => ({ sync: { ...state.sync, removeFiles: [...state.sync.removeFiles, ...storedNames] } })),
+        clearLocalData: () =>
+          set({ projects: [], yarns: [], knitterName: '', knitLog: {}, profileUpdatedAt: 0, deleted: {}, sync: emptySync }),
 
         addProject: ({ name, files, steps, size }) => {
           const now = Date.now();
@@ -290,7 +330,13 @@ export const useProjects = create<ProjectsState>()(
         updateProject: (id, patch) => edit(id, () => patch),
 
         deleteProject: (id) =>
-          set((state) => ({ projects: state.projects.filter((p) => p.id !== id) })),
+          set((state) => {
+            const project = state.projects.find((p) => p.id === id);
+            return {
+              projects: state.projects.filter((p) => p.id !== id),
+              deleted: { ...state.deleted, [`project:${id}`]: { at: Date.now(), files: project?.files.map((f) => f.storedName) } },
+            };
+          }),
 
         finishProject: (id) =>
           edit(id, (p) => ({ finishedAt: Date.now(), ...stopTimer(p) })),
@@ -404,8 +450,15 @@ export const useProjects = create<ProjectsState>()(
           })),
 
         addYarn: (yarn) =>
-          set((state) => ({ yarns: [{ ...yarn, id: newId(), createdAt: Date.now() }, ...state.yarns] })),
-        deleteYarn: (id) => set((state) => ({ yarns: state.yarns.filter((y) => y.id !== id) })),
+          set((state) => {
+            const now = Date.now();
+            return { yarns: [{ ...yarn, id: newId(), createdAt: now, updatedAt: now }, ...state.yarns] };
+          }),
+        deleteYarn: (id) =>
+          set((state) => ({
+            yarns: state.yarns.filter((y) => y.id !== id),
+            deleted: { ...state.deleted, [`yarn:${id}`]: { at: Date.now() } },
+          })),
       };
     },
     {
@@ -418,6 +471,9 @@ export const useProjects = create<ProjectsState>()(
         seenWelcome: state.seenWelcome,
         knitterName: state.knitterName,
         knitLog: state.knitLog,
+        profileUpdatedAt: state.profileUpdatedAt,
+        deleted: state.deleted,
+        sync: state.sync,
       }),
       // v1 projects had no box colour.
       migrate: (persisted, version) => {

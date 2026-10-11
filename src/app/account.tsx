@@ -1,14 +1,17 @@
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { useConfirm } from '@/components/confirm-dialog';
 import { Icon } from '@/components/icon';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
-import { knitDuration } from '@/lib/dates';
-import { signOut, useSession } from '@/lib/auth';
+import { knitDuration, timeAgo } from '@/lib/dates';
+import { useSession } from '@/lib/auth';
+import { deleteAccount, signOutAndClear, useSyncStatus } from '@/lib/sync';
 import { initials, knitTime, useProjects } from '@/store/projects';
 
 const C = Colors.light;
@@ -18,6 +21,60 @@ export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const session = useSession();
+  const { ask, dialog } = useConfirm();
+  const syncStatus = useSyncStatus((s) => s.status);
+  const savedAt = useSyncStatus((s) => s.savedAt);
+  const [busy, setBusy] = useState<'signOut' | 'delete' | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  const signOut = async () => {
+    const ok = await ask({
+      title: 'Sign out?',
+      message: 'Your knitting is saved to your account and comes back when you sign in again. It will be removed from this phone.',
+      confirmLabel: 'Sign out',
+    });
+    if (!ok) return;
+    setBusy('signOut');
+    setProblem(null);
+    if (!(await signOutAndClear())) {
+      const anyway = await ask({
+        title: 'Not everything is saved',
+        message: 'Some changes couldn’t be saved to your account (are you offline?). If you sign out now, they’ll be lost.',
+        confirmLabel: 'Sign out anyway',
+      });
+      if (anyway) await signOutAndClear(true);
+    }
+    setBusy(null);
+  };
+
+  const removeAccount = async () => {
+    const ok = await ask({
+      title: 'Delete your account?',
+      message:
+        'This deletes your account and everything saved in it, for good: projects, patterns, notes, rows and yarn. It also clears this phone. This can’t be undone.',
+      confirmLabel: 'Delete account',
+    });
+    if (!ok) return;
+    setBusy('delete');
+    setProblem(null);
+    try {
+      await deleteAccount();
+      router.replace('/');
+    } catch (e) {
+      setProblem(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const savedLine =
+    syncStatus === 'saving'
+      ? 'Saving to your account…'
+      : syncStatus === 'offline'
+        ? 'Not saved yet: you seem to be offline. It will save when you’re back online.'
+        : savedAt
+          ? `Saved to your account ${timeAgo(savedAt)}`
+          : 'Saved to your account';
   const name = useProjects((s) => s.knitterName);
   const setName = useProjects((s) => s.setKnitterName);
   const projects = useProjects((s) => s.projects);
@@ -69,14 +126,23 @@ export default function AccountScreen() {
         <View style={styles.account}>
           {session ? (
             <>
-              <Text style={styles.accountText}>
-                Signed in as <Text style={{ fontFamily: Fonts.extrabold }}>{session.user.email}</Text>
-              </Text>
-              <Button label="Sign out" variant="secondary" size="small" onPress={() => signOut()} />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.accountText}>
+                  Signed in as <Text style={{ fontFamily: Fonts.extrabold }}>{session.user.email}</Text>
+                </Text>
+                <Text style={[styles.savedText, syncStatus === 'offline' && { color: C.danger }]}>{savedLine}</Text>
+              </View>
+              <Button
+                label={busy === 'signOut' ? 'Saving…' : 'Sign out'}
+                variant="secondary"
+                size="small"
+                disabled={!!busy}
+                onPress={signOut}
+              />
             </>
           ) : (
             <>
-              <Text style={styles.accountText}>Not signed in. Your knitting is kept on this phone.</Text>
+              <Text style={styles.accountText}>Not signed in. Sign in to keep your knitting safe in your account.</Text>
               <Button label="Sign in" size="small" onPress={() => router.push('/login')} />
             </>
           )}
@@ -95,7 +161,22 @@ export default function AccountScreen() {
             <Text style={styles.statLabel}>{yarnCount === 1 ? 'yarn ball' : 'yarn balls'} in your stash</Text>
           </View>
         </View>
+
+        {session && (
+          <View style={styles.danger}>
+            {problem && <Text style={styles.problem}>{problem}</Text>}
+            <Button
+              label={busy === 'delete' ? 'Deleting…' : 'Delete account'}
+              icon="trash"
+              variant="danger"
+              disabled={!!busy}
+              onPress={removeAccount}
+            />
+            <Text style={styles.dangerHint}>Deletes your account and everything saved in it, for good.</Text>
+          </View>
+        )}
       </ScrollView>
+      {dialog}
     </KeyboardAvoidingView>
   );
 }
@@ -126,6 +207,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   accountText: { flex: 1, fontFamily: Fonts.semibold, fontSize: 14, lineHeight: 20, color: C.text },
+  savedText: { fontFamily: Fonts.semibold, fontSize: 12.5, lineHeight: 17, color: C.textSecondary },
+  danger: { marginTop: 36, gap: 8 },
+  dangerHint: { fontFamily: Fonts.semibold, fontSize: 13, color: C.textSecondary, textAlign: 'center' },
+  problem: { fontFamily: Fonts.bold, fontSize: 14, lineHeight: 20, color: C.danger },
   section: { marginTop: 26, fontFamily: Fonts.display, fontSize: 20, color: C.text },
   grid: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   stat: { flexGrow: 1, flexBasis: '40%', minHeight: 96, padding: 16, borderRadius: 24, justifyContent: 'space-between' },
