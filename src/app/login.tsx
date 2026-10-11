@@ -11,7 +11,7 @@ import { TextField } from '@/components/text-field';
 import { TextTabs } from '@/components/text-tabs';
 import { WaveBand } from '@/components/wave-band';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
-import { accountsEnabled, signInWithEmail, signInWithGoogle, signUpWithEmail } from '@/lib/auth';
+import { accountsEnabled, sendPasswordReset, signInWithEmail, signInWithGoogle, signUpWithEmail } from '@/lib/auth';
 
 const C = Colors.light;
 type Mode = 'signIn' | 'signUp';
@@ -25,7 +25,7 @@ export default function LoginScreen() {
   const [mode, setMode] = useState<Mode>(params.mode === 'signUp' ? 'signUp' : 'signIn');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState<'email' | 'google' | null>(null);
+  const [busy, setBusy] = useState<'email' | 'google' | 'reset' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -46,6 +46,24 @@ export default function LoginScreen() {
       } else {
         done();
       }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const forgot = async () => {
+    setError(null);
+    setNotice(null);
+    if (!/\S+@\S+\.\S+/.test(email.trim())) {
+      setError('Type your email above first, then tap “Forgot password?” again.');
+      return;
+    }
+    setBusy('reset');
+    try {
+      await sendPasswordReset(email);
+      setNotice(`We sent a link to ${email.trim()}. Tap it to choose a new password, then sign in here.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -115,6 +133,11 @@ export default function LoginScreen() {
             returnKeyType="go"
             onSubmitEditing={() => canSubmit && submit()}
           />
+          {mode === 'signIn' && accountsEnabled && (
+            <Pressable accessibilityRole="button" onPress={forgot} disabled={!!busy} style={styles.forgot}>
+              <Text style={styles.forgotText}>{busy === 'reset' ? 'Sending…' : 'Forgot password?'}</Text>
+            </Pressable>
+          )}
 
           {error && <Text style={styles.error}>{error}</Text>}
           {notice && <Text style={styles.notice}>{notice}</Text>}
@@ -185,6 +208,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   googleText: { fontFamily: Fonts.extrabold, fontSize: 16, color: C.text },
+  forgot: { alignSelf: 'flex-end', minHeight: 36, justifyContent: 'center', marginTop: -10 },
+  forgotText: { fontFamily: Fonts.bold, fontSize: 14, color: C.primary },
   skip: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
   skipText: { fontFamily: Fonts.bold, fontSize: 14.5, color: C.textSecondary, textDecorationLine: 'underline' },
 });

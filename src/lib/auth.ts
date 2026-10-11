@@ -48,6 +48,14 @@ export async function signUpWithEmail(email: string, password: string) {
   return !data.session;
 }
 
+/** Emails a link to choose a new password; it opens the "choose a new password" page on dropstitch.io. */
+export async function sendPasswordReset(email: string) {
+  const { error } = await client().auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: 'https://dropstitch.io/reset',
+  });
+  if (error) throw friendly(error);
+}
+
 /** The session carried in the link Google sends you back with. */
 async function sessionFromUrl(url: string) {
   const { params, errorCode } = QueryParams.getQueryParams(url);
