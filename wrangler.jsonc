@@ -1,0 +1,12 @@
+// Cloudflare Worker that serves the web version of DropStitch at dropstitch.io.
+// Cloudflare builds it from GitHub with `npx expo export -p web`, then uploads the `dist` folder.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dropstitch",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // Every address (like /project/abc/knit) opens the app, which then shows the right screen.
+    "not_found_handling": "single-page-application"
+  }
+}
