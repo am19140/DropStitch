@@ -19,6 +19,7 @@ function friendly(error: AuthError | Error): Error {
   if (/email not confirmed/i.test(message)) return new Error('Please confirm your email first. Check your inbox for the link.');
   if (/already registered|already exists/i.test(message)) return new Error('There’s already an account with this email. Try signing in.');
   if (/password should be/i.test(message)) return new Error('Please use a password of at least 8 characters.');
+  if (/provider is not enabled|unsupported provider/i.test(message)) return new Error('Google sign-in isn’t switched on yet. Please use your email for now.');
   if (/rate limit|too many/i.test(message)) return new Error('Too many tries. Please wait a minute and try again.');
   if (/network|fetch/i.test(message)) return new Error('Couldn’t reach the server. Check your internet connection.');
   return new Error(message || 'Something went wrong. Please try again.');
@@ -56,8 +57,24 @@ async function sessionFromUrl(url: string) {
  * Signs in with Google. In the browser the page goes to Google and comes back signed in. On phones
  * Google opens in a secure in-app browser and hands the session back to the app through its link.
  */
+/** Whether Google sign-in is switched on in the Supabase project (its public settings say). */
+async function googleEnabled() {
+  try {
+    const url = process.env.EXPO_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
+    const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? '';
+    const response = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: key } });
+    const settings = await response.json();
+    return settings?.external?.google !== false;
+  } catch {
+    // If the settings can't be read, try anyway; Supabase will say what's wrong.
+    return true;
+  }
+}
+
 export async function signInWithGoogle() {
   const auth = client().auth;
+  // Otherwise the browser would leave the app for Supabase's error page.
+  if (!(await googleEnabled())) throw new Error('Google sign-in isn’t switched on yet. Please use your email for now.');
   if (Platform.OS === 'web') {
     const { error } = await auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
     if (error) throw friendly(error);
