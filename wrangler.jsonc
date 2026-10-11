@@ -1,12 +1,13 @@
-// Cloudflare Worker that serves the web version of DropStitch at dropstitch.io.
-// Cloudflare builds it from GitHub with `npx expo export -p web`, then uploads the `dist` folder.
+// Cloudflare Worker that serves the DropStitch website at dropstitch.io: the landing page,
+// the privacy policy and the "email confirmed" page, all plain files in ./website (no build step).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "dropstitch",
   "compatibility_date": "2026-09-01",
   "assets": {
-    "directory": "./dist",
-    // Every address (like /project/abc/knit) opens the app, which then shows the right screen.
-    "not_found_handling": "single-page-application"
+    "directory": "./website",
+    // /privacy serves privacy.html, /confirmed serves confirmed.html.
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
   }
 }

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Email confirmed · DropStitch</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#80ABD7">
+  <link rel="icon" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="band page-band">
+    <div class="wrap">
+      <nav class="nav" aria-label="Main">
+        <a class="brand" href="/"><img src="/img/head.png" alt="" width="40" height="40">dropstitch</a>
+      </nav>
+      <div style="height:44px"></div>
+    </div>
+    <svg class="wave" viewBox="0 0 390 46" preserveAspectRatio="none" aria-hidden="true" style="background:var(--paper)"><path d="M0,0 H390 V18 C330,48 270,44 205,26 C140,8 80,10 0,34 Z" fill="#80ABD7"/></svg>
+  </header>
+
+  <main class="confirm">
+    <img src="/img/proud.webp" alt="Purl proudly holding up a finished sweater" width="640" height="640">
+    <h1 id="title">You’re in!</h1>
+    <p id="message">Your email is confirmed. Go back to DropStitch and sign in to start knitting.</p>
+    <a class="button" href="dropstitch://login">Open DropStitch</a>
+  </main>
+
+  <script>
+    // Supabase sends people here after they tap the link in an email. If the link was old or already
+    // used, it says so in the address; show that instead of a cheerful "You’re in!".
+    (function () {
+      var params = new URLSearchParams(location.hash.slice(1) + '&' + location.search.slice(1));
+      var error = params.get('error_description') || params.get('error');
+      // The link also carries sign-in details for the browser; this page doesn't use them, so clear them away.
+      if (location.hash || location.search) history.replaceState(null, '', location.pathname);
+      if (!error) return;
+      document.getElementById('title').textContent = 'That link didn’t work';
+      document.getElementById('message').textContent =
+        /expired|invalid/i.test(error)
+          ? 'This link has expired or was already used. Sign in to DropStitch, and if your email isn’t confirmed yet, we’ll send you a new link.'
+          : 'Something went wrong with this link: ' + error.replace(/\+/g, ' ') + '. Please try signing in again.';
+    })();
+  </script>
+</body>
+</html>

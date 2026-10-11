@@ -38,7 +38,12 @@ export async function signInWithEmail(email: string, password: string) {
 /** Creates an account. Returns true when the account still needs its email confirmed before signing in. */
 export async function signUpWithEmail(email: string, password: string) {
   if (password.length < 8) throw new Error('Please use a password of at least 8 characters.');
-  const { data, error } = await client().auth.signUp({ email: email.trim(), password });
+  const { data, error } = await client().auth.signUp({
+    email: email.trim(),
+    password,
+    // The link in the confirmation email opens the website's "You're in!" page.
+    options: { emailRedirectTo: 'https://dropstitch.io/confirmed' },
+  });
   if (error) throw friendly(error);
   return !data.session;
 }

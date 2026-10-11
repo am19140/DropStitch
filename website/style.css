@@ -1,0 +1,115 @@
+/* DropStitch website: the app's look — a sky-blue wave over cream paper, Nunito, chocolate buttons. */
+@font-face { font-family: Nunito; font-weight: 600; font-display: swap; src: url(/fonts/Nunito_600SemiBold.ttf) format('truetype'); }
+@font-face { font-family: Nunito; font-weight: 700; font-display: swap; src: url(/fonts/Nunito_700Bold.ttf) format('truetype'); }
+@font-face { font-family: Nunito; font-weight: 800; font-display: swap; src: url(/fonts/Nunito_800ExtraBold.ttf) format('truetype'); }
+@font-face { font-family: Nunito; font-weight: 900; font-display: swap; src: url(/fonts/Nunito_900Black.ttf) format('truetype'); }
+
+:root {
+  --paper: #FFFCF4;
+  --ink: #2A1C18;
+  --ink-2: #6E5A50;
+  --sky: #80ABD7;
+  --mist: #D7E5F4;
+  --card: #F3F6FB;
+  --line: #E1E9F4;
+  --cobalt: #034FC9;
+  --red: #F51614;
+  --oat: #E2D9BC;
+  --cocoa: #683629;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Nunito, ui-rounded, system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1.55;
+}
+a { color: inherit; }
+img { display: block; max-width: 100%; height: auto; }
+
+/* The sky band and its wave */
+.band { background: var(--sky); position: relative; }
+.wave { display: block; width: 100%; height: 56px; }
+.wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+.nav { display: flex; align-items: center; justify-content: space-between; padding-top: 22px; }
+.brand { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 900; font-size: 22px; }
+.brand img { width: 40px; height: 40px; }
+.nav-link { font-weight: 800; font-size: 15px; text-decoration: none; opacity: .8; }
+.nav-link:hover { opacity: 1; }
+
+/* Landing hero */
+.hero { display: grid; grid-template-columns: 1.1fr .9fr; align-items: end; gap: 24px; padding-top: 40px; }
+.hero h1 { margin: 0; font-weight: 900; font-size: clamp(44px, 7vw, 76px); line-height: 1.02; letter-spacing: -1px; }
+.hero .lede { margin: 18px 0 0; font-size: clamp(17px, 2vw, 20px); max-width: 30ch; opacity: .85; }
+.hero-art { position: relative; z-index: 2; margin-bottom: -86px; justify-self: end; width: min(420px, 100%); }
+.hero-copy { padding-bottom: 40px; }
+
+.stores { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.store {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 56px; padding: 0 22px 0 18px; border-radius: 999px;
+  background: var(--ink); color: var(--paper); text-decoration: none;
+}
+.store svg { width: 22px; height: 22px; flex: none; }
+.store small { display: block; font-weight: 700; font-size: 11px; opacity: .8; line-height: 1.1; }
+.store b { display: block; font-weight: 900; font-size: 17px; line-height: 1.15; }
+.store[aria-disabled='true'] { cursor: default; }
+.soon { margin: 12px 0 0; font-weight: 700; font-size: 14px; opacity: .75; }
+
+/* Features */
+.section { padding: 56px 0 24px; }
+.section h2 { margin: 0 0 24px; font-weight: 900; font-size: clamp(28px, 4vw, 38px); }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.card { background: var(--card); border: 1.5px solid var(--line); border-radius: 26px; padding: 22px; }
+.card .tag { display: inline-block; font-weight: 900; font-size: 15px; padding: 4px 12px; border-radius: 10px; background: var(--cobalt); color: #fff; }
+.card h3 { margin: 14px 0 6px; font-weight: 900; font-size: 21px; line-height: 1.2; }
+.card p { margin: 0; color: var(--ink-2); }
+.card.solid-sky { background: var(--sky); border-color: var(--sky); }
+.card.solid-oat { background: var(--oat); border-color: var(--oat); }
+.card.solid-sky p, .card.solid-oat p { color: var(--ink); opacity: .8; }
+
+.purl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: center; margin-top: 16px; }
+.quote { background: var(--cobalt); color: var(--paper); border-radius: 26px; padding: 28px; }
+.quote p { margin: 0; font-weight: 900; font-size: clamp(22px, 3vw, 30px); line-height: 1.2; }
+.quote span { display: block; margin-top: 10px; font-weight: 700; opacity: .8; }
+
+/* Simple pages (privacy, confirmed) */
+.page-band { padding-bottom: 0; }
+.page-title { padding: 34px 0 6px; }
+.page-title h1 { margin: 0; font-weight: 900; font-size: clamp(36px, 6vw, 56px); line-height: 1.05; }
+.page-title p { margin: 10px 0 0; opacity: .8; }
+.prose { max-width: 720px; padding: 28px 24px 24px; margin: 0 auto; }
+.prose h2 { margin: 32px 0 8px; font-weight: 900; font-size: 22px; }
+.prose p, .prose li { color: var(--ink-2); }
+.prose strong { color: var(--ink); }
+.prose ul { padding-left: 20px; }
+
+.center { text-align: center; }
+.confirm { display: grid; place-items: center; padding: 8px 24px 40px; text-align: center; }
+.confirm img { width: min(320px, 80vw); margin-top: -40px; position: relative; z-index: 2; }
+.confirm h1 { margin: 18px 0 6px; font-weight: 900; font-size: clamp(34px, 6vw, 48px); line-height: 1.05; }
+.confirm p { margin: 0 auto; max-width: 34ch; color: var(--ink-2); font-size: 18px; }
+.button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 56px; padding: 0 28px; margin-top: 24px; border-radius: 999px;
+  background: var(--ink); color: var(--paper); text-decoration: none; font-weight: 900; font-size: 17px;
+}
+
+footer { margin-top: 40px; border-top: 1.5px solid var(--line); }
+.footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 22px 24px 32px; color: var(--ink-2); font-weight: 700; font-size: 14px; }
+.footer nav { display: flex; gap: 18px; }
+.footer a { text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; padding-top: 28px; }
+  .hero-copy { padding-bottom: 0; }
+  .hero-art { justify-self: center; width: min(300px, 80%); margin-bottom: -70px; }
+  .cards, .purl-row { grid-template-columns: 1fr; }
+  .section { padding-top: 72px; }
+}
