@@ -10,6 +10,7 @@
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <link rel="stylesheet" href="/style.css">
   <style>
+    .form[hidden] { display: none; }
     .form { width: 100%; max-width: 380px; margin: 22px auto 0; text-align: left; display: grid; gap: 14px; }
     .form label { font-weight: 800; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-2); }
     .form input {
@@ -103,6 +104,8 @@
               : 'Couldn’t save it: ' + result.error.message;
             return;
           }
+          $('password').value = '';
+          $('repeat').value = '';
           supabase.auth.signOut();
           show('Password changed!', 'All set. Go back to DropStitch and sign in with your new password.', 'proud');
         });
