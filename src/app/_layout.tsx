@@ -14,6 +14,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 import { ScreenTransition } from '@/components/screen-transition';
+import { TourProvider } from '@/components/tour';
 import { Colors } from '@/constants/theme';
 import { useAccountSync } from '@/lib/sync';
 import { useProjectsHydrated } from '@/store/projects';
@@ -61,6 +62,7 @@ export default function RootLayout() {
           border: C.border,
         },
       }}>
+      <TourProvider>
       <Stack
         // Screens slide in from the right on phones (iOS style on Android too); in the browser,
         // ScreenTransition eases them in. Sheets (modals) already slide up, so they're left alone.
@@ -83,6 +85,7 @@ export default function RootLayout() {
         <Stack.Screen name="account" options={{ presentation: 'modal' }} />
         <Stack.Screen name="project/[id]/edit" options={{ presentation: 'modal' }} />
       </Stack>
+      </TourProvider>
     </ThemeProvider>
   );
 }

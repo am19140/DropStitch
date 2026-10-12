@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from '@/components/icon';
+import { TourTarget } from '@/components/tour';
 import { Colors, Fonts } from '@/constants/theme';
 import { initials, useProjects } from '@/store/projects';
 
@@ -50,16 +51,19 @@ export function TabBar({ state, navigation }: TabBarProps) {
   };
 
   return (
+    <TourTarget id="tab.bar">
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) + 4 }]}>
       {tab(0)}
       {tab(1)}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Start a new project"
-        onPress={() => router.push('/new')}
-        style={({ pressed }) => [styles.fab, { transform: [{ scale: pressed ? 0.94 : 1 }] }]}>
-        <Icon name="add" size={28} strokeWidth={2.6} color={C.surface} />
-      </Pressable>
+      <TourTarget id="tab.add" style={styles.fabSpot}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Start a new project"
+          onPress={() => router.push('/new')}
+          style={({ pressed }) => [styles.fab, { transform: [{ scale: pressed ? 0.94 : 1 }] }]}>
+          <Icon name="add" size={28} strokeWidth={2.6} color={C.surface} />
+        </Pressable>
+      </TourTarget>
       {tab(2)}
       <Pressable
         accessibilityRole="button"
@@ -72,6 +76,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
         <Text style={styles.label}>You</Text>
       </Pressable>
     </View>
+    </TourTarget>
   );
 }
 
@@ -90,10 +95,11 @@ const styles = StyleSheet.create({
   label: { fontFamily: Fonts.bold, fontSize: 12, color: IDLE },
   labelOn: { color: C.text, fontFamily: Fonts.extrabold },
   // A dark circle sitting up out of the bar, with a ring of the bar's colour that breaks its top line.
+  // The + button sits up out of the bar.
+  fabSpot: { marginTop: -35 },
   fab: {
     width: 70,
     height: 70,
-    marginTop: -35,
     borderRadius: 35,
     borderWidth: 5,
     borderColor: C.surface,

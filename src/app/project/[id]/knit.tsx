@@ -12,6 +12,7 @@ import { RepeatCard, RepeatSide } from '@/components/repeat-view';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
+import { Tour, TourTarget, type TourStep } from '@/components/tour';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
 import {
   countsRows,
@@ -35,6 +36,30 @@ const SIDE_STYLE = {
   WS: { short: 'WS', long: 'wrong side' },
   round: { short: 'RND', long: 'in the round' },
 } as const;
+
+/** Purl's guide the first time the counter opens. */
+const KNIT_TOUR: TourStep[] = [
+  {
+    target: 'knit.hero',
+    title: 'Where you are',
+    text: 'Right side or wrong side, which row or repeat you’re on, and how many rows to go. The timer runs while you knit.',
+  },
+  {
+    target: 'knit.bar',
+    title: 'One tap per row',
+    text: 'Tap Next row after every row. Counted one too many? Tap −. When a step is done, the button turns into Next step.',
+  },
+  {
+    target: 'knit.tabs',
+    title: 'All the steps',
+    text: 'See every step of your pattern, tick them off, or tap one to jump to it.',
+  },
+  {
+    target: 'knit.pattern',
+    title: 'The original pattern',
+    text: 'Peek at your PDF any time, without losing your place.',
+  },
+];
 
 /** "0:42" / "1:05:09" */
 function formatDuration(ms: number) {
@@ -160,12 +185,14 @@ export default function KnitScreen() {
           round
           right={
             project.files.length > 0 ? (
-              <HeaderButton
-                icon="file"
-                label="View pattern"
-                round
-                onPress={() => router.push({ pathname: '/project/[id]/pdf', params: { id: project.id } })}
-              />
+              <TourTarget id="knit.pattern">
+                <HeaderButton
+                  icon="file"
+                  label="View pattern"
+                  round
+                  onPress={() => router.push({ pathname: '/project/[id]/pdf', params: { id: project.id } })}
+                />
+              </TourTarget>
             ) : null
           }
         />
@@ -177,19 +204,22 @@ export default function KnitScreen() {
         <Text style={styles.where} numberOfLines={2}>
           {step?.section ? `You’re knitting the ${step.section.toLowerCase()}` : project.steps.length ? 'Current step' : 'Row counter'}
         </Text>
-        <TextTabs<Tab>
-          value={tab}
-          onChange={setTab}
-          options={[
-            { value: 'counter', label: 'Counter' },
-            { value: 'steps', label: `All steps${project.steps.length ? ` (${project.steps.length})` : ''}` },
-          ]}
-        />
+        <TourTarget id="knit.tabs" style={{ alignSelf: 'flex-start' }}>
+          <TextTabs<Tab>
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: 'counter', label: 'Counter' },
+              { value: 'steps', label: `All steps${project.steps.length ? ` (${project.steps.length})` : ''}` },
+            ]}
+          />
+        </TourTarget>
       </View>
 
       {tab === 'counter' ? (
         <ScrollView contentContainerStyle={styles.body}>
           {/* The sky card: where you are, big, with Purl knitting (or dozing while the timer is paused). */}
+          <TourTarget id="knit.hero">
           <View style={styles.hero}>
             <View style={styles.grandma} pointerEvents="none">
               {grandma}
@@ -242,6 +272,7 @@ export default function KnitScreen() {
             )}
             {timerPill}
           </View>
+          </TourTarget>
 
           {/* "Repeat rows 1–2 until it measures 26 cm": the rows keep flipping RS/WS above,
               and this says when you've got there. */}
@@ -289,7 +320,10 @@ export default function KnitScreen() {
         </View>
       )}
 
-      <KnitBar project={project} label="Total rows" value={String(project.rowCount)} />
+      <TourTarget id="knit.bar">
+        <KnitBar project={project} label="Total rows" value={String(project.rowCount)} />
+      </TourTarget>
+      <Tour id="knit" steps={KNIT_TOUR} ready={tab === 'counter'} />
     </SafeAreaView>
   );
 }

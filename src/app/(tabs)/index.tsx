@@ -6,6 +6,7 @@ import { progressOf, rowInfo } from '@/components/project-box';
 import { GrandmaTea } from '@/components/grandma/grandma-scenes';
 import { Icon } from '@/components/icon';
 import { Purl } from '@/components/purl';
+import { Tour, TourTarget, type TourStep } from '@/components/tour';
 import { WaveBand } from '@/components/wave-band';
 import { YarnBall } from '@/components/yarn-ball';
 import { Colors, Fonts } from '@/constants/theme';
@@ -33,6 +34,7 @@ export default function HomeScreen() {
   const firstName = knitterName.trim().split(/\s+/)[0];
 
   return (
+    <>
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
       <WaveBand
         style={{ paddingBottom: 6 }}
@@ -58,8 +60,12 @@ export default function HomeScreen() {
       </WaveBand>
 
       <View style={styles.content}>
-        <StreakWeek streak={streak} />
-        {current ? <NeedlesCard project={current} /> : <StartCard onPress={() => router.push('/new')} />}
+        <TourTarget id="home.streak">
+          <StreakWeek streak={streak} />
+        </TourTarget>
+        <TourTarget id="home.card">
+          {current ? <NeedlesCard project={current} /> : <StartCard onPress={() => router.push('/new')} />}
+        </TourTarget>
 
         {others.length > 0 && (
           <>
@@ -71,10 +77,36 @@ export default function HomeScreen() {
         )}
       </View>
     </ScrollView>
+    <Tour id="home" steps={HOME_TOUR} />
+    </>
   );
 }
 
 type Streak = ReturnType<typeof streakInfo>;
+
+/** Purl's first tour of the app, on the home screen. */
+const HOME_TOUR: TourStep[] = [
+  {
+    target: 'tab.add',
+    title: 'Start here',
+    text: 'Tap + to add a pattern: a PDF or a photo. I’ll split it into steps and keep only the numbers for your size.',
+  },
+  {
+    target: 'home.card',
+    title: 'Your project lives here',
+    text: 'It shows where you are and how far along. Tap it to pick up right where you stopped.',
+  },
+  {
+    target: 'home.streak',
+    title: 'A little every day',
+    text: 'Count a row and that day joins your streak. Days you knitted get filled in.',
+  },
+  {
+    target: 'tab.bar',
+    title: 'Everything else',
+    text: 'Your projects, your yarn stash and your profile are down here. Have fun, dear!',
+  },
+];
 
 /** The last seven days as numbered beads on a thread: knitted days filled in, today dark. */
 function StreakWeek({ streak }: { streak: Streak }) {

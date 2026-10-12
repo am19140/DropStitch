@@ -215,6 +215,11 @@ type ProjectsState = {
   yarns: Yarn[];
   seenWelcome: boolean;
   markWelcomeSeen: () => void;
+  /** Which on-screen guides have been shown (or skipped) on this phone, by guide id. */
+  seenTours: Record<string, true>;
+  markTourSeen: (id: string) => void;
+  /** Shows every guide again, from the profile. */
+  resetTours: () => void;
   /** The knitter's name, for the account button. Only kept on this phone. */
   knitterName: string;
   setKnitterName: (name: string) => void;
@@ -296,6 +301,9 @@ export const useProjects = create<ProjectsState>()(
         yarns: [],
         seenWelcome: false,
         markWelcomeSeen: () => set({ seenWelcome: true }),
+        seenTours: {},
+        markTourSeen: (id) => set((state) => ({ seenTours: { ...state.seenTours, [id]: true } })),
+        resetTours: () => set({ seenTours: {} }),
         knitterName: '',
         setKnitterName: (knitterName) => set({ knitterName, profileUpdatedAt: Date.now() }),
         knitLog: {},
@@ -469,6 +477,7 @@ export const useProjects = create<ProjectsState>()(
         projects: state.projects,
         yarns: state.yarns,
         seenWelcome: state.seenWelcome,
+        seenTours: state.seenTours,
         knitterName: state.knitterName,
         knitLog: state.knitLog,
         profileUpdatedAt: state.profileUpdatedAt,

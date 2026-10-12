@@ -21,6 +21,7 @@ export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const session = useSession();
+  const resetTours = useProjects((s) => s.resetTours);
   const { ask, dialog } = useConfirm();
   const syncStatus = useSyncStatus((s) => s.status);
   const savedAt = useSyncStatus((s) => s.savedAt);
@@ -163,6 +164,17 @@ export default function AccountScreen() {
             <Text style={styles.statLabel}>{yarnCount === 1 ? 'yarn ball' : 'yarn balls'} in your stash</Text>
           </View>
         </View>
+
+        <Button
+          label="Show me around again"
+          icon="reset"
+          variant="secondary"
+          onPress={() => {
+            resetTours();
+            router.replace('/');
+          }}
+          style={{ marginTop: 24 }}
+        />
 
         {session && (
           <View style={styles.danger}>
