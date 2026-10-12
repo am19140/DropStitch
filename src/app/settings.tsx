@@ -15,7 +15,7 @@ import { useProjects } from '@/store/projects';
 
 const C = Colors.light;
 
-/** Settings, opened from the gear on Home: Premium (soon), the account, help and the small print. */
+/** Settings, opened from the gear on Home: Plus (soon), the account, help and the small print. */
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -36,8 +36,8 @@ export default function SettingsScreen() {
         </WaveBand>
 
         <View style={styles.content}>
-          <View style={styles.premium}>
-            <View style={styles.premiumTop}>
+          <View style={styles.plus}>
+            <View style={styles.plusTop}>
               <View style={styles.star}>
                 <Icon name="star" size={22} color={C.primary} strokeWidth={2} />
               </View>
@@ -45,9 +45,9 @@ export default function SettingsScreen() {
                 <Text style={styles.soonText}>Coming soon</Text>
               </View>
             </View>
-            <Text style={styles.premiumTitle}>DropStitch Premium</Text>
-            <Text style={styles.premiumText}>
-              Extra treats for keen knitters are on the way. Everything you use today stays free.
+            <Text style={styles.plusTitle}>DropStitch Plus</Text>
+            <Text style={styles.plusText}>
+              Read any pattern, even photos and scans, and keep your patterns on every device. The row counter stays free.
             </Text>
           </View>
 
@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
   title: { marginTop: 10, fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, color: C.text },
   subtitle: { marginTop: 6, fontFamily: Fonts.semibold, fontSize: 14.5, color: C.text, opacity: 0.75 },
   content: { paddingHorizontal: Spacing.four, paddingTop: Spacing.two },
-  premium: { padding: 18, borderRadius: 24, backgroundColor: C.primary, gap: 6 },
-  premiumTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
+  plus: { padding: 18, borderRadius: 24, backgroundColor: C.primary, gap: 6 },
+  plusTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
   star: {
     width: 40,
     height: 40,
@@ -165,8 +165,8 @@ const styles = StyleSheet.create({
   },
   soon: { paddingHorizontal: 11, paddingVertical: 5, borderRadius: 999, borderWidth: 1.5, borderColor: C.beige },
   soonText: { fontFamily: Fonts.extrabold, fontSize: 12.5, color: C.beige },
-  premiumTitle: { fontFamily: Fonts.display, fontSize: 22, color: C.beige },
-  premiumText: { fontFamily: Fonts.semibold, fontSize: 14, lineHeight: 20, color: C.beige, opacity: 0.9 },
+  plusTitle: { fontFamily: Fonts.display, fontSize: 22, color: C.beige },
+  plusText: { fontFamily: Fonts.semibold, fontSize: 14, lineHeight: 20, color: C.beige, opacity: 0.9 },
   section: { marginTop: 26, marginBottom: 10, fontFamily: Fonts.display, fontSize: 19, color: C.text },
   list: {
     borderRadius: 20,

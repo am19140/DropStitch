@@ -19,6 +19,7 @@ import {
   currentLine,
   currentSide,
   knitTime,
+  timerRunning,
   projectTitle,
   repeatInfo,
   untilLength,
@@ -105,8 +106,13 @@ export default function KnitScreen() {
       pauseTimer: s.pauseTimer,
     }))
   );
-  const running = !!project?.timerStartedAt;
-  const now = useNow(running);
+  // Ticks while a timer is set; the timer stops counting on its own 30 minutes after the last row.
+  const now = useNow(!!project?.timerStartedAt);
+  const running = !!project && timerRunning(project, now);
+  const expired = !!project?.timerStartedAt && !running;
+  useEffect(() => {
+    if (expired && project) pauseTimer(project.id);
+  }, [expired, project, pauseTimer]);
 
   if (!project) return null;
 

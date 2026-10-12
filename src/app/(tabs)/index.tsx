@@ -92,7 +92,7 @@ const HOME_TOUR: TourStep[] = [
   {
     target: 'tab.add',
     title: 'Start here',
-    text: 'Tap + to add a pattern: a PDF or a photo. I’ll split it into steps and keep only the numbers for your size.',
+    text: 'Tap + to add a pattern. I’ll split a PDF into steps and keep only the numbers for your size.',
   },
   {
     target: 'home.card',
@@ -203,7 +203,7 @@ function StartCard({ onPress }: { onPress: () => void }) {
         <View style={{ flex: 1 }}>
           <Text style={styles.muted}>Nothing on the needles</Text>
           <Text style={styles.cardTitle}>Your first project</Text>
-          <Text style={[styles.muted, { marginTop: 2 }]}>Add a pattern as a PDF or photos, and we’ll count the rows.</Text>
+          <Text style={[styles.muted, { marginTop: 2 }]}>Add a PDF pattern and we’ll turn it into steps, in your size.</Text>
         </View>
         <YarnBall color={C.sky} size={58} style={{ marginTop: -8, marginRight: -6 }} />
       </View>

@@ -9,6 +9,8 @@ export type ParsedStep = {
   detail?: string;
   /** How many stitches you should have once the step is done, when the pattern says. */
   stitches?: number;
+  /** The reader wasn't sure this is an instruction, but showed it rather than leave it out. */
+  unsure?: boolean;
 };
 
 const ROW_WORD = String.raw`(?:rows?|rnds?|rounds?|r)`;
@@ -24,6 +26,8 @@ const REPEAT_RANGE = new RegExp(String.raw`\brepeat\b.*?\b${ROW_WORD}\.?\s*(\d+)
 const ROW_AMOUNT = /\b(\d+)\s*(?:more\s+)?(?:rows?|rounds?|rnds?)\b/i;
 // "pick up 3 sts for every 4 rows" is a rate, not an amount
 const RATE = /\b(?:every|per|for each)\s+\d+(?:st|nd|rd|th)?\s*(?:rows?|rnds?|rounds?)\b/gi;
+// "Next row (RS): …", "Set-up row: …", "Dec rnd: …", "Short row 1: …": one row
+const SINGLE_ROW = /^(?:next|set-?up|foundation|dec(?:rease)?|inc(?:rease)?|turning|eyelet|buttonhole|picot|short)\s+(?:row|rnd|round)\b(?!s)/i;
 // "... 3 times" / "3x"
 const TIMES = /\b(\d+)\s*(?:times|x)\b/i;
 
@@ -50,6 +54,7 @@ export function detectRows(line: string): number | undefined {
     if (to >= from) return to - from + 1;
   }
   if (LEADING_SINGLE.test(line)) return 1;
+  if (SINGLE_ROW.test(line) && !ROW_AMOUNT.test(line.replace(RATE, ''))) return 1;
 
   const times = Number(line.match(TIMES)?.[1] ?? 1);
   const repeat = line.match(REPEAT_RANGE);
@@ -82,15 +87,20 @@ export function parseSteps(text: string): ParsedStep[] {
     });
 }
 
-/** Side of the first row a line talks about ("Row 1 (RS)", "next WS row", "RS and WS"). */
+const SIDE = /\b(RS|WS)\b|\b(right|wrong)[\s-]side\b/i;
+
+/** Side of the first row a line talks about ("Row 1 (RS)", "next WS row", "Row 2 (wrong side)"). */
 export function detectSide(text: string): 'RS' | 'WS' | undefined {
   // "…ending with a WS row" says where the step ends, not where it starts.
-  const m = text.replace(/\bend(?:ing|s)?\s+(?:with|after|on)\s+an?\s+(?:RS|WS)\s+row\b/gi, '').match(/\b(RS|WS)\b/);
+  const m = text
+    .replace(/\bend(?:ing|s)?\s+(?:with|after|on)\s+an?\s+(?:RS|WS|right[\s-]side|wrong[\s-]side)\s+row\b/gi, '')
+    .match(SIDE);
   if (!m) return undefined;
+  if (m[2]) return m[2].toLowerCase() === 'right' ? 'RS' : 'WS';
   return m[1].toUpperCase() as 'RS' | 'WS';
 }
 
 /** Whether a line is worked in the round. */
 export function detectRound(text: string): boolean {
-  return /\b(rnds?|rounds?|in the round)\b/i.test(text) && !/\b(RS|WS)\b/.test(text);
+  return /\b(rnds?|rounds?|in the round)\b/i.test(text) && !SIDE.test(text);
 }

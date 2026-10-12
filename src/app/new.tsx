@@ -50,6 +50,8 @@ export default function NewPatternScreen() {
   const steps = [...pdfSteps, ...typedSteps];
   const sections = [...new Set(pdfSteps.map((s) => s.section).filter(Boolean))] as string[];
   const canCreate = name.trim().length > 0 && !needsSize && !reading;
+  // Photos are kept to look at, but not read into steps (yet).
+  const onlyPhotos = files.length > 0 && files.every((f) => f.kind === 'image');
 
   const addFiles = (added: PatternFile[]) => {
     pendingFiles.current = [...pendingFiles.current, ...added];
@@ -104,6 +106,12 @@ export default function NewPatternScreen() {
                 A PDF, a screenshot or photos of a paper pattern. You can add more later.
               </ThemedText>
               <FilePicker files={files} onAdd={addFiles} onRemove={removeFile} />
+              {onlyPhotos && (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Photos stay with your project to look at while you knit. Reading them into steps is coming soon: for
+                  now, type the steps below.
+                </ThemedText>
+              )}
             </View>
 
             {reading && (
@@ -143,6 +151,12 @@ export default function NewPatternScreen() {
                   </View>
                 ) : pattern ? (
                   <>
+                    {pattern.craft === 'crochet' && (
+                      <ThemedText type="small">
+                        This looks like a crochet pattern. DropStitch is made for knitting for now, so check each step
+                        before you start.
+                      </ThemedText>
+                    )}
                     {pattern.sizes.length > 1 && (
                       <View style={{ gap: 10 }}>
                         <ThemedText type="section">Which size are you knitting?</ThemedText>

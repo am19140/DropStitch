@@ -12,7 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { WaveBand } from '@/components/wave-band';
 import { Colors, Fonts } from '@/constants/theme';
 import { daysAgo, knitDuration, longDate, shortDate } from '@/lib/dates';
-import { knitTime, projectTitle, useProject, useProjects } from '@/store/projects';
+import { knitTime, projectTitle, timerRunning, useProject, useProjects } from '@/store/projects';
 
 const C = Colors.light;
 
@@ -37,6 +37,7 @@ export default function ProjectScreen() {
   const { step, row, target, counting } = rowInfo(project);
   const params = { id: project.id };
   const knitted = knitTime(project);
+  const running = timerRunning(project);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
@@ -46,7 +47,7 @@ export default function ProjectScreen() {
           finished ? (
             <Purl pose="proud" size={222} />
           ) : (
-            <PaintedKnittingGrandma paused={!project.timerStartedAt} width={222} active={isFocused} />
+            <PaintedKnittingGrandma paused={!running} width={222} active={isFocused} />
           )
         }
         artStyle={{ right: -16, bottom: -4 }}>
@@ -80,7 +81,7 @@ export default function ProjectScreen() {
         </View>
         {knitted > 0 && (
           <View style={styles.metaRow}>
-            <Icon name={project.timerStartedAt ? 'pause' : 'play'} size={16} color={C.text} />
+            <Icon name={running ? 'pause' : 'play'} size={16} color={C.text} />
             <Text style={styles.meta}>{knitDuration(knitted)} of knitting</Text>
           </View>
         )}

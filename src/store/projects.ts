@@ -7,6 +7,9 @@ import type { YarnAppearance } from '@/components/yarn-ball';
 import { ProjectColors } from '@/constants/theme';
 import { dayKey } from '@/lib/dates';
 import type { ParsedStep } from '@/lib/parse-steps';
+import { countsRows, lengthTarget } from '@/lib/step-rules';
+
+export { countsRows };
 
 export type PatternFile = {
   id: string;
@@ -37,6 +40,8 @@ export type Step = {
   detail?: string;
   /** How many stitches you should have once the step is done, when the pattern says. */
   stitches?: number;
+  /** The pattern reader wasn't sure this is an instruction (see pattern-parser.ts). */
+  unsure?: boolean;
 };
 
 export type Side = 'RS' | 'WS';
@@ -103,15 +108,39 @@ export type SyncMeta = {
 
 export const emptySync: SyncMeta = { userId: null, pulledAt: null, versions: {}, uploaded: {}, removeFiles: [] };
 
+/**
+ * A timer left running stops counting this long after the last row (or after it was started):
+ * a forgotten timer shouldn't turn a night's sleep into knitting time. Long enough for a slow round.
+ */
+export const TIMER_IDLE_MS = 30 * 60_000;
+
+/** When a running session stops counting: now, or 30 minutes after the last row if that's earlier. */
+function sessionEnd(p: Project, now: number) {
+  const last = Math.max(p.timerStartedAt ?? 0, p.lastStitchAt ?? 0);
+  return Math.min(now, last + TIMER_IDLE_MS);
+}
+
+/** Whether the timer is counting: started, and a row counted (or started) in the last 30 minutes. */
+export function timerRunning(p: Project, now = Date.now()) {
+  return !!p.timerStartedAt && sessionEnd(p, now) === now;
+}
+
 /** Stops a running timer, adding the session to the project's knitting time. */
 function stopTimer(p: Project): Partial<Project> {
   if (!p.timerStartedAt) return {};
-  return { knitMs: (p.knitMs ?? 0) + (Date.now() - p.timerStartedAt), timerStartedAt: undefined };
+  const session = Math.max(0, sessionEnd(p, Date.now()) - p.timerStartedAt);
+  return { knitMs: (p.knitMs ?? 0) + session, timerStartedAt: undefined };
+}
+
+/** Keeps the timer going, or starts a new session when it isn't running (or stopped counting a while ago). */
+function resumeTimer(p: Project): Partial<Project> {
+  if (timerRunning(p)) return {};
+  return { ...stopTimer(p), timerStartedAt: Date.now() };
 }
 
 /** Total knitting time so far, including a running session. */
 export function knitTime(p: Project, now = Date.now()) {
-  return (p.knitMs ?? 0) + (p.timerStartedAt ? Math.max(0, now - p.timerStartedAt) : 0);
+  return (p.knitMs ?? 0) + (p.timerStartedAt ? Math.max(0, sessionEnd(p, now) - p.timerStartedAt) : 0);
 }
 
 export function newId() {
@@ -127,28 +156,6 @@ export function currentSide(step: Step): Side | undefined {
   if (step.inRound || !step.startSide) return undefined;
   const even = step.rowsDone % 2 === 0;
   return even ? step.startSide : step.startSide === 'RS' ? 'WS' : 'RS';
-}
-
-/** Steps you do once rather than row by row: "Cast on 120 sts", "Place marker", "Weave in ends". */
-const ONE_OFF =
-  /^(?:cast\s+on|co|cast\s+off|bind\s+off|bo|pick\s+up|place|pm|break|cut|weave|block|wash|sew|seam|graft|put|transfer|move|hold|slip|divide|remove|insert|attach|fold|thread|leave|try|measure|change|switch|join|turn|start|begin|do\s+not|don['’]t)\b/i;
-/**
- * …unless it goes on to knit rows: "Bind off 3 sts at the beg of the next 2 rows",
- * "Change to 4.5 mm needles and work 10 cm in rib".
- */
-const KNITS_ON =
-  /\b(?:\d+\s*(?:more\s+)?(?:rows?|rnds?|rounds?)|next\s+(?:\w+\s+)?(?:rows?|rnds?|rounds?)|until)\b|\band\s+(?:work|knit|purl|continue)\b/i;
-
-/** Whether a step is knitted row by row (and gets the row counter), or just done once. */
-export function countsRows(step: Step): boolean {
-  if (step.rows || step.lines?.length) return true;
-  const text = step.text
-    // "With RS facing, pick up…" / "RS facing, pick up…" is still a pick-up.
-    .replace(/^(?:(?:with|using)\b|(?:RS|WS)\s+facing\b)[^,]*,\s*/i, '')
-    // Picking up is done once, and "3 sts for every 4 rows" is a rate, not rows to knit.
-    .replace(/\bpick\s+up\s+and\s+knit\b/gi, 'pick up')
-    .replace(/\b(?:every|per|for each)\s+\d+(?:st|nd|rd|th)?\s*(?:rows?|rnds?|rounds?)\b/gi, '');
-  return !ONE_OFF.test(text) || KNITS_ON.test(text);
 }
 
 /**
@@ -172,12 +179,7 @@ export function currentLine(step: Step): string | undefined {
 
 /** "Repeat rows 1–2 until the back measures 26 cm" → "26 cm": the length a step knits up to, when it says. */
 export function untilLength(step: Step): string | undefined {
-  const m = step.text.match(
-    /\buntil\b[^.]*?\bmeasures?\s+(?:about\s+|approx\.?\s+)?(\d+(?:[.,]\d+)?)\s*(cm|mm|inches|inch|in\b|")/i
-  );
-  if (!m) return undefined;
-  const unit = m[2].toLowerCase();
-  return `${m[1]} ${unit === '"' || unit.startsWith('in') ? 'in' : unit}`;
+  return lengthTarget(step.text);
 }
 
 /**
@@ -351,7 +353,7 @@ export const useProjects = create<ProjectsState>()(
 
         startTimer: (id) => {
           logKnitting(0);
-          edit(id, (p) => (p.timerStartedAt ? {} : { timerStartedAt: Date.now() }));
+          edit(id, (p) => resumeTimer(p));
         },
         pauseTimer: (id) => edit(id, (p) => stopTimer(p)),
         reopenProject: (id) => edit(id, () => ({ finishedAt: undefined })),
@@ -372,7 +374,7 @@ export const useProjects = create<ProjectsState>()(
               }
             }
             return {
-              timerStartedAt: p.timerStartedAt ?? Date.now(),
+              ...resumeTimer(p),
               lastStitchAt: Date.now(),
               rowCount: p.rowCount + 1,
               steps,
@@ -412,7 +414,7 @@ export const useProjects = create<ProjectsState>()(
             return {
               steps,
               currentStep: next === -1 ? p.currentStep : next,
-              timerStartedAt: p.timerStartedAt ?? Date.now(),
+              ...resumeTimer(p),
               lastStitchAt: Date.now(),
             };
           });

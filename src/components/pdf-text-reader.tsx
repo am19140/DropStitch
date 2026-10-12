@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { HtmlView } from '@/components/html-view';
+import { PAGE_BREAK, PDF_LINES_JS } from '@/lib/pdf-lines';
 import { readPatternFile } from '@/lib/pattern-files';
 import { LOAD_PDFJS, pdfjsScript } from '@/lib/pdfjs';
 import type { PatternFile } from '@/store/projects';
@@ -19,6 +20,7 @@ ${pdfjsScript()}
 </script>
 <script type="module">
   ${LOAD_PDFJS}
+  ${PDF_LINES_JS}
   const post = (msg) => {
     const text = JSON.stringify(msg);
     if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(text);
@@ -33,18 +35,9 @@ ${pdfjsScript()}
     const pages = [];
     for (let n = 1; n <= pdf.numPages; n++) {
       const content = await (await pdf.getPage(n)).getTextContent();
-      let line = '', lastY = null, out = [];
-      for (const item of content.items) {
-        const y = item.transform ? Math.round(item.transform[5]) : lastY;
-        if (lastY !== null && y !== null && Math.abs(y - lastY) > 2 && line) { out.push(line); line = ''; }
-        line += item.str;
-        if (item.hasEOL) { out.push(line); line = ''; }
-        lastY = y;
-      }
-      if (line) out.push(line);
-      pages.push(out.join('\\n'));
+      pages.push(pdfPageLines(content.items).join('\\n'));
     }
-    post({ type: 'pdf-text', text: pages.join('\\n\\n') });
+    post({ type: 'pdf-text', text: pages.join(${JSON.stringify(PAGE_BREAK)}) });
   } catch (e) {
     post({ type: 'pdf-text-error', message: String(e && e.message || e) });
   }
