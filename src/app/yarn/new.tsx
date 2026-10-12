@@ -18,17 +18,13 @@ const C = Colors.light;
 
 /** A short palette from Purl's world; any other colour comes from the colour picker. */
 const YARN_COLOURS = [
-  { name: 'Purl’s chair', hex: '#034FC9' },
-  { name: 'Sky wash', hex: '#80ABD7' },
-  { name: 'Shawl red', hex: '#F51614' },
-  { name: 'Peony', hex: '#F4A9B8' },
-  { name: 'Pure sun', hex: '#F4D242' },
-  { name: 'Monet ponds', hex: '#898E46' },
-  { name: 'Tropical rain', hex: '#008471' },
-  { name: 'Fleece', hex: '#E2D9BC' },
+  { name: 'Midnight', hex: '#0C2467' },
+  { name: 'Cherry', hex: '#A00200' },
+  { name: 'Olive', hex: '#9A9156' },
+  { name: 'Oat milk', hex: '#EFDBB7' },
   { name: 'Hot cocoa', hex: '#683629' },
-  { name: 'Charcoal', hex: '#3B3835' },
   { name: 'Snow', hex: '#F7F4EE' },
+  { name: 'Charcoal', hex: '#3B3835' },
 ];
 const LOOKS: { value: YarnAppearance; label: string }[] = [
   { value: 'fine', label: 'Fine' },
@@ -107,7 +103,7 @@ export default function NewYarnScreen() {
                   {custom ? (
                     <View style={[styles.customDot, { backgroundColor: selected.hex }]} />
                   ) : (
-                    <Icon name="add" size={20} color={C.text} strokeWidth={2.6} />
+                    <Icon name="add" size={16} color={C.text} strokeWidth={2.6} />
                   )}
                 </View>
               </Pressable>
@@ -196,11 +192,11 @@ const styles = StyleSheet.create({
   look: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 18, borderWidth: 1.5, borderColor: C.cardLine, backgroundColor: C.card },
   lookOn: { borderColor: C.text, backgroundColor: C.surface },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  swatches: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
-  swatchRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
-  swatch: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: 'rgba(28, 26, 23, 0.15)', alignItems: 'center', justifyContent: 'center' },
+  swatches: { flexDirection: 'row', justifyContent: 'space-between' },
+  swatchRing: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  swatch: { width: 33, height: 33, borderRadius: 17, borderWidth: 1, borderColor: 'rgba(28, 26, 23, 0.15)', alignItems: 'center', justifyContent: 'center' },
   rainbow: { backgroundImage: 'conic-gradient(#F51614, #F4D242, #008471, #80ABD7, #034FC9, #B9A3D9, #F51614)', backgroundColor: '#E1E9F4' },
-  customDot: { width: 24, height: 24, borderRadius: 12, borderWidth: 2.5, borderColor: '#FFFFFF' },
+  customDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2.5, borderColor: '#FFFFFF' },
   more: { alignSelf: 'center', minHeight: 44, paddingHorizontal: 18, borderRadius: 22, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', gap: 6 },
   moreText: { fontFamily: Fonts.semibold, fontSize: 14, color: C.text },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
