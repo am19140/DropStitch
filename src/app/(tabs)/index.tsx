@@ -6,6 +6,7 @@ import { progressOf, rowInfo } from '@/components/project-box';
 import { GrandmaTea } from '@/components/grandma/grandma-scenes';
 import { Icon } from '@/components/icon';
 import { Purl } from '@/components/purl';
+import { HeaderButton } from '@/components/screen-header';
 import { Tour, TourTarget, type TourStep } from '@/components/tour';
 import { WaveBand } from '@/components/wave-band';
 import { YarnBall } from '@/components/yarn-ball';
@@ -43,6 +44,8 @@ export default function HomeScreen() {
         <View style={styles.brand}>
           <Purl pose="head" size={36} style={{ marginLeft: -4 }} />
           <Text style={styles.brandText}>dropstitch</Text>
+          <View style={{ flex: 1 }} />
+          <HeaderButton icon="settings" label="Settings" round onPress={() => router.push('/settings')} />
         </View>
         <Text style={styles.date}>{todayLabel()}</Text>
         <Text style={styles.greeting}>
@@ -234,7 +237,7 @@ function SmallProjectRow({ project }: { project: Project }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.background },
   content: { paddingHorizontal: 24, paddingTop: 2 },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 4, marginRight: -6 },
   brandText: { fontFamily: Fonts.display, fontSize: 20, color: C.text },
   date: { marginTop: 18, fontFamily: Fonts.bold, fontSize: 14, color: C.text, opacity: 0.75 },
   greeting: { marginTop: 2, maxWidth: 236, fontFamily: Fonts.display, fontSize: 28, lineHeight: 33, color: C.text },

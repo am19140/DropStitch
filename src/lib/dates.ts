@@ -71,3 +71,9 @@ export function todayLabel(now = Date.now()) {
   const d = new Date(now);
   return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
+
+/** "October 2026" */
+export function monthYear(time: number) {
+  const d = new Date(time);
+  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
