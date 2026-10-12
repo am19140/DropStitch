@@ -22,7 +22,7 @@ export function makePose(time:number){
  };
 }
 
-/** Purl choosing between a red and a blue ball of yarn, for the yarn stash: she glances from one to the
+/** Mrs Purl choosing between a red and a blue ball of yarn, for the yarn stash: she glances from one to the
  * other while lifting each in turn. Her head and neck stay still. */
 export default function ChoosingYarnGrandma({width=320,active=true}:ChoosingYarnGrandmaProps){
  const id='choose'+useId().replace(/[^a-zA-Z0-9_-]/g,'');
@@ -50,7 +50,7 @@ export default function ChoosingYarnGrandma({width=320,active=true}:ChoosingYarn
  },[active,foreground,reduced]);
  const pose=makePose(time);
  return (
-    <Svg width={width} height={width*1312/1199} viewBox="0 0 1199 1312" {...a11yProps} accessibilityLabel="Purl choosing between red and blue yarn">
+    <Svg width={width} height={width*1312/1199} viewBox="0 0 1199 1312" {...a11yProps} accessibilityLabel="Mrs Purl choosing between red and blue yarn">
       <Defs >
         <SvgImage id={`${id}-fix-original`} width="1199" height="1312" href={require('@/assets/images/grandma/choosing-original.png')} />
         <SvgImage id={`${id}-fix-backing`} width="1199" height="1312" href={require('@/assets/images/grandma/choosing-backing.png')} />

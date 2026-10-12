@@ -9,7 +9,7 @@ import { WaveBand } from '@/components/wave-band';
 import { Colors, Fonts } from '@/constants/theme';
 import { useProjects, type Project } from '@/store/projects';
 
-/** How far Purl turns her head while reading (1 = as painted). */
+/** How far Mrs Purl turns her head while reading (1 = as painted). */
 const READING_MOTION = 1.8;
 
 /** Splits a list into rows of `size` (padding the last row so boxes keep their width). */
@@ -39,7 +39,7 @@ export default function ProjectsScreen() {
         art={<GrandmaReading width={226} motion={READING_MOTION} active={isFocused} />}
         artStyle={{ right: -14, bottom: -8 }}>
         <Text style={styles.title}>Your{'\n'}projects</Text>
-        <Text style={styles.subtitle}>Your pattern library,{'\n'}read along by Purl</Text>
+        <Text style={styles.subtitle}>Your pattern library,{'\n'}read along by Mrs Purl</Text>
       </WaveBand>
 
       <View style={styles.content}>

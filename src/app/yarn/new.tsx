@@ -16,7 +16,7 @@ import { useProjects } from '@/store/projects';
 
 const C = Colors.light;
 
-/** A short palette from Purl's world; any other colour comes from the colour picker. */
+/** A short palette from Mrs Purl's world; any other colour comes from the colour picker. */
 const YARN_COLOURS = [
   { name: 'Midnight', hex: '#0C2467' },
   { name: 'Cherry', hex: '#A00200' },

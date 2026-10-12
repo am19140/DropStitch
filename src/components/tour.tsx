@@ -10,7 +10,7 @@ const C = Colors.light;
 
 /**
  * A guide that runs on top of the real app: everything is dimmed except one thing at a time, which
- * Purl explains in a bubble. Only Next and Skip can be tapped while it's showing. Each guide shows
+ * Mrs Purl explains in a bubble. Only Next and Skip can be tapped while it's showing. Each guide shows
  * once per phone (see `seenTours` in the store) and can be shown again from the profile.
  *
  * Mark things to point at with <TourTarget id="…">, then put <Tour id="…" steps={…} /> on the screen.

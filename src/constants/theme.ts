@@ -1,5 +1,5 @@
 /**
- * DropStitch theme, taken from Purl: a sky-blue wave on top of cream paper, cobalt blue for
+ * DropStitch theme, taken from Mrs Purl: a sky-blue wave on top of cream paper, cobalt blue for
  * progress and the side you're on, chocolate for buttons, and red only for small accents.
  * Light-only for now.
  */
@@ -16,15 +16,15 @@ const palette = {
   /** Calm cards on the page, with a hairline border. */
   card: '#F3F6FB',
   cardLine: '#E1E9F4',
-  /** Ink: Purl's dark brown face. */
+  /** Ink: Mrs Purl's dark brown face. */
   text: '#2A1C18',
   textSecondary: '#6E5A50',
   border: '#E1E9F4',
-  /** Cobalt blue, from Purl's chair: primary buttons and the active tab. */
+  /** Cobalt blue, from Mrs Purl's chair: primary buttons and the active tab. */
   primary: '#034FC9',
   /** Text and icons on top of `primary`. */
   onPrimary: '#FFFFFF',
-  /** Red, from Purl's shawl and slippers: highlights. White text on it only at 18px+ bold. */
+  /** Red, from Mrs Purl's shawl and slippers: highlights. White text on it only at 18px+ bold. */
   red: '#F51614',
   onRed: '#FFFFFF',
   /** Light blue. Takes ink text. */

@@ -87,7 +87,7 @@ export default function HomeScreen() {
 
 type Streak = ReturnType<typeof streakInfo>;
 
-/** Purl's first tour of the app, on the home screen. */
+/** Mrs Purl's first tour of the app, on the home screen. */
 const HOME_TOUR: TourStep[] = [
   {
     target: 'tab.add',

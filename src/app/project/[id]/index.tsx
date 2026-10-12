@@ -91,7 +91,7 @@ export default function ProjectScreen() {
         {finished ? (
           <View style={{ marginTop: 6 }}>
             <Text style={styles.proudTitle}>You made this!</Text>
-            <Text style={styles.proudNote}>Purl is showing it off to the whole flock.</Text>
+            <Text style={styles.proudNote}>Mrs Purl is showing it off to the whole flock.</Text>
           </View>
         ) : (
           <>

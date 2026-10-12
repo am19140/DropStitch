@@ -7,12 +7,12 @@ import { Colors } from '@/constants/theme';
 
 const C = Colors.light;
 
-/** How far an illustration hangs down past the wave, so Purl stands a little in front of it. */
+/** How far an illustration hangs down past the wave, so Mrs Purl stands a little in front of it. */
 const OVERHANG = 28;
 
 type WaveBandProps = {
   children: ReactNode;
-  /** An illustration (usually Purl) on the band's right side, standing a little past the wave. */
+  /** An illustration (usually Mrs Purl) on the band's right side, standing a little past the wave. */
   art?: ReactNode;
   artStyle?: StyleProp<ViewStyle>;
   /** Extra room under the content, before the wave. */

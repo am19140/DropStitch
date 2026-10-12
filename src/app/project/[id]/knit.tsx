@@ -38,7 +38,7 @@ const SIDE_STYLE = {
   round: { short: 'RND', long: 'in the round' },
 } as const;
 
-/** Purl's guide the first time the counter opens. */
+/** Mrs Purl's guide the first time the counter opens. */
 const KNIT_TOUR: TourStep[] = [
   {
     target: 'knit.hero',
@@ -224,7 +224,7 @@ export default function KnitScreen() {
 
       {tab === 'counter' ? (
         <ScrollView contentContainerStyle={styles.body}>
-          {/* The sky card: where you are, big, with Purl knitting (or dozing while the timer is paused). */}
+          {/* The sky card: where you are, big, with Mrs Purl knitting (or dozing while the timer is paused). */}
           <TourTarget id="knit.hero">
           <View style={styles.hero}>
             <View style={styles.grandma} pointerEvents="none">

@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import type { StyleProp, ImageStyle } from 'react-native';
 
-/** Purl, the grandma sheep, in her hand-painted poses. */
+/** Mrs Purl, the grandma sheep, in her hand-painted poses. */
 const POSES = {
   /** Knitting in her chair: the row counter and active projects. */
   knitting: require('@/assets/images/purl/knitting.webp'),
@@ -20,12 +20,12 @@ const POSES = {
 export type PurlPose = keyof typeof POSES;
 
 const LABELS: Record<PurlPose, string> = {
-  knitting: 'Purl the sheep, knitting in her chair',
-  reading: 'Purl the sheep, reading a knitting pattern',
-  asleep: 'Purl the sheep, asleep in her chair',
-  proud: 'Purl the sheep, proudly holding up a finished sweater',
-  yarnPile: 'Purl the sheep sitting among balls of yarn',
-  head: 'Purl the sheep',
+  knitting: 'Mrs Purl the sheep, knitting in her chair',
+  reading: 'Mrs Purl the sheep, reading a knitting pattern',
+  asleep: 'Mrs Purl the sheep, asleep in her chair',
+  proud: 'Mrs Purl the sheep, proudly holding up a finished sweater',
+  yarnPile: 'Mrs Purl the sheep sitting among balls of yarn',
+  head: 'Mrs Purl the sheep',
 };
 
 export function Purl({ pose, size, style }: { pose: PurlPose; size: number; style?: StyleProp<ImageStyle> }) {

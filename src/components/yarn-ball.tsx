@@ -5,7 +5,7 @@ import { LAYERS, yarnPalette, type YarnBallProps } from '@/components/yarn-color
 
 export { normalizeYarnHex, yarnPalette, type YarnAppearance } from '@/components/yarn-colors';
 
-/** A painted yarn ball in any colour, matching Purl's gouache style. */
+/** A painted yarn ball in any colour, matching Mrs Purl's gouache style. */
 export const YarnBall = memo(function YarnBall({
   color,
   appearance = 'smooth',
