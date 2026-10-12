@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { ColourPicker } from '@/components/colour-picker';
 import { Icon } from '@/components/icon';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
@@ -15,42 +16,19 @@ import { useProjects } from '@/store/projects';
 
 const C = Colors.light;
 
+/** A short palette from Purl's world; any other colour comes from the colour picker. */
 const YARN_COLOURS = [
   { name: 'Purl’s chair', hex: '#034FC9' },
-  { name: 'Shawl red', hex: '#F51614' },
   { name: 'Sky wash', hex: '#80ABD7' },
+  { name: 'Shawl red', hex: '#F51614' },
+  { name: 'Peony', hex: '#F4A9B8' },
+  { name: 'Pure sun', hex: '#F4D242' },
+  { name: 'Monet ponds', hex: '#898E46' },
+  { name: 'Tropical rain', hex: '#008471' },
   { name: 'Fleece', hex: '#E2D9BC' },
   { name: 'Hot cocoa', hex: '#683629' },
-  { name: 'Tomato jam', hex: '#C45F3F' },
-  { name: 'Peony bundle', hex: '#FFC0C0' },
-  { name: 'Monet ponds', hex: '#898E46' },
-  { name: 'Matcha milk', hex: '#E3E6C3' },
-  { name: 'Pure sun', hex: '#F4D242' },
-  { name: 'Airplane view', hex: '#80B0E8' },
-  { name: 'Autumn lavender', hex: '#D1CAEA' },
-  { name: 'Limeade', hex: '#D6D35F' },
-  { name: 'Bubble gum', hex: '#F29CC3' },
-  { name: 'Tropical rain', hex: '#008471' },
-  { name: 'Oatmeal', hex: '#E9DCC6' },
   { name: 'Charcoal', hex: '#3B3835' },
-  { name: 'Strawberry', hex: '#E0475B' },
-  { name: 'Raspberry', hex: '#B8336A' },
-  { name: 'Blush', hex: '#FFE4DF' },
-  { name: 'Sage', hex: '#A8B88A' },
-  { name: 'Forest', hex: '#3F5E3A' },
-  { name: 'Mint', hex: '#BDE3C8' },
-  { name: 'Mustard', hex: '#D9A520' },
-  { name: 'Rust', hex: '#A24A2A' },
-  { name: 'Cocoa', hex: '#6B4A3A' },
-  { name: 'Denim', hex: '#4A6FA5' },
-  { name: 'Sky', hex: '#BFD9F2' },
-  { name: 'Plum', hex: '#6B3E66' },
-  { name: 'Lilac', hex: '#B9A3D9' },
-  { name: 'Coral', hex: '#F28C6F' },
-  { name: 'Teal', hex: '#2F8F8A' },
   { name: 'Snow', hex: '#F7F4EE' },
-  { name: 'Silver', hex: '#BDBAB4' },
-  { name: 'Ink', hex: '#1F2430' },
 ];
 const LOOKS: { value: YarnAppearance; label: string }[] = [
   { value: 'fine', label: 'Fine' },
@@ -64,15 +42,14 @@ export default function NewYarnScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const addYarn = useProjects((s) => s.addYarn);
-  const [colour, setColour] = useState(0);
-  const [expanded, setExpanded] = useState(false);
+  const [selected, setSelected] = useState<{ name: string; hex: string }>(YARN_COLOURS[0]);
+  const [picking, setPicking] = useState(false);
+  const custom = !YARN_COLOURS.some((c) => c.hex === selected.hex);
   const [name, setName] = useState('');
   const [material, setMaterial] = useState('');
   const [needles, setNeedles] = useState<string[]>([]);
   const [appearance, setAppearance] = useState<YarnAppearance>('smooth');
 
-  const selected = YARN_COLOURS[colour];
-  const visible = expanded ? YARN_COLOURS : YARN_COLOURS.slice(0, 12);
   const canSave = material.trim().length > 0;
 
   const save = () => {
@@ -106,35 +83,35 @@ export default function NewYarnScreen() {
           />
 
           <View style={{ gap: 10 }}>
-            <View style={styles.labelRow}>
-              <ThemedText type="eyebrow" themeColor="textSecondary">COLOUR</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
-                {visible.length} of {YARN_COLOURS.length}
-              </ThemedText>
-            </View>
+            <ThemedText type="eyebrow" themeColor="textSecondary">COLOUR</ThemedText>
             <View style={styles.swatches}>
-              {visible.map((c, i) => (
+              {YARN_COLOURS.map((c) => (
                 <Pressable
                   key={c.hex}
                   accessibilityRole="button"
                   accessibilityLabel={c.name}
-                  accessibilityState={{ selected: i === colour }}
-                  onPress={() => setColour(i)}
-                  style={[styles.swatchRing, i === colour && { borderColor: C.text }]}>
+                  accessibilityState={{ selected: c.hex === selected.hex }}
+                  onPress={() => setSelected(c)}
+                  style={[styles.swatchRing, c.hex === selected.hex && { borderColor: C.text }]}>
                   <View style={[styles.swatch, { backgroundColor: c.hex }]} />
                 </Pressable>
               ))}
+              {/* Any other colour: a rainbow swatch that opens the colour picker. */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Choose your own colour"
+                accessibilityState={{ selected: custom }}
+                onPress={() => setPicking(true)}
+                style={[styles.swatchRing, custom && { borderColor: C.text }]}>
+                <View style={[styles.swatch, styles.rainbow]}>
+                  {custom ? (
+                    <View style={[styles.customDot, { backgroundColor: selected.hex }]} />
+                  ) : (
+                    <Icon name="add" size={20} color={C.text} strokeWidth={2.6} />
+                  )}
+                </View>
+              </Pressable>
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ expanded }}
-              onPress={() => setExpanded(!expanded)}
-              style={styles.more}>
-              <Text style={styles.moreText}>{expanded ? 'Fewer colours' : 'More colours'}</Text>
-              <View style={{ transform: [{ rotate: expanded ? '180deg' : '0deg' }] }}>
-                <Icon name="chevronDown" size={16} color={C.text} strokeWidth={2} />
-              </View>
-            </Pressable>
           </View>
 
           <View style={{ gap: 10 }}>
@@ -170,6 +147,18 @@ export default function NewYarnScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <ColourPicker
+        key={picking ? 'open' : 'closed'}
+        visible={picking}
+        initial={selected.hex}
+        appearance={appearance}
+        onCancel={() => setPicking(false)}
+        onPick={(hex) => {
+          setSelected({ name: hex, hex });
+          setPicking(false);
+        }}
+      />
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
         <Button label="Save yarn" size="large" disabled={!canSave} onPress={save} />
@@ -209,7 +198,9 @@ const styles = StyleSheet.create({
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
   swatchRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
-  swatch: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: 'rgba(28, 26, 23, 0.15)' },
+  swatch: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: 'rgba(28, 26, 23, 0.15)', alignItems: 'center', justifyContent: 'center' },
+  rainbow: { backgroundImage: 'conic-gradient(#F51614, #F4D242, #008471, #80ABD7, #034FC9, #B9A3D9, #F51614)', backgroundColor: '#E1E9F4' },
+  customDot: { width: 24, height: 24, borderRadius: 12, borderWidth: 2.5, borderColor: '#FFFFFF' },
   more: { alignSelf: 'center', minHeight: 44, paddingHorizontal: 18, borderRadius: 22, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', gap: 6 },
   moreText: { fontFamily: Fonts.semibold, fontSize: 14, color: C.text },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
