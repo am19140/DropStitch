@@ -23,7 +23,7 @@ type Kind = 'project' | 'yarn' | 'profile';
 type Row = { kind: Kind; id: string; data: unknown; deleted: boolean; updated_at: number; synced_at: string };
 type Profile = { knitterName: string; knitLog: Record<string, number> };
 
-export type SyncStatus = 'off' | 'saving' | 'saved' | 'offline';
+export type SyncStatus = 'off' | 'saving' | 'saved' | 'offline' | 'failed';
 export const useSyncStatus = create<{ status: SyncStatus; savedAt: number | null }>(() => ({
   status: 'off',
   savedAt: null,
@@ -244,7 +244,10 @@ async function syncOnce(): Promise<boolean> {
     return true;
   } catch (error) {
     console.warn('Saving to your account failed', error);
-    useSyncStatus.setState({ status: 'offline' });
+    // No connection, or something else (like the account's database not being set up yet).
+    const message = error instanceof Error ? error.message : String((error as { message?: string })?.message ?? error);
+    const offline = /network|fetch|connection|timed? ?out/i.test(message);
+    useSyncStatus.setState({ status: offline ? 'offline' : 'failed' });
     return false;
   }
 }

@@ -72,6 +72,8 @@ export default function AccountScreen() {
       ? 'Saving to your account…'
       : syncStatus === 'offline'
         ? 'Not saved yet: you seem to be offline. It will save when you’re back online.'
+        : syncStatus === 'failed'
+          ? 'Couldn’t save to your account just now. Your knitting is safe on this phone; we’ll keep trying.'
         : savedAt
           ? `Saved to your account ${timeAgo(savedAt)}`
           : 'Saved to your account';
@@ -130,7 +132,7 @@ export default function AccountScreen() {
                 <Text style={styles.accountText}>
                   Signed in as <Text style={{ fontFamily: Fonts.extrabold }}>{session.user.email}</Text>
                 </Text>
-                <Text style={[styles.savedText, syncStatus === 'offline' && { color: C.danger }]}>{savedLine}</Text>
+                <Text style={[styles.savedText, (syncStatus === 'offline' || syncStatus === 'failed') && { color: C.danger }]}>{savedLine}</Text>
               </View>
               <Button
                 label={busy === 'signOut' ? 'Saving…' : 'Sign out'}
