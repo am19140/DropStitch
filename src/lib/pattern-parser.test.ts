@@ -237,6 +237,14 @@ Knit to XS (44) S (50) M (56) sts, place marker, knit to end.`;
     assert.deepEqual(parsePattern('Cast on XS (88) S (100) sts.\nKnit 10 rows.').sizes, []);
   });
 
+  test('a stitch count in brackets ends its step: "… 5 times. (30 sts) Bind off."', () => {
+    const pattern = `Cast on 40 sts.
+Decrease 1 st at each end of every RS row 5 times. (30 sts)
+Bind off.`;
+    assert.deepEqual(texts(pattern), ['Cast on 40 sts.', 'Decrease 1 st at each end of every RS row 5 times. (30 sts)', 'Bind off.']);
+    assert.equal(stepWith(pattern, 'every RS row')?.stitches, 30);
+  });
+
   test('a line per size: only your size, and only its stitch count', () => {
     const pattern = `Cast on XS (60) S (70) M (80) sts.
 Knit to XS (30) S (35) M (40) sts, place marker.

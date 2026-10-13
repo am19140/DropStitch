@@ -410,6 +410,8 @@ function splitPieces(text: string): string[] {
   const pieces = text
     .replace(/([.:!)\]])\s+(?=(?:Row|Rows|Rnd|Rnds|Round|Rounds)\s+\d|\d+(?:st|nd|rd|th)\s+(?:row|rnd|round)\b)/g, '$1\n')
     .replace(/([.!?\]])\s+(?=[A-Z*“"])/g, '$1\n')
+    // "Dec every RS row 5 times. (30 sts) Bind off.": the count closes its step, and the next one starts after it.
+    .replace(/([([]\s*=?\s*\d+\s*(?:sts|stitches)[^()[\]]{0,24}[)\]]\.?)\s+(?=[A-Z*“"])/gi, '$1\n')
     .split('\n')
     .map((p) => p.trim())
     .filter(Boolean);
