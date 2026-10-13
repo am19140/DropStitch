@@ -208,6 +208,16 @@ const COUNT_SENTENCE = /\b(?:there (?:is|are|will be) now|you (?:should )?(?:now
 const STITCH_COUNT = /^(?:(?:starting|ending|total|final)\s+)?stitch count:?\s*(\d+)\b/i;
 /** "RS decrease row / 62 sts", "WS purl", "RS knit": one row of a row-by-row table. */
 const TABLE_ROW = /^(?:RS|WS)\s+(?:dec(?:rease)?|inc(?:rease)?|knit|purl|k|p|work|patt(?:ern)?)\b/;
+/** "1 increase round / 116 sts", "2 regular knit rounds": a line of a round-by-round check list. */
+const COUNTED_ROW = /^\d+\s+(?:increase|decrease|inc|dec|regular|plain)(?:\s+knit)?\s+(?:rounds?|rnds?|rows?)\b/i;
+/** "If you are unsure: step by step, it should look like this:" — the pattern saying it again, as a check. */
+const CHECK_LIST = /^if you(?:['’]re| are) (?:unsure|in doubt|not sure)\b/i;
+/**
+ * "1 round with increases – 2 rounds knit without increases – Work the above a total of 4 times":
+ * a shaping round and plain rounds, repeated. Groups: shaping count, unit, kind, plain count, times.
+ */
+const SHAPING_CYCLE =
+  /\b(\d+)\s+(rounds?|rnds?|rows?)\s+with\s+(increases|decreases)\b.*?\b(\d+)\s+(?:rounds?|rnds?|rows?)\s+(?:knit(?:ted)?\s+|worked\s+)?without\s+(?:increases|decreases|shaping)\b.*?\b(?:work|repeat)\s+the\s+above\s+(?:a\s+total\s+of\s+)?(\d+)\s+times\b/i;
 /** The stitch count at the end of a table row: " / 62 sts". */
 const COUNT_IN_ROW = /\s*[/–-]?\s*\(?(\d+)\s*(?:sts|stitches)\)?\.?\s*$/i;
 /** "Decreases are worked on every 2nd RS row", "All WS rows are worked purl": how it's done, said before the steps. */
@@ -254,7 +264,7 @@ function classify(piece: string): 'instruction' | 'note' | 'unsure' {
   if (COUNT_ONLY.test(body) || ABBREVIATION.test(body) || STITCH_COUNT.test(body)) return 'note';
   // "Total stitch count. You now have: 80 stitches."
   if (body.length <= 70 && COUNT_SENTENCE.test(body) && !INSTRUCTION.test(body)) return 'note';
-  if (PASSIVE.test(body)) return 'note';
+  if (PASSIVE.test(body) || CHECK_LIST.test(body)) return 'note';
   // Swatching and gauge advice belong to the front matter.
   if (/\bswatch/i.test(body) || (/\b(?:gauge|tension)\b/i.test(body) && !INSTRUCTION.test(body))) return 'note';
   if (isInstruction(body)) return 'instruction';
@@ -327,7 +337,8 @@ function joinLines(lines: string[]): string {
     const point = BULLET.test(raw) || LIST_NUMBER.test(raw);
     const line = raw.replace(BULLET, '').replace(LIST_NUMBER, '');
     // A table row stands on its own line, and so does the sentence after the table.
-    const table = TABLE_ROW.test(line) || (TABLE_ROW.test(previous) && /^[A-Z]/.test(line));
+    const row = (l: string) => TABLE_ROW.test(l) || COUNTED_ROW.test(l);
+    const table = row(line) || (row(previous) && /^[A-Z]/.test(line));
     previous = line;
     if (!out) out = line;
     else if (point || (/^[A-Z0-9]/.test(line) && OWN_LINE.test(line)) || table) out += `\n${line}`;
@@ -441,7 +452,7 @@ function splitPieces(text: string): string[] {
     // "1st row: (RS). *K1. P1. Rep from * to end of row." is one row, written as short sentences.
     if (previous && ROW_LINE.test(previous) && p.length <= 60 && STITCHES.test(p) && !ROW_START.test(p)) {
       merged[merged.length - 1] += ` ${p}`;
-    } else if (previous && p.length < 14 && !isInstruction(p) && !COUNT_ONLY.test(p) && !TABLE_ROW.test(p)) {
+    } else if (previous && p.length < 14 && !isInstruction(p) && !COUNT_ONLY.test(p) && !TABLE_ROW.test(p) && !COUNTED_ROW.test(p)) {
       // Glue stray fragments (that aren't instructions themselves) back onto the previous piece.
       merged[merged.length - 1] += ` ${p}`;
     } else merged.push(p);
@@ -637,9 +648,12 @@ function toSteps(
       const last = steps[steps.length - 1];
       if (count && last) last.stitches = Number(count[1]);
       // Keep notes that talk about the knitting with the step; leave out the chatter.
-      if (count || signal || knitDensity(piece) > 0) {
-        if (last) last.detail = `${last.detail ?? last.text} ${piece}`;
-        else leadNotes.push(piece);
+      // "If you are unsure: step by step…" and its list of rounds: a check on the step before, not new steps.
+      let note = piece;
+      if (CHECK_LIST.test(piece)) while (i + 1 < pieces.length && COUNTED_ROW.test(pieces[i + 1])) note += ` ${pieces[++i]}`;
+      if (count || signal || knitDensity(note) > 0) {
+        if (last) last.detail = `${last.detail ?? last.text} ${note}`;
+        else leadNotes.push(note);
       }
       if (signal) sideSignal(signal);
       i += 1;
@@ -760,6 +774,38 @@ function toSteps(
         },
         raw
       );
+      i += 1;
+      continue;
+    }
+
+    // "1 round with increases, 2 rounds without, work the above 4 times": one step that repeats those rounds.
+    const cycle = piece.match(SHAPING_CYCLE);
+    if (cycle) {
+      const [shaped, plain, times] = [Number(cycle[1]), Number(cycle[4]), Number(cycle[5])];
+      const unit = /^r(?:nd|ound)/i.test(cycle[2]) ? 'round' : 'row';
+      const kind = /^inc/i.test(cycle[3]) ? 'Increase' : 'Decrease';
+      // "This is done as follows: knit to 1st marker and M1R, …" just before says what the shaping round is.
+      const before = steps[steps.length - 1];
+      const how = before && !before.rows && !before.lines && /\bas follows:\s*\S/i.test(raws[raws.length - 1]) ? raws[raws.length - 1] : '';
+      if (how) {
+        steps.pop();
+        raws.pop();
+      }
+      const shapedLine = how ? `${kind} ${unit}: ${tidy(how.replace(/^.*?\bas follows:\s*/i, ''))}` : `${kind} ${unit}`;
+      const plainLine = /without[^.]*?\bknit|knit(?:ted)?\s+without/i.test(cycle[0]) ? 'Knit' : `Work without ${kind.toLowerCase()}s`;
+      const size = shaped + plain;
+      const total = piece.match(/(\d+)\s*(?:sts|stitches)(?:\s+(?:in\s+)?total)?\.?$/i);
+      push(
+        {
+          text: `Repeat these ${size} ${unit}s ${times} times.`,
+          lines: [...Array(shaped).fill(capitalize(shapedLine)), ...Array(plain).fill(plainLine)],
+          rows: size * times,
+          ...(unit === 'round' ? { inRound: true } : {}),
+          ...(total ? { stitches: Number(total[1]) } : {}),
+        },
+        [how, piece].filter(Boolean).join(' ')
+      );
+      intro = undefined;
       i += 1;
       continue;
     }

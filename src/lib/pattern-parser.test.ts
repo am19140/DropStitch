@@ -345,6 +345,35 @@ Place all sts on hold.`;
   });
 });
 
+describe('a shaping round and plain rounds, repeated', () => {
+  const pattern = `Cast on 80 sts and join in the round.
+Raglan:
+Shape as follows: k1, m1, knit to 1 st before marker, m1, k1.
+This is worked every 4th round:
+1 round with increases
+3 rounds knit without increases
+Repeat the above a total of 3 times, ending with 86 sts total.
+If you are unsure, step by step:
+1 increase round / 82 sts
+3 regular knit rounds
+1 increase round / 84 sts
+3 regular knit rounds
+1 increase round / 86 sts
+Bind off loosely.`;
+
+  test('one step that repeats the rounds, going by the instruction and not the check list', () => {
+    const steps = read(pattern);
+    assert.deepEqual(steps.map((s) => s.text), ['Cast on 80 sts and join in the round.', 'Repeat these 4 rounds 3 times.', 'Bind off loosely.']);
+    const repeat = steps[1];
+    assert.equal(repeat.rows, 12);
+    assert.equal(repeat.inRound, true);
+    assert.equal(repeat.stitches, 86);
+    assert.deepEqual(repeat.lines, ['Increase round: K1, m1, knit to 1 st before marker, m1, k1.', 'Knit', 'Knit', 'Knit']);
+    assert.match(repeat.detail ?? '', /If you are unsure/);
+    assert.ok(steps.every((s) => !s.unsure));
+  });
+});
+
 describe('crochet', () => {
   test('a crochet pattern is recognised', () => {
     const pattern = `Ch 20.
