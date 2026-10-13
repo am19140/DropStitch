@@ -5,6 +5,6 @@ const expoConfig = require("eslint-config-expo/flat");
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ["dist/*", "src/lib/pdfjs.generated.ts"],
+    ignores: ["dist/*", "src/lib/pdfjs.generated.ts", "supabase/functions/*"],
   }
 ]);

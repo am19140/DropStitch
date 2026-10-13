@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -12,6 +12,16 @@ import { ThemedText } from '@/components/themed-text';
 import { WaveBand } from '@/components/wave-band';
 import { YarnBall, type YarnAppearance } from '@/components/yarn-ball';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
+import {
+  canLookUpYarn,
+  fibreText,
+  looksFor,
+  needleLabel,
+  searchYarns,
+  yarnDetails,
+  type FoundYarn,
+  type YarnDetails,
+} from '@/lib/yarn-lookup';
 import { useProjects } from '@/store/projects';
 
 const C = Colors.light;
@@ -46,8 +56,37 @@ export default function NewYarnScreen() {
   const [material, setMaterial] = useState('');
   const [needles, setNeedles] = useState<string[]>([]);
   const [appearance, setAppearance] = useState<YarnAppearance>('smooth');
+  // "Look it up" on Ravelry, for the accounts it's open to; everyone else types the yarn in.
+  const [canLookUp, setCanLookUp] = useState(false);
+  const [mode, setMode] = useState<'lookup' | 'manual'>('manual');
+  const [from, setFrom] = useState<FoundYarn | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    canLookUpYarn().then((ok) => {
+      if (!live || !ok) return;
+      setCanLookUp(true);
+      setMode('lookup');
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  /** Fills the form from a Ravelry yarn; the colour is still the knitter's to pick. */
+  const fillFrom = (yarn: FoundYarn, details?: YarnDetails) => {
+    setName([yarn.company, yarn.name].filter(Boolean).join(' '));
+    setAppearance(looksFor(yarn.weight));
+    if (details) {
+      setMaterial(fibreText(details.fibres));
+      setNeedles(details.needles.map(needleLabel));
+    }
+    setFrom(yarn);
+    setMode('manual');
+  };
 
   const canSave = material.trim().length > 0;
+  const needleOptions = [...new Set([...NEEDLES, ...needles])].sort((a, b) => parseFloat(a) - parseFloat(b));
 
   const save = () => {
     addYarn({ name: name.trim(), colorName: selected.name, hex: selected.hex, material: material.trim(), needles, appearance });
@@ -72,76 +111,110 @@ export default function NewYarnScreen() {
         </WaveBand>
 
         <View style={styles.content}>
-          <TextField
-            label="Name · optional"
-            value={name}
-            onChangeText={setName}
-            placeholder="e.g. Drops Merino Extra Fine"
-          />
-
-          <View style={{ gap: 10 }}>
-            <ThemedText type="eyebrow" themeColor="textSecondary">COLOUR</ThemedText>
-            <View style={styles.swatches}>
-              {YARN_COLOURS.map((c) => (
+          {canLookUp && (
+            <View style={styles.modes}>
+              {(['lookup', 'manual'] as const).map((m) => (
                 <Pressable
-                  key={c.hex}
+                  key={m}
                   accessibilityRole="button"
-                  accessibilityLabel={c.name}
-                  accessibilityState={{ selected: c.hex === selected.hex }}
-                  onPress={() => setSelected(c)}
-                  style={[styles.swatchRing, c.hex === selected.hex && { borderColor: C.text }]}>
-                  <View style={[styles.swatch, { backgroundColor: c.hex }]} />
+                  accessibilityState={{ selected: mode === m }}
+                  onPress={() => setMode(m)}
+                  style={[styles.mode, mode === m && styles.modeOn]}>
+                  <Text style={[styles.modeText, mode === m && { color: C.surface }]}>
+                    {m === 'lookup' ? 'Look it up' : 'Type it myself'}
+                  </Text>
                 </Pressable>
               ))}
-              {/* Any other colour: a rainbow swatch that opens the colour picker. */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Choose your own colour"
-                accessibilityState={{ selected: custom }}
-                onPress={() => setPicking(true)}
-                style={[styles.swatchRing, custom && { borderColor: C.text }]}>
-                <View style={[styles.swatch, styles.rainbow]}>
-                  {custom ? (
-                    <View style={[styles.customDot, { backgroundColor: selected.hex }]} />
-                  ) : (
-                    <Icon name="add" size={16} color={C.text} strokeWidth={2.6} />
-                  )}
+            </View>
+          )}
+
+          {mode === 'lookup' ? (
+            <YarnLookup onPick={fillFrom} />
+          ) : (
+            <>
+              {from && (
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={() => from.url && Linking.openURL(from.url)}
+                  style={styles.credit}>
+                  <Text style={styles.creditText}>
+                    Filled in from {from.company} {from.name} on Ravelry
+                    {from.metres && from.grams ? ` · ${from.metres} m / ${from.grams} g` : ''}. Pick your colour below.
+                  </Text>
+                </Pressable>
+              )}
+              <TextField
+                label="Name · optional"
+                value={name}
+                onChangeText={setName}
+                placeholder="e.g. Drops Merino Extra Fine"
+              />
+
+              <View style={{ gap: 10 }}>
+                <ThemedText type="eyebrow" themeColor="textSecondary">COLOUR</ThemedText>
+                <View style={styles.swatches}>
+                  {YARN_COLOURS.map((c) => (
+                    <Pressable
+                      key={c.hex}
+                      accessibilityRole="button"
+                      accessibilityLabel={c.name}
+                      accessibilityState={{ selected: c.hex === selected.hex }}
+                      onPress={() => setSelected(c)}
+                      style={[styles.swatchRing, c.hex === selected.hex && { borderColor: C.text }]}>
+                      <View style={[styles.swatch, { backgroundColor: c.hex }]} />
+                    </Pressable>
+                  ))}
+                  {/* Any other colour: a rainbow swatch that opens the colour picker. */}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Choose your own colour"
+                    accessibilityState={{ selected: custom }}
+                    onPress={() => setPicking(true)}
+                    style={[styles.swatchRing, custom && { borderColor: C.text }]}>
+                    <View style={[styles.swatch, styles.rainbow]}>
+                      {custom ? (
+                        <View style={[styles.customDot, { backgroundColor: selected.hex }]} />
+                      ) : (
+                        <Icon name="add" size={16} color={C.text} strokeWidth={2.6} />
+                      )}
+                    </View>
+                  </Pressable>
                 </View>
-              </Pressable>
-            </View>
-          </View>
+              </View>
 
-          <View style={{ gap: 10 }}>
-            <ThemedText type="eyebrow" themeColor="textSecondary">LOOKS LIKE</ThemedText>
-            <View style={styles.looks}>
-              {LOOKS.map((l) => (
-                <Pressable
-                  key={l.value}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${l.label} yarn`}
-                  accessibilityState={{ selected: appearance === l.value }}
-                  onPress={() => setAppearance(l.value)}
-                  style={[styles.look, appearance === l.value && styles.lookOn]}>
-                  <YarnBall color={selected.hex} appearance={l.value} size={64} />
-                  <Text style={styles.chipText}>{l.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
+              <View style={{ gap: 10 }}>
+                <ThemedText type="eyebrow" themeColor="textSecondary">LOOKS LIKE</ThemedText>
+                <View style={styles.looks}>
+                  {LOOKS.map((l) => (
+                    <Pressable
+                      key={l.value}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${l.label} yarn`}
+                      accessibilityState={{ selected: appearance === l.value }}
+                      onPress={() => setAppearance(l.value)}
+                      style={[styles.look, appearance === l.value && styles.lookOn]}>
+                      <YarnBall color={selected.hex} appearance={l.value} size={64} />
+                      <Text style={styles.chipText}>{l.label}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
 
-          <View style={{ gap: 10 }}>
-            <TextField label="Material" value={material} onChangeText={setMaterial} placeholder="e.g. merino wool" />
-            <Chips options={MATERIALS} isOn={(m) => material === m} onPress={setMaterial} />
-          </View>
+              <View style={{ gap: 10 }}>
+                <TextField label="Material" value={material} onChangeText={setMaterial} placeholder="e.g. merino wool" />
+                <Chips options={MATERIALS} isOn={(m) => material === m} onPress={setMaterial} />
+              </View>
 
-          <View style={{ gap: 10 }}>
-            <ThemedText type="eyebrow" themeColor="textSecondary">NEEDLES THAT FIT · OPTIONAL</ThemedText>
-            <Chips
-              options={NEEDLES}
-              isOn={(n) => needles.includes(n)}
-              onPress={(n) => setNeedles(needles.includes(n) ? needles.filter((x) => x !== n) : [...needles, n])}
-            />
-          </View>
+              <View style={{ gap: 10 }}>
+                <ThemedText type="eyebrow" themeColor="textSecondary">NEEDLES THAT FIT · OPTIONAL</ThemedText>
+                <Chips
+                  options={needleOptions}
+                  isOn={(n) => needles.includes(n)}
+                  onPress={(n) => setNeedles(needles.includes(n) ? needles.filter((x) => x !== n) : [...needles, n])}
+                />
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
 
@@ -157,10 +230,91 @@ export default function NewYarnScreen() {
         }}
       />
 
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
-        <Button label="Save yarn" size="large" disabled={!canSave} onPress={save} />
-      </View>
+      {mode === 'manual' && (
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
+          <Button label="Save yarn" size="large" disabled={!canSave} onPress={save} />
+        </View>
+      )}
     </KeyboardAvoidingView>
+  );
+}
+
+/** Search Ravelry's yarn database, then pick a yarn to fill the form with. */
+function YarnLookup({ onPick }: { onPick: (yarn: FoundYarn, details?: YarnDetails) => void }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<FoundYarn[] | null>(null);
+  const [busy, setBusy] = useState<'search' | number | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  const search = async () => {
+    if (!query.trim()) return;
+    setBusy('search');
+    setFailed(false);
+    try {
+      setResults(await searchYarns(query));
+    } catch {
+      setFailed(true);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const pick = async (yarn: FoundYarn) => {
+    setBusy(yarn.id);
+    try {
+      onPick(yarn, await yarnDetails(yarn.id));
+    } catch {
+      // The details are a bonus: the name and weight are enough to go on.
+      onPick(yarn);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <View style={{ gap: 12 }}>
+      <TextField
+        label="Brand and yarn"
+        value={query}
+        onChangeText={setQuery}
+        placeholder="e.g. Drops Merino Extra Fine"
+        returnKeyType="search"
+        onSubmitEditing={search}
+        autoFocus
+      />
+      <Button label="Search" icon="search" variant="secondary" disabled={!query.trim() || busy !== null} onPress={search} />
+      {busy === 'search' && <ActivityIndicator color={C.text} />}
+      {failed && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Couldn’t reach Ravelry just now. Try again, or type the yarn in yourself.
+        </ThemedText>
+      )}
+      {results?.length === 0 && (
+        <ThemedText type="small" themeColor="textSecondary">
+          No yarns found. Try the brand and the yarn name, like “Drops Air”.
+        </ThemedText>
+      )}
+      {results?.map((y) => (
+        <Pressable
+          key={y.id}
+          accessibilityRole="button"
+          accessibilityLabel={`${y.company} ${y.name}`}
+          disabled={busy !== null}
+          onPress={() => pick(y)}
+          style={styles.result}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={styles.resultName}>{y.name}</Text>
+            <Text style={styles.resultMeta}>
+              {[y.company, y.weight, y.metres && y.grams ? `${y.metres} m / ${y.grams} g` : '', y.discontinued ? 'discontinued' : '']
+                .filter(Boolean)
+                .join(' · ')}
+            </Text>
+          </View>
+          {busy === y.id ? <ActivityIndicator color={C.text} /> : <Icon name="chevronRight" size={20} color={C.textSecondary} />}
+        </Pressable>
+      ))}
+      {results && results.length > 0 && <Text style={styles.creditText}>Yarn details from Ravelry.</Text>}
+    </View>
   );
 }
 
@@ -204,4 +358,13 @@ const styles = StyleSheet.create({
   chip: { minHeight: 44, paddingHorizontal: 16, borderRadius: 22, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, justifyContent: 'center' },
   chipText: { fontFamily: Fonts.semibold, fontSize: 14, color: C.text },
   footer: { paddingHorizontal: Spacing.four, paddingTop: 14, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border },
+  modes: { flexDirection: 'row', gap: 8 },
+  mode: { flex: 1, minHeight: 44, borderRadius: 22, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' },
+  modeOn: { backgroundColor: C.text, borderColor: C.text },
+  modeText: { fontFamily: Fonts.bold, fontSize: 15, color: C.text },
+  result: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 18, borderWidth: 1.5, borderColor: C.cardLine, backgroundColor: C.card },
+  resultName: { fontFamily: Fonts.bold, fontSize: 15, color: C.text },
+  resultMeta: { fontFamily: Fonts.semibold, fontSize: 13, color: C.textSecondary },
+  credit: { padding: 12, borderRadius: 14, backgroundColor: C.card, borderWidth: 1.5, borderColor: C.cardLine },
+  creditText: { fontFamily: Fonts.semibold, fontSize: 13, lineHeight: 18, color: C.textSecondary },
 });
