@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -24,7 +24,8 @@ const PART_COLOURS = [C.sky, C.cocoa, C.primary, C.beige];
 /**
  * Right after Mrs Purl reads a PDF: one look at every step before you start, grouped by part.
  * Each step can open to show the pattern's own words, and the lines she wasn't sure about ask
- * Keep it / Leave it out, so nothing slips through.
+ * Keep it / Leave it out, so nothing slips through. The bubble and the footer button slide the
+ * screen to the next unsure line, and answering one slides on to the one after.
  */
 export default function CheckStepsScreen() {
   const router = useRouter();
@@ -32,6 +33,36 @@ export default function CheckStepsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProject(id);
   const [editing, setEditing] = useState<Step | null>(null);
+  const [focused, setFocused] = useState<string | null>(null);
+  const [advance, setAdvance] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  // Where things sit, for sliding to a step: the scroll window's height, the body's top inside
+  // the scroll, each part's top inside the body, and each unsure card's part and top inside it.
+  const layout = useRef({ view: 0, body: 0, parts: [] as number[], cards: {} as Record<string, { part: number; y: number }> });
+
+  const slideTo = (stepId: string) => {
+    const l = layout.current;
+    const card = l.cards[stepId];
+    if (!card) return;
+    const y = l.body + (l.parts[card.part] ?? 0) + card.y;
+    scrollRef.current?.scrollTo({ y: Math.max(0, y - l.view * 0.2), animated: true });
+    setFocused(stepId);
+  };
+  const nextUnsure = () => {
+    const next = project?.steps.find((s) => s.unsure);
+    if (next) slideTo(next.id);
+  };
+
+  // After Keep it / Leave it out, wait for the cards to settle, then slide on to the next one.
+  useEffect(() => {
+    if (!advance) return;
+    const timer = setTimeout(() => {
+      setAdvance(false);
+      setFocused(null);
+      nextUnsure();
+    }, 120);
+    return () => clearTimeout(timer);
+  });
 
   const startKnitting = () => router.replace({ pathname: '/project/[id]', params: { id } });
 
@@ -61,7 +92,10 @@ export default function CheckStepsScreen() {
 
   return (
     <ThemedView style={styles.screen}>
-      <ScrollView contentContainerStyle={{ paddingBottom: Spacing.four }}>
+      <ScrollView
+        ref={scrollRef}
+        onLayout={(e) => (layout.current.view = e.nativeEvent.layout.height)}
+        contentContainerStyle={{ paddingBottom: Spacing.four }}>
         <WaveBand style={{ paddingBottom: 6 }}>
           <View style={styles.headerRow}>
             <HeaderButton icon="close" label="Skip checking" onPress={startKnitting} round />
@@ -70,17 +104,18 @@ export default function CheckStepsScreen() {
           <Text style={styles.subtitle}>{subtitle}</Text>
         </WaveBand>
 
-        <View style={styles.body}>
+        <View style={styles.body} onLayout={(e) => (layout.current.body = e.nativeEvent.layout.y)}>
           {unsure > 0 && (
-            <View style={styles.bubble}>
+            <Pressable accessibilityRole="button" onPress={nextUnsure} style={styles.bubble}>
               <Purl pose="head" size={42} />
               <Text style={styles.bubbleText}>
-                I wasn’t sure about {unsure === 1 ? '1 line' : `${unsure} lines`}, dear. Have a look before we start?
+                I wasn’t sure about {unsure === 1 ? '1 line' : `${unsure} lines`}, dear. Tap and I’ll show you.
               </Text>
-            </View>
+              <Icon name="chevronDown" size={18} color={C.text} strokeWidth={2.4} />
+            </Pressable>
           )}
           {parts.map((part, p) => (
-            <View key={p}>
+            <View key={p} onLayout={(e) => (layout.current.parts[p] = e.nativeEvent.layout.y)}>
               {part.title ? <Text style={styles.part}>{part.title.toUpperCase()}</Text> : null}
               {part.steps.map((step) => (
                 <StepCard
@@ -88,7 +123,12 @@ export default function CheckStepsScreen() {
                   projectId={project.id}
                   step={step}
                   colour={PART_COLOURS[p % PART_COLOURS.length]}
+                  focused={focused === step.id}
                   onEdit={() => setEditing(step)}
+                  onAnswered={() => setAdvance(true)}
+                  onLayout={(e) => {
+                    if (step.unsure) layout.current.cards[step.id] = { part: p, y: e.nativeEvent.layout.y };
+                  }}
                 />
               ))}
             </View>
@@ -97,7 +137,17 @@ export default function CheckStepsScreen() {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.three }]}>
-        <Button label="Looks good, start knitting" size="large" onPress={startKnitting} />
+        {unsure > 0 ? (
+          <Button
+            label={unsure === 1 ? 'Show me the last one' : `Show me the next one · ${unsure} left`}
+            icon="chevronDown"
+            iconAfter
+            size="large"
+            onPress={nextUnsure}
+          />
+        ) : (
+          <Button label="Looks good, start knitting" size="large" onPress={startKnitting} />
+        )}
       </View>
 
       {editing ? (
@@ -111,12 +161,18 @@ function StepCard({
   projectId,
   step,
   colour,
+  focused,
   onEdit,
+  onAnswered,
+  onLayout,
 }: {
   projectId: string;
   step: Step;
   colour: string;
+  focused: boolean;
   onEdit: () => void;
+  onAnswered: () => void;
+  onLayout: (e: LayoutChangeEvent) => void;
 }) {
   const { updateStep, deleteStep } = useProjects(
     useShallow((s) => ({ updateStep: s.updateStep, deleteStep: s.deleteStep }))
@@ -125,7 +181,7 @@ function StepCard({
 
   if (step.unsure) {
     return (
-      <View style={[styles.card, styles.unsureCard]}>
+      <View style={[styles.card, styles.unsureCard, focused && styles.focusedCard]} onLayout={onLayout}>
         <View style={[styles.bar, { backgroundColor: colour }]} />
         <View style={styles.cardBody}>
           <Text style={styles.unsureLabel}>Mrs Purl wasn’t sure this is a step</Text>
@@ -133,14 +189,20 @@ function StepCard({
           <View style={styles.choices}>
             <Pressable
               accessibilityRole="button"
-              onPress={() => updateStep(projectId, step.id, { unsure: false })}
+              onPress={() => {
+                updateStep(projectId, step.id, { unsure: false });
+                onAnswered();
+              }}
               style={[styles.pill, styles.pillDark]}>
               <Icon name="check" size={15} color={C.surface} strokeWidth={2.6} />
               <Text style={[styles.pillText, { color: C.surface }]}>Keep it</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              onPress={() => deleteStep(projectId, step.id)}
+              onPress={() => {
+                deleteStep(projectId, step.id);
+                onAnswered();
+              }}
               style={styles.pill}>
               <Icon name="trash" size={15} color={C.text} strokeWidth={2.2} />
               <Text style={styles.pillText}>Leave it out</Text>
@@ -158,7 +220,7 @@ function StepCard({
   ].filter(Boolean);
 
   return (
-    <View style={styles.card}>
+    <View style={styles.card} onLayout={onLayout}>
       <View style={[styles.bar, { backgroundColor: colour }]} />
       <View style={styles.cardBody}>
         <Text style={styles.stepText}>{step.text}</Text>
@@ -241,6 +303,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.card,
   },
   unsureCard: { backgroundColor: C.beige, borderColor: '#D6CBA6' },
+  focusedCard: { borderColor: C.primary, borderWidth: 2.5 },
   bar: { width: 4, borderRadius: 3, alignSelf: 'stretch' },
   cardBody: { flex: 1, gap: 6 },
   stepText: { fontFamily: Fonts.bold, fontSize: 15, lineHeight: 20, color: C.text },
