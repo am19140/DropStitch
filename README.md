@@ -20,12 +20,12 @@ Everything is kept on the phone first, so the app works offline. Once you sign i
 
 ## Design
 
-Purl, a grandma sheep, in her hand-painted paintings on a sky-blue wave (`#80ABD7`) at the top of the main screens. Pages are cream (`#FFFCF4`) with light-blue cards (`#F3F6FB`, border `#E1E9F4`).
+Mrs Purl, a grandma sheep, in her hand-painted paintings on a sky-blue wave (`#80ABD7`) at the top of the main screens. Pages are cream (`#FFFCF4`) with light-blue cards (`#F3F6FB`, border `#E1E9F4`).
 
 - **Chocolate** (`#2A1C18`) for buttons and text, **cobalt** (`#034FC9`) for progress and RS/WS, and **red** (`#F51614`) only for small accents.
 - **Nunito** everywhere, from Black for big titles and row numbers down to Regular.
 
-All colours and fonts live in `src/constants/theme.ts`. Purl's paintings are in `assets/images/purl`, and the yarn balls are painted layers in `assets/images/yarn` that take any colour.
+All colours and fonts live in `src/constants/theme.ts`. Mrs Purl's paintings are in `assets/images/purl`, and the yarn balls are painted layers in `assets/images/yarn` that take any colour.
 
 ## Running it
 
@@ -78,4 +78,4 @@ website/                     dropstitch.io: landing page, privacy policy, email 
 ## Notes
 
 - PDFs are drawn with [pdf.js](https://mozilla.github.io/pdf.js/), which ships inside the app, so patterns open without an internet connection. After changing the `pdfjs-dist` version, run `npm run pdfjs`.
-- The app icon is Purl's head.
+- The app icon is Mrs Purl's head.
