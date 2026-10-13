@@ -39,7 +39,7 @@ export default function ProjectsScreen() {
         art={<GrandmaReading width={226} motion={READING_MOTION} active={isFocused} />}
         artStyle={{ right: -14, bottom: -8 }}>
         <Text style={styles.title}>Your{'\n'}projects</Text>
-        <Text style={styles.subtitle}>Your pattern library,{'\n'}read along by Mrs Purl</Text>
+        <Text style={styles.subtitle}>Your pattern library,{'\n'}read by Mrs Purl</Text>
       </WaveBand>
 
       <View style={styles.content}>
