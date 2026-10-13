@@ -70,8 +70,30 @@ function findSizes(lines: string[]): string[] {
     const labels = sizeLabels(m[1] || (lines[i + 1] ?? ''));
     if (labels.length) return labels;
   }
-  return [];
+  return labelledSizes(lines.join(' '));
 }
+
+/** A letter size: "XS", "M", "XXL", "3XL". */
+const SIZE_LABEL = String.raw`(?:[2-6]?X{0,4}[SL]|M)`;
+/** "XS (88)": a size's name with its own number. */
+const LABELLED_VALUE = String.raw`${SIZE_LABEL}\s*\(\s*${VALUE}\s*\)`;
+const LABELLED_RUN = new RegExp(String.raw`(?<![\w(])${LABELLED_VALUE}(?:\s*${LABELLED_VALUE}){1,11}(?![\w(])`, 'g');
+
+/**
+ * Patterns without a "Sizes:" line that name every size next to its number: "CO XS (88) S (100) M (112) sts".
+ * The labels count when the same run of them comes up at least twice.
+ */
+function labelledSizes(text: string): string[] {
+  const seen = new Map<string, number>();
+  for (const run of text.match(LABELLED_RUN) ?? []) {
+    const key = [...run.matchAll(new RegExp(String.raw`(${SIZE_LABEL})\s*\(`, 'g'))].map((m) => m[1]).join(' ');
+    seen.set(key, (seen.get(key) ?? 0) + 1);
+  }
+  const [best] = [...seen].filter(([key]) => new Set(key.split(' ')).size === key.split(' ').length).sort((a, b) => b[1] - a[1]);
+  return best && best[1] >= 2 ? best[0].split(' ') : [];
+}
+
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const NUMBER_WORDS: Record<string, number> = {
   one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11,
@@ -81,10 +103,21 @@ const NUMBER_WORDS: Record<string, number> = {
 /** "fourteen (16, 16, 18, 18) more times": the first size spelled out. */
 const SPELLED_FIRST = new RegExp(String.raw`\b(${Object.keys(NUMBER_WORDS).join('|')})(?=\s*[([]\s*\d)`, 'gi');
 
-/** Keeps only the chosen size's numbers: "86 (90) 94" / "80 (88, 96)" / "80-88-96" → the one for `index`. */
-export function pickSize(text: string, count: number, index: number): string {
+/**
+ * Keeps only the chosen size's numbers: "86 (90) 94" / "80 (88, 96)" / "80-88-96" / "XS (88) S (100)" → the one
+ * for `index`. `labels` are the size names, for patterns that write them next to each number.
+ */
+export function pickSize(text: string, count: number, index: number, labels: string[] = []): string {
   if (count < 2) return text;
-  let out = text.replace(SPELLED_FIRST, (word: string) => String(NUMBER_WORDS[word.toLowerCase()]));
+  let out = text;
+  if (labels.length === count) {
+    const run = new RegExp(
+      String.raw`(?<![\w(])` + labels.map((l) => String.raw`${escapeRegExp(l)}\s*\(\s*(${VALUE})\s*\)`).join(String.raw`\s*`),
+      'g'
+    );
+    out = out.replace(run, (...m: string[]) => m[1 + index]);
+  }
+  out = out.replace(SPELLED_FIRST, (word: string) => String(NUMBER_WORDS[word.toLowerCase()]));
   out = out.replace(alternatingGroup(count), (...m: string[]) => m[1] + m[2 + index]);
   out = out.replace(COMMA_GROUP, (whole, first: string, rest: string) => {
     const values = [first, ...rest.split(/\s*[,;]\s*/)];
@@ -434,8 +467,16 @@ function sideOf(text: string): Pick<ParsedStep, 'startSide' | 'inRound'> {
 
 const other = (side: Side): Side => (side === 'RS' ? 'WS' : 'RS');
 
-/** Turns a section's sentences into steps. `forOtherSize` says whether a size-only label skips the piece. */
-function toSteps(pieces: string[], section: string | undefined, forOtherSize: (label: string) => boolean): ParsedStep[] {
+/**
+ * Turns a section's sentences into steps. `forOtherSize` says whether a size-only label skips the piece.
+ * `bareLabels` are size names that can start a piece on their own ("S K8, k2tog…").
+ */
+function toSteps(
+  pieces: string[],
+  section: string | undefined,
+  forOtherSize: (label: string) => boolean,
+  bareLabels: string[] = []
+): ParsedStep[] {
   const steps: ParsedStep[] = [];
   const raws: string[] = [];
   let pendingSide: Side | undefined;
@@ -463,9 +504,21 @@ function toSteps(pieces: string[], section: string | undefined, forOtherSize: (l
     if (last && last.rows === 1 && !last.startSide && !last.inRound) last.startSide = other(side);
   };
 
+  // After another size's own line, its notes ("You now have 36 sts") are skipped too.
+  let otherSize = false;
   let i = 0;
   while (i < pieces.length) {
-    const piece = pieces[i];
+    let piece = pieces[i];
+    // "S K8, k2tog…": only for size S. Other sizes skip it; size S drops the label.
+    const bare = bareLabels.length ? piece.match(/^(\S{1,5})\s+(?=[A-Z])/)?.[1] : undefined;
+    if (bare && bareLabels.includes(bare)) {
+      otherSize = forOtherSize(bare);
+      if (otherSize) {
+        i += 1;
+        continue;
+      }
+      piece = piece.slice(bare.length).trim();
+    }
     const signal = piece.match(SIDE_SIGNAL)?.[1]?.toUpperCase() as Side | undefined;
     const count = piece.replace(LEAD, '').match(COUNT_ONLY) ?? piece.match(COUNT_SENTENCE);
     const kind = classify(piece);
@@ -479,6 +532,10 @@ function toSteps(pieces: string[], section: string | undefined, forOtherSize: (l
 
     // Not an instruction: a description, a stitch count to check, or a note about the next row.
     if (kind === 'note') {
+      if (otherSize) {
+        i += 1;
+        continue;
+      }
       const last = steps[steps.length - 1];
       if (count && last) last.stitches = Number(count[1]);
       // Keep notes that talk about the knitting with the step; leave out the chatter.
@@ -491,6 +548,7 @@ function toSteps(pieces: string[], section: string | undefined, forOtherSize: (l
       continue;
     }
 
+    otherSize = false;
     // Keep "RS facing…" in the text: it tells you which way to hold the work.
     const tidied = tidy(piece);
     if (/^work as follows:?$/i.test(tidied)) {
@@ -685,17 +743,26 @@ export function parsePattern(fullText: string): ParsedPattern {
 
   const stepsFor = (sizeIndex: number) => {
     const forOtherSize = (label: string) => {
+      // "S" on its own: a line for one size only.
+      const exact = sizes.indexOf(label.trim());
+      if (exact !== -1) return exact !== sizeIndex;
       const only = forSizes(label, sizes);
       return !!only && !only.has(sizeIndex);
     };
+    // "…as follows: XS Knit all sts. S K8, k2tog…": each size's own line starts a new piece.
+    const sizeLines =
+      sizes.length > 1 && sizes.every((l) => new RegExp(`^${SIZE_LABEL}$`).test(l))
+        ? new RegExp(String.raw`:\s+(?=(?:${sizes.map(escapeRegExp).join('|')})\s+[A-Z])`, 'g')
+        : undefined;
     const out: ParsedStep[] = [];
     for (const s of sections) {
       const title = s.title?.trim().replace(/:$/, '');
       const parent = s.parent?.trim().replace(/:$/, '');
       const skip = (t?: string) => !!t && (SKIP_SECTIONS.test(t) || forOtherSize(t));
       if (skip(title) || skip(parent)) continue;
-      const body = pickSize(joinLines(s.lines), sizes.length, sizeIndex);
-      let steps = toSteps(splitPieces(body), title ? prettySection(title) : undefined, forOtherSize);
+      let body = pickSize(joinLines(s.lines), sizes.length, sizeIndex, sizes);
+      if (sizeLines) body = body.replace(sizeLines, ':\n');
+      let steps = toSteps(splitPieces(body), title ? prettySection(title) : undefined, forOtherSize, sizeLines ? sizes : []);
       // A chart's key explains symbols; only rows written out are steps.
       if (title && /^(?:charts?|diagrams?)\b/i.test(title)) steps = steps.filter((st) => st.lines);
       // "WEAVE IN ENDS" on a line of its own looks like a heading, but it's the last step.

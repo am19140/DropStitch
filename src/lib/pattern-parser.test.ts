@@ -224,6 +224,42 @@ Bind off.`;
     assert.deepEqual(texts(pattern, 0), ['Cast on 80 sts.', 'Knit 2 rows.', 'Bind off.']);
     assert.deepEqual(texts(pattern, 1), ['Cast on 88 sts.', 'Size M only: Purl 1 row.', 'Bind off.']);
   });
+
+  test('no "Sizes:" line, each size named next to its number: "XS (88) S (100) M (112)"', () => {
+    const pattern = `Cast on XS (88) S (100) M (112) sts and join in the round.
+Knit to XS (44) S (50) M (56) sts, place marker, knit to end.`;
+    const parsed = parsePattern(pattern);
+    assert.deepEqual(parsed.sizes, ['XS', 'S', 'M']);
+    assert.deepEqual(texts(pattern, 2), ['Cast on 112 sts and join in the round.', 'Knit to 56 sts, place marker, knit to end.']);
+  });
+
+  test('a size named once is not a size list', () => {
+    assert.deepEqual(parsePattern('Cast on XS (88) S (100) sts.\nKnit 10 rows.').sizes, []);
+  });
+
+  test('a line per size: only your size, and only its stitch count', () => {
+    const pattern = `Cast on XS (60) S (70) M (80) sts.
+Knit to XS (30) S (35) M (40) sts, place marker.
+Decrease as follows:
+XS Knit all sts.
+You have 30 sts.
+S K5, k2tog to end.
+You now have 32 sts.
+M K3, k2tog to end.
+You now have 34 sts.
+Bind off.`;
+    assert.deepEqual(texts(pattern, 2), [
+      'Cast on 80 sts.',
+      'Knit to 40 sts, place marker.',
+      'Decrease as follows:',
+      'K3, k2tog to end.',
+      'Bind off.',
+    ]);
+    assert.equal(stepWith(pattern, 'k3, k2tog', 2)?.stitches, 34);
+    assert.equal(stepWith(pattern, 'as follows', 2)?.stitches, undefined);
+    assert.equal(stepWith(pattern, 'k5, k2tog', 2), undefined);
+    assert.ok(stepWith(pattern, 'knit all sts', 0));
+  });
 });
 
 describe('what is left out', () => {
