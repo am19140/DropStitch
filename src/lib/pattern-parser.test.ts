@@ -301,6 +301,50 @@ Knit 10 rnds.`;
   });
 });
 
+describe('row-by-row tables', () => {
+  const pattern = `Cast on 40 sts.
+Yoke:
+Decreases are worked on every other RS row.
+All WS rows are purled.
+The decreases are worked as follows: K2, ssk, knit to 4 sts before end, k2tog, k2.
+Begin on the WS and purl 1 row.
+Starting stitch count:
+S (40) M (44)
+If you are unsure, here it is row by row:
+RS decrease row / S (38) M (42) sts
+WS purl
+RS knit
+WS purl
+RS decrease row / S (36) M (40) sts
+WS purl
+RS knit
+WS purl
+RS decrease row / S (34) M (38) sts
+WS purl
+Finish with the WS purl row.
+Place all sts on hold.`;
+
+  test('a table becomes one step that repeats its rows, with nothing unsure', () => {
+    const steps = read(pattern, 1);
+    assert.deepEqual(
+      steps.map((s) => s.text),
+      ['Cast on 40 sts.', 'Begin on the WS and purl 1 row.', 'Repeat these 4 rows 3 times, stopping after row 2 the last time.', 'Place all sts on hold.']
+    );
+    const table = steps[2];
+    assert.equal(table.rows, 10);
+    assert.equal(table.startSide, 'RS');
+    assert.equal(table.stitches, 38);
+    assert.deepEqual(table.lines, ['Decrease row: K2, ssk, knit to 4 sts before end, k2tog, k2.', 'Purl', 'Knit', 'Purl']);
+    assert.equal(steps[1].stitches, 44);
+    assert.ok(steps.every((s) => !s.unsure));
+  });
+
+  test('"WS purl" and "Starting stitch count" are not parts of the pattern', () => {
+    const sections = new Set(read(pattern).map((s) => s.section).filter(Boolean));
+    assert.deepEqual([...sections], ['Yoke']);
+  });
+});
+
 describe('crochet', () => {
   test('a crochet pattern is recognised', () => {
     const pattern = `Ch 20.

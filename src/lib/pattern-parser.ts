@@ -179,7 +179,7 @@ const SKIP_SECTIONS =
 
 /** Words that start an instruction ("Cast on…", "K3, M1L…", "Row 1 (RS)…", "Pick up and knit…"). */
 const INSTRUCTION =
-  /^(?:\*\s*)?(?:cast\s+on|co|cast\s+off|bind\s+off|bo|knit|purl|k\d+\w*|k(?:tbl|fb|wise)?|keep|kitchener|p\d+\w*|p(?:tbl|wise)?|k2tog|p2tog|ssk|ssp|sk2p|s2kp|cdd|kfb|m1[lrp]?|yo|sl\d*|slip|work|continue|cont|change|switch|pick\s+up|pu|join|rejoin|place|pm|sm|rm|remove|break|cut|turn|rep(?:eat)?|weave|inc(?:rease)?|dec(?:rease)?|transfer|divide|move|put|hold|return|graft|sew|seam|block|wash|try|measure|mark|make|bring|take|secure|press|steam|pin|position|set\s+in|do\s+not|don['’]t|insert|using|with|beg(?:in|inning)?|rows?|rnds?|rounds?|next|end|start|fold|attach|thread|leave|fasten\s+off|at\s+(?:the\s+)?same\s+time)\b/i;
+  /^(?:\*\s*)?(?:cast\s+on|co|cast\s+off|bind\s+off|bo|knit|purl|k\d+\w*|k(?:tbl|fb|wise)?|keep|kitchener|p\d+\w*|p(?:tbl|wise)?|k2tog|p2tog|ssk|ssp|sk2p|s2kp|cdd|kfb|m1[lrp]?|yo|sl\d*|slip|work|continue|cont|change|switch|pick\s+up|pu|join|rejoin|place|pm|sm|rm|remove|break|cut|turn|rep(?:eat)?|weave|inc(?:rease)?|dec(?:rease)?|transfer|divide|move|put|hold|return|graft|sew|seam|block|wash|try|measure|mark|make|bring|take|secure|press|steam|pin|position|set\s+in|do\s+not|don['’]t|insert|using|with|beg(?:in|inning)?|rows?|rnds?|rounds?|next|end|finish|start|fold|attach|thread|leave|fasten\s+off|at\s+(?:the\s+)?same\s+time)\b/i;
 
 /** "Now…", "Then,…", "RS facing with the cast-on edge on top,…" — lead-ins that come before the verb. */
 const LEAD = /^(?:(?:now|then|next|finally|first|afterwards)\b,?\s*|(?:with\s+)?(?:RS|WS|right side|wrong side)\s+facing\b[^,]*,\s*)+/i;
@@ -203,7 +203,15 @@ const IMPERATIVE =
 /** "(144 sts)", "= 54 sts", "[56 stitches]", "144 sts remain." — just the stitch count to check. */
 const COUNT_ONLY = /^[([]?\s*=?\s*(\d+)\s*(?:sts|stitches)(?!\s*(?:inc|dec|have been))\b[^()[\]]{0,24}[)\]]?\.?$/i;
 /** "There are now 144 sts", "You should have 144 sts" */
-const COUNT_SENTENCE = /\b(?:there (?:is|are|will be) now|you (?:should )?(?:now )?have)\s+(?:a total of\s+)?(\d+)\s+(?:sts|stitches)\b/i;
+const COUNT_SENTENCE = /\b(?:there (?:is|are|will be) now|you (?:should )?(?:now )?have):?\s+(?:a total of\s+)?(\d+)\s+(?:sts|stitches)\b/i;
+/** "Starting stitch count: 64", "Ending stitch count: 46" */
+const STITCH_COUNT = /^(?:(?:starting|ending|total|final)\s+)?stitch count:?\s*(\d+)\b/i;
+/** "RS decrease row / 62 sts", "WS purl", "RS knit": one row of a row-by-row table. */
+const TABLE_ROW = /^(?:RS|WS)\s+(?:dec(?:rease)?|inc(?:rease)?|knit|purl|k|p|work|patt(?:ern)?)\b/;
+/** The stitch count at the end of a table row: " / 62 sts". */
+const COUNT_IN_ROW = /\s*[/–-]?\s*\(?(\d+)\s*(?:sts|stitches)\)?\.?\s*$/i;
+/** "Decreases are worked on every 2nd RS row", "All WS rows are worked purl": how it's done, said before the steps. */
+const PASSIVE = /^(?:the\s+|all\s+)?(?:[\w-]+\s+){0,4}?(?:is|are)\s+(?:worked|knitted|knit|purled|done|made)\b(?![^:]*:)/i;
 /** "K = knit", "st(s) = stitch(es)": an abbreviation, not an instruction. */
 const ABBREVIATION = /^[\w()/.&’'-]{1,15}\s*=\s*[A-Za-z]/;
 
@@ -243,7 +251,10 @@ function isInstruction(text: string): boolean {
 /** What to do with a sentence: show it as a step, keep it as a note, or show it marked unsure. */
 function classify(piece: string): 'instruction' | 'note' | 'unsure' {
   const body = piece.replace(LEAD, '');
-  if (COUNT_ONLY.test(body) || ABBREVIATION.test(body)) return 'note';
+  if (COUNT_ONLY.test(body) || ABBREVIATION.test(body) || STITCH_COUNT.test(body)) return 'note';
+  // "Total stitch count. You now have: 80 stitches."
+  if (body.length <= 70 && COUNT_SENTENCE.test(body) && !INSTRUCTION.test(body)) return 'note';
+  if (PASSIVE.test(body)) return 'note';
   // Swatching and gauge advice belong to the front matter.
   if (/\bswatch/i.test(body) || (/\b(?:gauge|tension)\b/i.test(body) && !INSTRUCTION.test(body))) return 'note';
   if (isInstruction(body)) return 'instruction';
@@ -266,6 +277,8 @@ function isHeading(lines: string[], i: number): boolean {
   if (text.length < 3 || text.length > 50) return false;
   if (/[.;,!?)\]]$/.test(text) || !/^[A-Z]/.test(text) || /[=|]/.test(text)) return false;
   if (/\d/.test(text) && !/^(?:part|section|step)\s+\d+/i.test(text)) return false;
+  // "WS purl" in a table, "Starting stitch count:", "You now have:" — labels, not parts of the pattern.
+  if (TABLE_ROW.test(text) || /\bstitch count\b/i.test(text) || /^you (?:now|still|should) have\b/i.test(text)) return false;
   if (META.test(line) || /^at\s+(?:the\s+)?same\s+time\b/i.test(text)) return false;
   const words = text.split(/\s+/).length;
   // ALL CAPS stands out as a heading, even when it starts like an instruction ("BLOCK").
@@ -309,11 +322,15 @@ const LIST_NUMBER = /^\d{1,2}[.)]\s+(?=[A-Z*])/;
  */
 function joinLines(lines: string[]): string {
   let out = '';
+  let previous = '';
   for (const raw of lines) {
     const point = BULLET.test(raw) || LIST_NUMBER.test(raw);
     const line = raw.replace(BULLET, '').replace(LIST_NUMBER, '');
+    // A table row stands on its own line, and so does the sentence after the table.
+    const table = TABLE_ROW.test(line) || (TABLE_ROW.test(previous) && /^[A-Z]/.test(line));
+    previous = line;
     if (!out) out = line;
-    else if (point || (/^[A-Z0-9]/.test(line) && OWN_LINE.test(line))) out += `\n${line}`;
+    else if (point || (/^[A-Z0-9]/.test(line) && OWN_LINE.test(line)) || table) out += `\n${line}`;
     else if (/[a-z]-$/.test(out) && /^[a-z]/.test(line)) out += line;
     else out += ` ${line}`;
   }
@@ -412,6 +429,8 @@ function splitPieces(text: string): string[] {
     .replace(/([.!?\]])\s+(?=[A-Z*“"])/g, '$1\n')
     // "Dec every RS row 5 times. (30 sts) Bind off.": the count closes its step, and the next one starts after it.
     .replace(/([([]\s*=?\s*\d+\s*(?:sts|stitches)[^()[\]]{0,24}[)\]]\.?)\s+(?=[A-Z*“"])/gi, '$1\n')
+    // "Starting stitch count: 64 If you are unsure: …"
+    .replace(/(\bstitch count:?\s*\d+)\s+(?=[A-Z])/gi, '$1\n')
     .split('\n')
     .map((p) => p.trim())
     .filter(Boolean);
@@ -422,7 +441,7 @@ function splitPieces(text: string): string[] {
     // "1st row: (RS). *K1. P1. Rep from * to end of row." is one row, written as short sentences.
     if (previous && ROW_LINE.test(previous) && p.length <= 60 && STITCHES.test(p) && !ROW_START.test(p)) {
       merged[merged.length - 1] += ` ${p}`;
-    } else if (previous && p.length < 14 && !isInstruction(p) && !COUNT_ONLY.test(p)) {
+    } else if (previous && p.length < 14 && !isInstruction(p) && !COUNT_ONLY.test(p) && !TABLE_ROW.test(p)) {
       // Glue stray fragments (that aren't instructions themselves) back onto the previous piece.
       merged[merged.length - 1] += ` ${p}`;
     } else merged.push(p);
@@ -470,6 +489,51 @@ function sideOf(text: string): Pick<ParsedStep, 'startSide' | 'inRound'> {
 const other = (side: Side): Side => (side === 'RS' ? 'WS' : 'RS');
 
 /**
+ * A row-by-row table ("RS decrease row / 62 sts", "WS purl", "RS knit", "WS purl", "RS decrease row / 60 sts"…)
+ * becomes one step that repeats its rows. A decrease or increase row takes its stitches from the
+ * pattern's own "The decreases are worked as follows: …" earlier in the part (`before`); `used` says
+ * which of those sentences it took.
+ */
+function tableStep(run: string[], before: string[]): { step: ParsedStep; used: string[] } {
+  const used: string[] = [];
+  const shapes = run.map((row) => row.replace(COUNT_IN_ROW, '').trim().toLowerCase());
+  let size = run.length;
+  for (let p = 1; p * 2 <= run.length; p++) {
+    if (shapes.every((shape, k) => shape === shapes[k % p])) {
+      size = p;
+      break;
+    }
+  }
+  const times = Math.ceil(run.length / size);
+  const lines = run.slice(0, size).map((row) => {
+    const what = row.replace(/^(?:RS|WS)\s+/, '').replace(COUNT_IN_ROW, '').trim();
+    const kind = what.match(/^(dec|inc)/i)?.[1];
+    const source = kind
+      ? before.filter((p) => new RegExp(String.raw`\b${kind}\w*\b[^:]{0,80}\bas follows:\s*\S`, 'i').test(p)).pop()
+      : undefined;
+    if (!source) return capitalize(what);
+    if (!used.includes(source)) used.push(source);
+    return capitalize(`${what}: ${tidy(source.replace(/^.*?\bas follows:\s*/i, ''))}`);
+  });
+  const last = run.length - size * (times - 1);
+  const text =
+    times > 1
+      ? `Repeat these ${size} rows ${times} times${last < size ? `, stopping after row ${last} the last time` : ''}.`
+      : `Work these ${size} rows.`;
+  const count = [...run].reverse().map((row) => row.match(COUNT_IN_ROW)?.[1]).find(Boolean);
+  return {
+    step: {
+      text,
+      lines,
+      rows: run.length,
+      startSide: run[0].slice(0, 2) as Side,
+      ...(count ? { stitches: Number(count) } : {}),
+    },
+    used,
+  };
+}
+
+/**
  * Turns a section's sentences into steps. `forOtherSize` says whether a size-only label skips the piece.
  * `bareLabels` are size names that can start a piece on their own ("S K8, k2tog…").
  */
@@ -483,6 +547,8 @@ function toSteps(
   const raws: string[] = [];
   let pendingSide: Side | undefined;
   let intro: { text: string; raw: string } | undefined;
+  // "If you are unsure: this is how it should look, row by row:" before a table.
+  let tableIntro: string | undefined;
   // Notes that come before the section's first step, kept with that step's full pattern text.
   let leadNotes: string[] = [];
 
@@ -522,7 +588,7 @@ function toSteps(
       piece = piece.slice(bare.length).trim();
     }
     const signal = piece.match(SIDE_SIGNAL)?.[1]?.toUpperCase() as Side | undefined;
-    const count = piece.replace(LEAD, '').match(COUNT_ONLY) ?? piece.match(COUNT_SENTENCE);
+    const count = piece.replace(LEAD, '').match(COUNT_ONLY) ?? piece.match(COUNT_SENTENCE) ?? piece.match(STITCH_COUNT);
     const kind = classify(piece);
 
     // "Sizes S and L only: …" when you're knitting an M.
@@ -530,6 +596,36 @@ function toSteps(
     if (sizeLabel && forOtherSize(sizeLabel)) {
       i += 1;
       continue;
+    }
+
+    if (/:$/.test(piece) && i + 1 < pieces.length && TABLE_ROW.test(pieces[i + 1])) {
+      tableIntro = piece;
+      i += 1;
+      continue;
+    }
+
+    // A row-by-row table: one step that repeats its rows.
+    if (TABLE_ROW.test(piece)) {
+      let j = i;
+      while (j < pieces.length && TABLE_ROW.test(pieces[j])) j += 1;
+      if (j - i >= 3) {
+        const run = pieces.slice(i, j);
+        // "Finish with the WS purl row…": the table already ends there.
+        const ending = j < pieces.length && /^(?:finish|end)\s+(?:with|on)\b/i.test(pieces[j]) ? pieces[j++] : '';
+        const { step, used } = tableStep(run, pieces.slice(0, i));
+        // "The decreases are worked as follows: K2, ssk…" read as a step of its own: the table's rows say it now.
+        for (const source of used) {
+          const k = raws.indexOf(source);
+          if (k !== -1) {
+            steps.splice(k, 1);
+            raws.splice(k, 1);
+          }
+        }
+        push(step, [...used, tableIntro, ...run, ending].filter(Boolean).join(' '));
+        tableIntro = undefined;
+        i = j;
+        continue;
+      }
     }
 
     // Not an instruction: a description, a stitch count to check, or a note about the next row.
