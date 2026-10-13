@@ -75,7 +75,8 @@ export default function NewPatternScreen() {
     created.current = true;
     const size = pattern && sizeIndex !== null ? pattern.sizes[sizeIndex] : undefined;
     const id = addProject({ name: name.trim(), files, steps, size });
-    router.replace({ pathname: '/project/[id]', params: { id } });
+    // Steps read from a PDF get one look before knitting; typed ones are already the knitter's own.
+    router.replace({ pathname: pdfSteps.length ? '/project/[id]/check' : '/project/[id]', params: { id } });
   };
 
   return (

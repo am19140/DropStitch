@@ -161,7 +161,7 @@ export function StepList({ project }: { project: Project }) {
   );
 }
 
-function StepEditorSheet({
+export function StepEditorSheet({
   projectId,
   step,
   onClose,

@@ -210,7 +210,7 @@ export function projectProgress(project: Project) {
 
 type NewProject = { name: string; files: PatternFile[]; steps: ParsedStep[]; size?: string };
 type NewYarn = Omit<Yarn, 'id' | 'createdAt'>;
-type StepPatch = Partial<Pick<Step, 'text' | 'rows' | 'startSide' | 'inRound'>>;
+type StepPatch = Partial<Pick<Step, 'text' | 'rows' | 'startSide' | 'inRound' | 'unsure'>>;
 
 type ProjectsState = {
   projects: Project[];
