@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { RowPieces } from '@/components/row-pieces';
 import { Colors, Fonts } from '@/constants/theme';
+import { rowPieces } from '@/lib/row-pieces';
 import type { Side, Step } from '@/store/projects';
 
 const C = Colors.light;
@@ -77,10 +79,28 @@ export function RepeatSide({
 
 /**
  * What to do on this row of a repeating step. The step's sentence only shows during the first
- * repeat; after that you know it, so just this row's instruction is left.
+ * repeat; after that you know it, so just this row's instruction is left. A long row with markers
+ * shows as pieces to tick off (`ticked` of them so far).
  */
-export function RepeatCard({ step, repeat, unit, done, details }: { step: Step; repeat: Repeat; unit: 'row' | 'round'; done: boolean; details: ReactNode }) {
+export function RepeatCard({
+  step,
+  repeat,
+  unit,
+  done,
+  details,
+  ticked,
+  onTick,
+}: {
+  step: Step;
+  repeat: Repeat;
+  unit: 'row' | 'round';
+  done: boolean;
+  details: ReactNode;
+  ticked: number;
+  onTick: (ticked: number) => void;
+}) {
   const line = done ? undefined : step.lines?.[repeat.row - 1];
+  const split = line ? rowPieces(line) : undefined;
   return (
     <>
       {repeat.now === 1 && !done ? <Text style={styles.intro}>{step.text}</Text> : null}
@@ -89,8 +109,9 @@ export function RepeatCard({ step, repeat, unit, done, details }: { step: Step; 
           <Text style={styles.eyebrow}>
             {/* With two rows, RS/WS already says which one; longer repeats also say the row number. */}
             {repeat.size > 2 ? `This ${unit} · ${repeat.row} of ${repeat.size}` : `This ${unit}`}
+            {split?.label ? ` · ${split.label.toLowerCase()}` : ''}
           </Text>
-          <Text style={styles.line}>{line}</Text>
+          {split ? <RowPieces pieces={split.pieces} ticked={ticked} onTick={onTick} /> : <Text style={styles.line}>{line}</Text>}
         </>
       ) : null}
       {details}

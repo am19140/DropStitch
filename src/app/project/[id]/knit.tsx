@@ -9,11 +9,13 @@ import { Icon } from '@/components/icon';
 import { KnitBar, NextStepButton } from '@/components/knit-bar';
 import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandma';
 import { RepeatCard, RepeatSide } from '@/components/repeat-view';
+import { RowPieces } from '@/components/row-pieces';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
 import { Tour, TourTarget, type TourStep } from '@/components/tour';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
+import { rowPieces } from '@/lib/row-pieces';
 import {
   countsRows,
   currentLine,
@@ -99,6 +101,8 @@ export default function KnitScreen() {
   const [tab, setTab] = useState<Tab>('counter');
   // Which step's full pattern text is open, so it closes again when you move on.
   const [detailFor, setDetailFor] = useState<string | null>(null);
+  // How many pieces of a long row you've ticked off, for the row they belong to.
+  const [ticks, setTicks] = useState({ key: '', n: 0 });
   const { updateStep, startTimer, pauseTimer } = useProjects(
     useShallow((s) => ({
       updateStep: s.updateStep,
@@ -131,6 +135,12 @@ export default function KnitScreen() {
   const showDetail = !!step && detailFor === step.id;
   // "Knit and purl 11 times each": one screen for the whole step, counting repeats (6/11).
   const repeat = step ? repeatInfo(step) : undefined;
+  // A new row (or step) starts with nothing ticked.
+  const tickKey = step ? `${step.id}:${rowsDone}` : '';
+  const ticked = ticks.key === tickKey ? ticks.n : 0;
+  const onTick = (n: number) => setTicks({ key: tickKey, n });
+  const lineSplit = line ? rowPieces(line) : undefined;
+  const textSplit = step && !line ? rowPieces(step.text) : undefined;
 
   const grandma = <PaintedKnittingGrandma paused={!running} width={196} active={isFocused} />;
   const details = step ? (
@@ -290,15 +300,28 @@ export default function KnitScreen() {
 
           <View style={styles.stepCard}>
             {step && repeat && counting ? (
-              <RepeatCard step={step} repeat={repeat} unit={unit} done={done} details={details} />
+              <RepeatCard step={step} repeat={repeat} unit={unit} done={done} details={details} ticked={ticked} onTick={onTick} />
             ) : step ? (
               <>
-                <Text style={styles.cardLabel}>Current step</Text>
-                <Text style={styles.stepText}>{step.text}</Text>
+                <Text style={styles.cardLabel}>
+                  Current step{textSplit?.label ? ` · ${textSplit.label.toLowerCase()}` : ''}
+                </Text>
+                {textSplit && !done ? (
+                  <RowPieces pieces={textSplit.pieces} ticked={ticked} onTick={onTick} />
+                ) : (
+                  <Text style={styles.stepText}>{step.text}</Text>
+                )}
                 {line && (
                   <View style={styles.thisRow}>
-                    <Text style={styles.cardLabel}>{`This ${unit}`}</Text>
-                    <Text style={styles.thisRowText}>{line}</Text>
+                    <Text style={styles.cardLabel}>
+                      {`This ${unit}`}
+                      {lineSplit?.label ? ` · ${lineSplit.label.toLowerCase()}` : ''}
+                    </Text>
+                    {lineSplit ? (
+                      <RowPieces pieces={lineSplit.pieces} ticked={ticked} onTick={onTick} />
+                    ) : (
+                      <Text style={styles.thisRowText}>{line}</Text>
+                    )}
                   </View>
                 )}
                 {details}
