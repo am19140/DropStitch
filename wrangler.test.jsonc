@@ -1,0 +1,13 @@
+// Cloudflare Worker for the hidden test copy of the app at test.dropstitch.io: the Expo web build in ./dist.
+// `npm run test-copy` builds it and deploys it. Not linked from anywhere, and public/_headers + robots.txt keep it out of search.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dropstitch-test",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // Every path serves the app, so links like /project/abc open it.
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [{ "pattern": "test.dropstitch.io", "custom_domain": true }]
+}
