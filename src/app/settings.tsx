@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAccountActions } from '@/components/account-actions';
@@ -14,6 +14,30 @@ import { useSession } from '@/lib/auth';
 import { useProjects } from '@/store/projects';
 
 const C = Colors.light;
+
+/** An email to hello@ with a few questions to answer, and the app version and device filled in. */
+function feedbackMail() {
+  const version = Constants.expoConfig?.version ?? '';
+  // On the web the version says nothing, but which phone or computer the browser runs on does.
+  const device =
+    Platform.OS === 'web'
+      ? `web on ${(typeof navigator !== 'undefined' && /iPhone|iPad|Android|Macintosh|Windows|Linux/.exec(navigator.userAgent)?.[0]) || 'unknown'}`
+      : `${Platform.OS} ${Platform.Version}`;
+  const body = [
+    'What were you doing?',
+    '',
+    '',
+    'What happened?',
+    '',
+    '',
+    'What did you expect?',
+    '',
+    '',
+    '—',
+    `DropStitch ${version} · ${device}`,
+  ].join('\n');
+  return `mailto:hello@dropstitch.io?subject=${encodeURIComponent('DropStitch feedback')}&body=${encodeURIComponent(body)}`;
+}
 
 /** Settings, opened from the gear on Home: Plus (soon), the account, help and the small print. */
 export default function SettingsScreen() {
@@ -94,6 +118,12 @@ export default function SettingsScreen() {
                 resetTours();
                 router.dismissTo('/');
               }}
+            />
+            <Row
+              icon="notes"
+              label="Send feedback"
+              detail="Something broken, confusing or lovely? Tell us."
+              onPress={() => Linking.openURL(feedbackMail())}
             />
             <Row
               icon="mail"
