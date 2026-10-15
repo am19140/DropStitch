@@ -1,4 +1,4 @@
-/* The landing page beyond the hero: Mrs Purl talking, the pattern page and its words, "Knitting is relaxing. Patterns, not so much." The scroll movie itself lives in movie.css. */
+/* The landing page beyond the hero: Mrs Purl talking, the social links, the headline. The pattern book lives in book.css and marks.css, the phone in movie.css. */
 /* Mrs Purl, animated, with something to say */
 .hero-purl { position: relative; justify-self: center; width: min(460px, 100%); }
 .purl-svg { display: block; width: 100%; height: auto; }
@@ -48,4 +48,10 @@
   .sticky { right: 16px; bottom: 18px; max-width: 46%; font-size: 15px; line-height: 1.2; z-index: 1; }
   .bubble { left: -2%; top: -3%; max-width: 11ch; font-size: 14.5px; padding: 10px 13px; }
 }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.social { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--ink); background: rgba(255, 252, 244, .55); opacity: .85; }
+.social:hover { opacity: 1; background: var(--paper); }
+.social svg { width: 18px; height: 18px; }
+.footer nav { flex-wrap: wrap; }
+@media (max-width: 560px) { .nav-right { gap: 8px; } .nav-right .nav-link { display: none; } .social { width: 34px; height: 34px; } .brand { min-width: 0; } }
   

@@ -1,0 +1,104 @@
+/* The pattern book: a glossy magazine of instructions that turns its pages as you scroll, then tears. */
+.movie { height: 760vh; }
+/* page size, shared by the book and the two torn halves */
+.m-stage { --pw: min(440px, 42vw, calc((100vh - 230px) / 1.36)); --ph: calc(var(--pw) * 1.32); display: flex; flex-direction: column; }
+/* The torn halves may fly past the content column to the edge of the screen, but nothing scrolls sideways. */
+html { overflow-x: clip; }
+.m-stage { overflow: visible; clip-path: inset(0 -100vw); }
+/* the headline and an editorial strip sit in the scene, above the book */
+.story { padding-top: 34px; }
+.m-head { position: relative; z-index: 60; padding-top: 22px; }
+.m-head h2 { margin: 0; max-width: none; font-weight: 900; font-size: clamp(30px, 4.2vw, 52px); line-height: 1.02; letter-spacing: -1px; }
+.m-head h2 em { font-style: normal; color: var(--cobalt); }
+.m-meta { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 16px 0 0; padding-top: 10px; border-top: 1.5px solid var(--ink); font-weight: 800; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.m-meta .m-count { color: var(--cobalt); }
+.m-meta .m-scroll { margin-left: auto; }
+.m-area { position: relative; flex: 1; min-height: 0; }
+.book-wrap {
+  position: absolute; left: 50%; top: 50%; width: calc(var(--pw) * 2); height: var(--ph);
+  margin-left: calc(var(--pw) * -1); margin-top: calc(var(--ph) / -2);
+}
+.book { position: relative; width: 100%; height: 100%; }
+/* the soft shadow the book casts on the table */
+.book::before { content: ''; position: absolute; left: 3%; right: 3%; bottom: -26px; height: 40px; background: radial-gradient(50% 50% at 50% 50%, rgba(42, 28, 24, .28), rgba(42, 28, 24, 0) 75%); filter: blur(4px); }
+
+.page {
+  position: absolute; top: 0; width: var(--pw); height: var(--ph); overflow: hidden;
+  padding: calc(var(--pw) * .08) calc(var(--pw) * .075) calc(var(--pw) * .09);
+  background-color: #f6f1e3;
+  background-image: var(--paper-tex), linear-gradient(180deg, #f8f4e8, #f1ead8);
+  color: #33291f; font-weight: 600; font-size: calc(var(--pw) * .0275); line-height: 1.5;
+}
+.page.left { left: 0; }
+.page.right { left: var(--pw); }
+/* the curve into the spine, and a little gloss */
+.page::before, .page::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.page.right::before { background: linear-gradient(90deg, rgba(60, 40, 20, .28), rgba(60, 40, 20, .08) 5%, rgba(60, 40, 20, 0) 13%, rgba(60, 40, 20, 0) 94%, rgba(60, 40, 20, .06)); }
+.page.left::before { background: linear-gradient(270deg, rgba(60, 40, 20, .28), rgba(60, 40, 20, .08) 5%, rgba(60, 40, 20, 0) 13%, rgba(60, 40, 20, 0) 94%, rgba(60, 40, 20, .06)); }
+.page::after { background: linear-gradient(112deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .34) 44%, rgba(255, 255, 255, .08) 52%, rgba(255, 255, 255, 0) 64%); }
+.page.left::after { background: linear-gradient(68deg, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, .22) 50%, rgba(255, 255, 255, 0) 64%); }
+/* the stack of pages showing at the outer edges */
+.page.right.base { box-shadow: 1px 0 0 #e6dfcb, 2px 0 0 #d4cbb4, 3px 0 0 #e8e1cd, 4px 0 0 #d0c7af, 5px 1px 0 #e3dbc6, 0 2px 3px rgba(42, 28, 24, .12); }
+.page.left.base { box-shadow: -1px 0 0 #e6dfcb, -2px 0 0 #d4cbb4, -3px 0 0 #e8e1cd, -4px 0 0 #d0c7af, -5px 1px 0 #e3dbc6, 0 2px 3px rgba(42, 28, 24, .12); }
+
+/* a page that turns: front on the right, back becomes the next left page */
+/* Each page is flat and carries its own perspective; the script shows the side that faces you. */
+.leaf { position: absolute; left: var(--pw); top: 0; width: var(--pw); height: var(--ph); transform-origin: 0 50%; will-change: transform; z-index: 10; }
+.leaf .face { left: 0; }
+.leaf .face.back { transform: scaleX(-1); visibility: hidden; }
+.leaf .face .dim { position: absolute; inset: 0; z-index: 4; background: #2b2015; opacity: 0; pointer-events: none; }
+/* While it turns, a page is a chain of narrow slices, each turned a little more than the last, so it bends like paper. */
+.curl { position: absolute; inset: 0; display: none; perspective: 2600px; perspective-origin: 0 50%; }
+.seg { position: absolute; top: 0; left: 0; height: 100%; transform-origin: 0 50%; }
+.seg > .sf, .seg > .sb { position: absolute; inset: 0; overflow: hidden; }
+.seg > .sb { transform: scaleX(-1); }
+.seg .page { left: auto; }
+/* no per-slice gloss or spine shading: overlapping slices would draw it twice */
+.seg .page::before, .seg .page::after { display: none; }
+.seg .dim { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+/* the shadow a turning page throws on the page underneath */
+.turn-shadow { position: absolute; top: 0; left: var(--pw); width: var(--pw); height: var(--ph); pointer-events: none; z-index: 5; opacity: 0; background: linear-gradient(90deg, rgba(43, 32, 21, .35), rgba(43, 32, 21, 0) 60%); }
+
+/* inside the pages */
+.ph { display: flex; justify-content: space-between; padding-bottom: 6px; margin-bottom: 10px; border-bottom: 1px solid rgba(51, 41, 31, .25); font-weight: 800; font-size: .82em; letter-spacing: .12em; text-transform: uppercase; color: #8a7a6a; }
+.cols { column-count: 2; column-gap: 1.6em; }
+.cols h4 { margin: 0 0 .3em; font-weight: 900; font-size: 1em; letter-spacing: .1em; text-transform: uppercase; color: #1f1812; break-after: avoid; }
+.cols p { margin: 0 0 .8em; }
+.cols h4 + p { margin-top: 0; }
+.cols p + h4, .cols table + h4 { margin-top: 1em; }
+.cols mark { background: linear-gradient(transparent 55%, rgba(128, 171, 215, .7) 55%); color: inherit; }
+.cols .cont { font-style: italic; color: #9a8a79; text-align: right; }
+.cols .key { font-size: .9em; color: #6e5a50; }
+.cols .errata { padding: .5em .6em; border: 1px solid rgba(245, 22, 20, .45); color: #5a2a22; }
+.sizes { width: 100%; border-collapse: collapse; margin: 0 0 .4em; font-size: .92em; break-inside: avoid; }
+.sizes th, .sizes td { padding: .15em .2em; text-align: right; border-bottom: 1px solid rgba(51, 41, 31, .18); }
+.sizes th:first-child, .sizes td:first-child { text-align: left; color: #6e5a50; }
+.chart { display: block; width: 100%; height: auto; margin: .3em 0 .5em; break-inside: avoid; }
+
+/* the editorial cobalt page */
+.page.cover { background: var(--cobalt); color: #f6f1e3; display: flex; flex-direction: column; padding: calc(var(--pw) * .11) calc(var(--pw) * .1); }
+.page.cover::after { background: linear-gradient(68deg, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, .16) 50%, rgba(255, 255, 255, 0) 64%); }
+.cover .kicker { margin: 0; font-weight: 800; font-size: 1.05em; letter-spacing: .2em; text-transform: uppercase; opacity: .85; }
+.cover .title { margin: auto 0 0; font-weight: 900; font-size: 5.2em; line-height: .92; letter-spacing: -.02em; }
+.cover .deck { margin: .9em 0 0; font-weight: 800; font-size: 1.45em; line-height: 1.3; max-width: 18em; }
+.cover .fine { margin: 2.2em 0 0; padding-top: .9em; border-top: 1px solid rgba(246, 241, 227, .4); font-weight: 700; font-size: .95em; opacity: .8; }
+
+/* torn halves carry a flat copy of the last spread */
+.half .face { background: none; box-shadow: none; }
+.flat { position: absolute; inset: 0; }
+.half .rim { background: #fffcf2; background-image: var(--paper-tex); }
+.half .face .page.right.base { box-shadow: none; }
+
+@media (max-width: 760px) {
+  /* half an open book: the right page, with the spine near the left edge */
+  .m-stage { --pw: min(330px, 84vw, calc((100vh - 200px) / 1.36)); }
+  .m-head h2 { font-size: 27px; }
+  .m-meta { font-size: 10.5px; gap: 4px 14px; margin-top: 10px; }
+  .m-meta .m-scroll { display: none; }
+  .book-wrap { margin-left: calc(var(--pw) * -1.5); }
+  .page { font-size: calc(var(--pw) * .029); padding: calc(var(--pw) * .08) calc(var(--pw) * .07) calc(var(--pw) * .09); }
+  .cols { column-count: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .leaf { transition: none; }
+}
