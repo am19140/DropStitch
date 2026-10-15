@@ -66,8 +66,9 @@ function findSizes(lines: string[]): string[] {
     const m = lines[i].match(/^\s*(?:sizes?|to fit|size\s*\(s\))\s*[:\-–]?\s*(.*)$/i);
     // "Size U.S. 8 (5 mm) knitting needles" is about needles, not sizes to knit.
     if (!m || /\b(?:needles?|hooks?)\b/i.test(lines[i])) continue;
-    // "Sizes: XS (S) M", or a "SIZES" heading with the labels on the next line.
-    const labels = sizeLabels(m[1] || (lines[i + 1] ?? ''));
+    // "Sizes: XS (S) M", or a "SIZES" heading with the labels on the next line, which may say "Sizes:" again.
+    const next = (lines[i + 1] ?? '').replace(/^\s*(?:sizes?|to fit)\s*[:\-–]?\s*/i, '');
+    const labels = sizeLabels(m[1] || next);
     if (labels.length) return labels;
   }
   return labelledSizes(lines.join(' '));

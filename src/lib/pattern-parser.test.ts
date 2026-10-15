@@ -188,6 +188,18 @@ Work as for back until piece measures 40 cm.`;
     assert.equal(texts(pattern, 2)[0], 'Cast on 94 sts.');
   });
 
+  test('a SIZES heading followed by a "Sizes:" line: the word is not a size', () => {
+    const pattern = `SIZES
+Sizes: XS (S, M, L, XL)
+
+Choose a size about 10 cm bigger than your chest.
+
+BODY
+Cast on 80 (88, 96, 104, 112) sts.`;
+    assert.deepEqual(parsePattern(pattern).sizes, ['XS', 'S', 'M', 'L', 'XL']);
+    assert.equal(texts(pattern, 2)[0], 'Cast on 96 sts.');
+  });
+
   test('a SIZES heading with the sizes on the next line', () => {
     const pattern = `SIZES
 Scarf (Wrap)
