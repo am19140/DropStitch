@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { SelectMark } from '@/components/select-mode';
 import { YarnBall } from '@/components/yarn-ball';
 import { Colors, Fonts } from '@/constants/theme';
 import { countsRows, projectTitle, repeatInfo, untilLength, type Project } from '@/store/projects';
@@ -47,7 +48,20 @@ export function monthLabel(time: number) {
 }
 
 /** A project's card: a yarn ball in its colour, its name, and how far along it is (or when it was finished). */
-export function ProjectBox({ project, size = 'large' }: { project: Project; size?: 'large' | 'small' }) {
+export function ProjectBox({
+  project,
+  size = 'large',
+  selecting = false,
+  selected = false,
+  onSelect,
+}: {
+  project: Project;
+  size?: 'large' | 'small';
+  /** While picking projects to remove, a tap picks the box instead of opening it. */
+  selecting?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
+}) {
   const router = useRouter();
   const large = size === 'large';
   const progress = progressOf(project);
@@ -59,10 +73,15 @@ export function ProjectBox({ project, size = 'large' }: { project: Project; size
 
   return (
     <Pressable
-      accessibilityRole="link"
-      onPress={() => router.push({ pathname: '/project/[id]', params: { id: project.id } })}
+      accessibilityRole={selecting ? 'checkbox' : 'link'}
+      aria-checked={selecting ? selected : undefined}
+      onPress={() => (selecting ? onSelect?.() : router.push({ pathname: '/project/[id]', params: { id: project.id } }))}
       accessibilityLabel={projectTitle(project)}
-      style={({ pressed }) => [large ? styles.large : styles.small, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}>
+      style={({ pressed }) => [
+        large ? styles.large : styles.small,
+        selected && styles.picked,
+        { transform: [{ scale: pressed ? 0.98 : 1 }] },
+      ]}>
       <YarnBall color={project.color} size={large ? 64 : 46} style={{ marginLeft: -6, marginTop: -4 }} />
       <Text style={large ? styles.nameLarge : styles.nameSmall} numberOfLines={large ? 2 : 3}>
         {projectTitle(project)}
@@ -83,11 +102,13 @@ export function ProjectBox({ project, size = 'large' }: { project: Project; size
       ) : (
         <Text style={styles.meta}>{monthLabel(project.finishedAt ?? project.updatedAt)}</Text>
       )}
+      {selecting && <SelectMark selected={selected} />}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  picked: { borderColor: Colors.light.primary, borderWidth: 2.5 },
   large: { flex: 1, minHeight: 196, borderRadius: 22, padding: 16, backgroundColor: C.card, borderWidth: 1.5, borderColor: C.cardLine },
   small: { flex: 1, minHeight: 150, borderRadius: 20, padding: 12, backgroundColor: C.card, borderWidth: 1.5, borderColor: C.cardLine },
   nameLarge: { marginTop: 6, fontFamily: Fonts.display, fontSize: 18, lineHeight: 22, color: C.text },

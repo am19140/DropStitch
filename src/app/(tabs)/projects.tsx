@@ -3,12 +3,15 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { CobaltCard, CobaltProgress, cobaltText } from '@/components/cobalt-card';
+import { useConfirm } from '@/components/confirm-dialog';
 import { ProjectBox, progressOf, rowInfo } from '@/components/project-box';
+import { SelectBar, SelectToggle, useSelection } from '@/components/select-mode';
 import { GrandmaReading } from '@/components/grandma/grandma-scenes';
 import { ThemedText } from '@/components/themed-text';
 import { WaveBand } from '@/components/wave-band';
 import { YarnBall } from '@/components/yarn-ball';
 import { Colors, Fonts } from '@/constants/theme';
+import { deletePatternFiles } from '@/lib/pattern-files';
 import { projectTitle, useProjects, type Project } from '@/store/projects';
 
 /** How far Mrs Purl turns her head while reading (1 = as painted). */
@@ -35,41 +38,81 @@ export default function ProjectsScreen() {
   const finished = projects
     .filter((p) => p.finishedAt)
     .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0));
+  const pick = useSelection();
+  const { ask, dialog } = useConfirm();
+  const deleteProject = useProjects((s) => s.deleteProject);
+
+  const removePicked = async () => {
+    const picked = projects.filter((p) => pick.isSelected(p.id));
+    const many = picked.length > 1;
+    const ok = await ask({
+      title: many ? `Remove ${picked.length} projects?` : 'Remove this project?',
+      message: many
+        ? 'Their steps, rows, notes and pattern files go too. This can’t be undone.'
+        : `“${projectTitle(picked[0])}” goes, with its steps, rows, notes and pattern files. This can’t be undone.`,
+      confirmLabel: 'Remove',
+    });
+    if (!ok) return;
+    for (const p of picked) {
+      deletePatternFiles(p.files);
+      deleteProject(p.id);
+    }
+    pick.stop();
+  };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
-      <WaveBand
-        style={{ paddingBottom: 30 }}
-        art={<GrandmaReading width={226} motion={READING_MOTION} active={isFocused} />}
-        artStyle={{ right: -14, bottom: -8 }}>
-        <Text style={styles.title}>Your{'\n'}projects</Text>
-        <Text style={styles.subtitle}>Your pattern library,{'\n'}read by Mrs Purl</Text>
-      </WaveBand>
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={{ paddingBottom: pick.selecting ? 110 : 40 }}>
+        <WaveBand
+          style={{ paddingBottom: 30 }}
+          art={<GrandmaReading width={226} motion={READING_MOTION} active={isFocused} />}
+          artStyle={{ right: -14, bottom: -8 }}>
+          <Text style={styles.title}>Your{'\n'}projects</Text>
+          <Text style={styles.subtitle}>Your pattern library,{'\n'}read by Mrs Purl</Text>
+        </WaveBand>
 
-      <View style={styles.content}>
-        <Section title="Active now" count={active.length} />
-        {active.length === 0 ? (
-          <View style={styles.emptyActive}>
-            <ThemedText themeColor="textSecondary">Nothing on the needles right now.</ThemedText>
-            <Button label="Start a project" icon="add" onPress={() => router.push('/new')} />
-          </View>
-        ) : (
-          <>
-            <KnittingNow project={knitting} />
-            {others.length > 0 && <Grid items={others} columns={2} size="large" />}
-          </>
-        )}
+        <View style={styles.content}>
+          {projects.length > 0 && (
+            <SelectToggle selecting={pick.selecting} onPress={pick.selecting ? pick.stop : pick.start} style={{ marginTop: 4 }} />
+          )}
+          <Section title="Active now" count={active.length} />
+          {active.length === 0 ? (
+            <View style={styles.emptyActive}>
+              <ThemedText themeColor="textSecondary">Nothing on the needles right now.</ThemedText>
+              <Button label="Start a project" icon="add" onPress={() => router.push('/new')} />
+            </View>
+          ) : (
+            pick.selecting ? (
+              // While picking, the project you're knitting sits in the grid like the others.
+              <Grid items={active} columns={2} size="large" pick={pick} />
+            ) : (
+              <>
+                <KnittingNow project={knitting} />
+                {others.length > 0 && <Grid items={others} columns={2} size="large" />}
+              </>
+            )
+          )}
 
-        <Section title="Finished" count={finished.length} />
-        {finished.length === 0 ? (
-          <ThemedText themeColor="textSecondary" style={{ marginTop: 6 }}>
-            Finished projects show up here, with the notes you wrote along the way.
-          </ThemedText>
-        ) : (
-          <Grid items={finished} columns={3} size="small" />
-        )}
-      </View>
-    </ScrollView>
+          <Section title="Finished" count={finished.length} />
+          {finished.length === 0 ? (
+            <ThemedText themeColor="textSecondary" style={{ marginTop: 6 }}>
+              Finished projects show up here, with the notes you wrote along the way.
+            </ThemedText>
+          ) : (
+            <Grid items={finished} columns={3} size="small" pick={pick} />
+          )}
+        </View>
+      </ScrollView>
+      {pick.selecting && (
+        <SelectBar
+          count={pick.ids.size}
+          total={projects.length}
+          onSelectAll={() => pick.selectAll(projects.map((p) => p.id))}
+          onRemove={removePicked}
+        />
+      )}
+      {dialog}
+    </View>
   );
 }
 
@@ -110,14 +153,35 @@ function Section({ title, count }: { title: string; count: number }) {
   );
 }
 
-function Grid({ items, columns, size }: { items: Project[]; columns: number; size: 'large' | 'small' }) {
+function Grid({
+  items,
+  columns,
+  size,
+  pick,
+}: {
+  items: Project[];
+  columns: number;
+  size: 'large' | 'small';
+  pick?: ReturnType<typeof useSelection>;
+}) {
   const gap = size === 'large' ? 14 : 12;
   return (
     <View style={{ gap }}>
       {rows(items, columns).map((row, i) => (
         <View key={i} style={{ flexDirection: 'row', gap }}>
           {row.map((p, j) =>
-            p ? <ProjectBox key={p.id} project={p} size={size} /> : <View key={`pad-${j}`} style={{ flex: 1 }} />
+            p ? (
+              <ProjectBox
+                key={p.id}
+                project={p}
+                size={size}
+                selecting={pick?.selecting}
+                selected={pick?.isSelected(p.id)}
+                onSelect={() => pick?.toggle(p.id)}
+              />
+            ) : (
+              <View key={`pad-${j}`} style={{ flex: 1 }} />
+            )
           )}
         </View>
       ))}
