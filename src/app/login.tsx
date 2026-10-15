@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
@@ -28,8 +28,43 @@ export default function LoginScreen() {
   const [busy, setBusy] = useState<'email' | 'google' | 'reset' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Set after "Create account" while the email link still has to be tapped.
+  const [waiting, setWaiting] = useState(false);
+  const trying = useRef(false);
 
   const done = () => (router.canGoBack() ? router.back() : router.replace('/'));
+
+  // The email link opens in Mail and then the browser, not here (a home screen app can't be opened
+  // by a link). When this screen comes back into view, sign in with what's still typed, quietly:
+  // until the link is tapped Supabase just says the email isn't confirmed yet.
+  useEffect(() => {
+    if (!waiting) return;
+    const tryAgain = () => {
+      if (trying.current) return;
+      trying.current = true;
+      signInWithEmail(email, password)
+        .then(() => {
+          setWaiting(false);
+          done();
+        })
+        .catch(() => {})
+        .finally(() => {
+          trying.current = false;
+        });
+    };
+    if (Platform.OS === 'web') {
+      const onVisible = () => document.visibilityState === 'visible' && tryAgain();
+      document.addEventListener('visibilitychange', onVisible);
+      window.addEventListener('focus', tryAgain);
+      return () => {
+        document.removeEventListener('visibilitychange', onVisible);
+        window.removeEventListener('focus', tryAgain);
+      };
+    }
+    const subscription = AppState.addEventListener('change', (state) => state === 'active' && tryAgain());
+    return () => subscription.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waiting, email, password]);
   const canSubmit = accountsEnabled && /\S+@\S+\.\S+/.test(email.trim()) && password.length > 0 && !busy;
 
   const submit = async () => {
@@ -41,8 +76,9 @@ export default function LoginScreen() {
         await signInWithEmail(email, password);
         done();
       } else if (await signUpWithEmail(email, password)) {
-        setNotice('Nearly there! We sent you an email. Tap the link in it, then sign in here.');
+        setNotice('Nearly there! We sent you an email. Tap the link in it, then come back here and you’ll be signed in.');
         setMode('signIn');
+        setWaiting(true);
       } else {
         done();
       }

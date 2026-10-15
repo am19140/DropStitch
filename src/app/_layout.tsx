@@ -79,6 +79,7 @@ export default function RootLayout() {
         )}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
+        <Stack.Screen name="confirmed" options={{ animation: 'fade' }} />
         <Stack.Screen name="login" />
         <Stack.Screen name="new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="yarn/new" options={{ presentation: 'modal' }} />

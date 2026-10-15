@@ -41,8 +41,12 @@ export async function signUpWithEmail(email: string, password: string) {
   const { data, error } = await client().auth.signUp({
     email: email.trim(),
     password,
-    // The link in the confirmation email opens the website's "You're in!" page.
-    options: { emailRedirectTo: 'https://dropstitch.io/confirmed' },
+    // The link in the confirmation email opens the app's own "You're in!" screen where the app runs on
+    // the web (like the test copy), not the website. Phone apps have no address, so they get the website's page.
+    options: {
+      emailRedirectTo:
+        Platform.OS === 'web' && typeof window !== 'undefined' ? `${window.location.origin}/confirmed` : 'https://dropstitch.io/confirmed',
+    },
   });
   if (error) throw friendly(error);
   return !data.session;
