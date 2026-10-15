@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import { create } from 'zustand';
 
 import { deleteStoredFile, hasStoredFile, readStoredFile, storeBase64 } from '@/lib/file-store';
+import { RetiredColors } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useProjects, type Project, type SyncMeta, type Yarn } from '@/store/projects';
 
@@ -94,7 +95,9 @@ async function pull(uid: string) {
           if (project) removedFiles.push(...project.files.map((f) => f.storedName));
           projects = projects.filter((p) => p.id !== row.id);
         } else {
-          const next = { ...(row.data as Project), updatedAt: row.updated_at };
+          const data = row.data as Project;
+          // A project saved before a colour was retired comes back in the colour that replaced it.
+          const next = { ...data, color: RetiredColors[data.color] ?? data.color, updatedAt: row.updated_at };
           projects = project ? projects.map((p) => (p.id === row.id ? next : p)) : [next, ...projects];
         }
       } else if (row.kind === 'yarn') {

@@ -14,7 +14,9 @@
   --line: #E1E9F4;
   --cobalt: #034FC9;
   --red: #F51614;
-  --oat: #E2D9BC;
+  --oat: #E8E3C3;
+  /* the page behind everything: banana, like the palette photo */
+  --page: var(--oat);
   --cocoa: #683629;
 }
 
@@ -22,7 +24,7 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--page);
   color: var(--ink);
   font-family: Nunito, ui-rounded, system-ui, sans-serif;
   font-weight: 600;

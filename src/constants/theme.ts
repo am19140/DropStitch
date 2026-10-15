@@ -30,8 +30,8 @@ const palette = {
   /** Light blue. Takes ink text. */
   sky: '#80ABD7',
   skySoft: '#D7E5F4',
-  /** Beige. Takes ink text. */
-  beige: '#E2D9BC',
+  /** Banana beige. Takes ink text. */
+  beige: '#E8E3C3',
   /** Chocolate. Takes white text. */
   cocoa: '#683629',
   danger: '#B20E19',
@@ -47,7 +47,10 @@ export const Colors = { light: palette, dark: palette } as const;
 export type ThemeColor = keyof typeof palette;
 
 /** Box colours for projects, like paint-chip cards. All take ink text. */
-export const ProjectColors = ['#80ABD7', '#E2D9BC', '#D7E5F4', '#EAD9A8', '#B9CFEA', '#F3D2C8'];
+export const ProjectColors = ['#80ABD7', '#E8E3C3', '#D7E5F4', '#EAD9A8', '#B9CFEA', '#F3D2C8'];
+
+/** Colours the app used to use, and what they became: saved projects are moved over when they load or sync. */
+export const RetiredColors: Record<string, string> = { '#E2D9BC': '#E8E3C3' };
 
 /** Font families, loaded in app/_layout.tsx: Nunito throughout. Custom fonts need one family per weight. */
 export const Fonts = {

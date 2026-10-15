@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { YarnAppearance } from '@/components/yarn-ball';
-import { ProjectColors } from '@/constants/theme';
+import { ProjectColors, RetiredColors } from '@/constants/theme';
 import { dayKey } from '@/lib/dates';
 import type { ParsedStep } from '@/lib/parse-steps';
 import { countsRows, lengthTarget } from '@/lib/step-rules';
@@ -473,7 +473,7 @@ export const useProjects = create<ProjectsState>()(
     },
     {
       name: 'dropstitch-projects',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         projects: state.projects,
@@ -486,7 +486,7 @@ export const useProjects = create<ProjectsState>()(
         deleted: state.deleted,
         sync: state.sync,
       }),
-      // v1 projects had no box colour.
+      // v1 projects had no box colour; v2 box colours may be one the app has since retired.
       migrate: (persisted, version) => {
         const state = persisted as { projects?: Project[] };
         if (version < 2 && state.projects) {
@@ -494,6 +494,9 @@ export const useProjects = create<ProjectsState>()(
             ...p,
             color: p.color ?? ProjectColors[i % ProjectColors.length],
           }));
+        }
+        if (version < 3 && state.projects) {
+          state.projects = state.projects.map((p) => ({ ...p, color: RetiredColors[p.color] ?? p.color }));
         }
         return state as ProjectsState;
       },
