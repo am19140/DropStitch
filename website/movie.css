@@ -1,0 +1,84 @@
+/* The movie: the pattern scrolls up, its words fall off, the empty page tears, the phone rises with the round in pieces. */
+.movie { position: relative; height: 640vh; margin-top: 18px; }
+.m-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+
+:root {
+  --paper-tex: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .40  0 0 0 0 .34  0 0 0 0 .28  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --paper-mottle: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='520' height='520'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='2' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .45  0 0 0 0 .32  0 0 0 .10 0'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>");
+  --paper-fibres: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.02 .9' numOctaves='2' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .42  0 0 0 0 .3  0 0 0 .06 0'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
+  --sheet: #f8f3e8;
+}
+.m-paper.paper, .half .face {
+  background-color: var(--sheet);
+  background-image: var(--paper-tex), var(--paper-fibres), var(--paper-mottle), radial-gradient(120% 90% at 50% 40%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 70%), linear-gradient(#faf6ec, #f3ecdc);
+}
+.m-paper.paper {
+  position: absolute; top: 0; left: 50%; width: min(600px, calc(100% - 8px)); transform-origin: 0 0;
+  max-height: none; overflow: visible; margin: 0;
+  border: 0; border-radius: 1px; color: #3e322c;
+  box-shadow: inset 0 0 50px rgba(150, 120, 80, .14), 0 1px 2px rgba(42, 28, 24, .10), 0 18px 40px rgba(42, 28, 24, .14);
+}
+.m-paper.paper::after { display: none; }
+.m-paper .w { display: inline-block; will-change: transform; }
+.m-paper .nw { white-space: nowrap; }
+.m-paper .tally.w, .m-paper .sticky.w, .m-paper .page.w { display: block; }
+
+.half { position: absolute; top: 0; left: 0; display: none; pointer-events: none; filter: drop-shadow(0 12px 20px rgba(42, 28, 24, .16)); will-change: transform; }
+.half .rim, .half .face, .half .shade-wrap, .half .shade { position: absolute; inset: 0; }
+.half .face { box-shadow: inset 0 0 50px rgba(150, 120, 80, .14); }
+/* the torn paper's white core, a little fluffy */
+.half .rim { background: #fffdf7; background-image: var(--paper-tex); }
+/* a soft shadow just past the torn edge */
+.half .shade-wrap { filter: blur(1.8px); }
+.half .shade { background: rgba(90, 70, 45, .18); }
+
+.m-hint { position: absolute; left: 0; top: 18px; margin: 0; font-weight: 800; color: var(--ink-2); }
+
+/* the payoff, left of the phone on big screens */
+.m-done { position: absolute; left: 0; top: 50%; max-width: 30ch; margin: 0; opacity: 0; transform: translateY(-50%); pointer-events: none; }
+.m-done .big { margin: 0; font-weight: 900; font-size: clamp(30px, 4vw, 46px); line-height: 1.05; color: var(--cobalt); }
+.m-done p { margin: 12px 0 0; font-weight: 700; font-size: 18px; line-height: 1.45; color: var(--ink-2); }
+
+/* the phone */
+.m-phone { position: absolute; right: 6%; top: 50%; width: min(290px, 34vh); aspect-ratio: 9 / 19.5; margin-top: calc(min(290px, 34vh) * -19.5 / 18); padding: 7px; border-radius: 40px; background: var(--ink); box-shadow: 0 22px 44px rgba(42, 28, 24, .22); transform: translateY(120vh); will-change: transform; }
+.m-phone .screen { position: relative; width: 100%; height: 100%; border-radius: 34px; overflow: hidden; background: var(--paper); container-type: inline-size; padding: 16% 6% 0; }
+.island { position: absolute; z-index: 2; top: 3cqw; left: 50%; width: 30cqw; height: 8.5cqw; margin-left: -15cqw; border-radius: 99px; background: #111; }
+.c-crumb { margin: 0; font-weight: 700; font-size: 4.2cqw; color: var(--ink-2); }
+.c-title { margin: 1cqw 0 0; font-weight: 900; font-size: 6.6cqw; line-height: 1.15; }
+.c-card { position: relative; margin-top: 4.5cqw; height: 56cqw; padding: 5cqw; border-radius: 8cqw; background: var(--sky); overflow: hidden; }
+.c-pill { position: absolute; top: 4cqw; right: 4cqw; display: flex; align-items: center; gap: 1.6cqw; padding: 1.6cqw 3cqw; border-radius: 99px; background: var(--paper); font-weight: 800; font-size: 3.6cqw; }
+.c-pill b { width: 2cqw; height: 2cqw; border-radius: 50%; background: var(--red); }
+.c-side { margin: 4cqw 0 0; font-weight: 900; font-size: 20cqw; line-height: .9; color: var(--cobalt); letter-spacing: -.5cqw; }
+.c-sidel { margin: 1cqw 0 0; font-weight: 800; font-size: 4.6cqw; color: var(--cobalt); }
+.c-rep { margin: 3cqw 0 0; font-weight: 800; font-size: 4.6cqw; }
+.c-card img { position: absolute; right: -8cqw; bottom: -9cqw; width: 50cqw; height: auto; }
+.c-line { margin-top: 4cqw; padding: 4cqw 5cqw 2cqw; border-radius: 6cqw; border: 1.5px solid var(--line); background: var(--paper); }
+.c-label { display: block; font-weight: 700; font-size: 3.6cqw; color: var(--ink-2); }
+.pieces { list-style: none; margin: 1.5cqw 0 0; padding: 0; }
+.pieces li { display: flex; gap: 3cqw; align-items: flex-start; padding: 2.2cqw 0; border-top: 1.5px solid var(--line); font-weight: 800; font-size: 4.3cqw; line-height: 1.3; color: var(--ink-2); transition: color .25s, font-size .25s; }
+.pieces li:first-child { border-top: 0; }
+.pieces .tick { position: relative; flex: none; width: 6cqw; height: 6cqw; border-radius: 50%; border: 2px solid #C9D6E6; transition: background .25s, border-color .25s; }
+.pieces li.now { color: var(--ink); font-weight: 900; font-size: 5cqw; }
+.pieces li.now .tick { border: 3px solid var(--cobalt); }
+.pieces li.done { color: var(--ink-2); text-decoration: line-through; }
+.pieces li.done .tick { border-color: var(--cobalt); background: var(--cobalt) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / 80% no-repeat; }
+.c-plain { display: none; margin: 2cqw 0 2cqw; font-weight: 900; font-size: 6cqw; }
+.screen.round2 .pieces { display: none; }
+.screen.round2 .c-plain { display: block; }
+.c-bar { position: absolute; left: 6cqw; right: 6cqw; bottom: 7cqw; display: flex; align-items: center; justify-content: space-between; }
+.c-total { font-weight: 700; font-size: 3.6cqw; color: var(--ink-2); }
+.c-total b { display: block; font-weight: 900; font-size: 7cqw; color: var(--ink); }
+.c-next { padding: 3.6cqw 6cqw; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 900; font-size: 4.6cqw; transition: box-shadow .3s, background .3s; }
+.screen.ready .c-next { background: var(--cobalt); box-shadow: 0 0 0 1.6cqw rgba(3, 79, 201, .22); }
+
+@media (max-width: 760px) {
+  .m-paper.paper { width: min(290px, 74vw); padding: 18px 12px 22px 30px; font-size: 10.5px; line-height: 1.55; }
+  .m-paper .paper .head, .m-paper .head { font-size: 10px; margin: 12px 0 4px; }
+  .m-paper .tally { left: 7px; top: 26px; width: 16px; height: 110px; }
+  .m-paper .page { font-size: 9.5px; top: 7px; right: 12px; }
+  .m-paper .sticky { right: 10px; bottom: -16px; max-width: 54%; padding: 8px 10px; font-size: 12px; }
+  .m-paper .cont { font-size: 10px; }
+  .m-paper .pencil { top: -7px; font-size: 9.5px; }
+  .m-phone { right: auto; left: 50%; width: min(300px, 40vh, 78vw); margin-left: calc(min(300px, 40vh, 78vw) / -2); margin-top: calc(min(300px, 40vh, 78vw) * -19.5 / 18); }
+  .m-done { display: none; }
+}
