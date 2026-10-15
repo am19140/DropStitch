@@ -34,7 +34,11 @@ export default function ConfirmedScreen() {
 
   useEffect(() => {
     if (state !== 'checking' || !supabase) return;
-    supabase.auth.getSession().then(({ data }) => setState(data.session ? 'signedIn' : 'confirmed'));
+    supabase.auth.getSession().then(({ data }) => {
+      // The link's sign-in details stay in the address; once they're used, clear them away.
+      if (Platform.OS === 'web' && window.location.hash) window.history.replaceState(null, '', window.location.pathname);
+      setState(data.session ? 'signedIn' : 'confirmed');
+    });
   }, [state]);
 
   const start = () => {
@@ -93,7 +97,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 24, alignItems: 'center' },
   art: { marginTop: 8 },
   title: { marginTop: 12, textAlign: 'center', fontFamily: Fonts.display, fontSize: 34, lineHeight: 38, color: C.text },
-  message: { marginTop: 10, maxWidth: 340, textAlign: 'center', fontFamily: Fonts.semibold, fontSize: 17, lineHeight: 24, color: C.textSecondary },
+  message: { marginTop: 10, maxWidth: 320, textAlign: 'center', fontFamily: Fonts.semibold, fontSize: 17, lineHeight: 24, color: C.textSecondary },
   button: { marginTop: 24, alignSelf: 'stretch' },
   hint: { marginTop: 16, maxWidth: 340, textAlign: 'center', fontFamily: Fonts.semibold, fontSize: 15, lineHeight: 21, color: C.textSecondary },
 });
