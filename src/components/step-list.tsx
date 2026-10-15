@@ -99,19 +99,23 @@ export function StepList({ project }: { project: Project }) {
                       styles.stepText,
                       current && styles.stepTextCurrent,
                       !step.done && !current && { color: C.textSecondary },
+                      step.done && !current && styles.stepTextDone,
                     ]}
                     numberOfLines={3}
                   >
                     {index + 1}. {step.text}
                   </Text>
-                  {(step.rows || current || step.rowsDone > 0) && (
+                  {step.done && !current ? (
+                    // Ticked off (maybe without counting its rows): no "0 / 18 rows" next to the tick.
+                    <Text style={styles.stepSub}>Done</Text>
+                  ) : (step.rows || current || step.rowsDone > 0) ? (
                     <Text style={styles.stepSub}>
                       {step.rows
                         ? `${step.rowsDone} / ${step.rows} rows`
                         : `${step.rowsDone} rows`}
                       {current ? " · current" : ""}
                     </Text>
-                  )}
+                  ) : null}
                 </Pressable>
 
                 <Button
@@ -379,6 +383,11 @@ const styles = StyleSheet.create({
   },
   stepTextCurrent: {
     fontFamily: Fonts.extrabold,
+  },
+  // Knitted steps are crossed off, like a line struck through on the pattern.
+  stepTextDone: {
+    color: C.textSecondary,
+    textDecorationLine: "line-through",
   },
   stepSub: {
     fontFamily: Fonts.semibold,

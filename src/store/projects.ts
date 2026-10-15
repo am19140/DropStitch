@@ -403,7 +403,12 @@ export const useProjects = create<ProjectsState>()(
           })),
 
         goToStep: (id, index) =>
-          edit(id, (p) => ({ currentStep: clampIndex(index, p.steps.length) })),
+          edit(id, (p) => {
+            const to = clampIndex(index, p.steps.length);
+            // Jumping ahead means the steps before it are knitted: tick them off. Jumping back changes nothing else.
+            if (to <= p.currentStep) return { currentStep: to };
+            return { currentStep: to, steps: p.steps.map((s, i) => (i < to && !s.done ? { ...s, done: true } : s)) };
+          }),
 
         completeStep: (id) => {
           // Moving on means you're knitting: start the timer if it isn't running.
