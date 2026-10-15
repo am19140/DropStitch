@@ -11,7 +11,8 @@ const CREAM = '#F6F1E3';
 
 /**
  * The one bold block on a screen: cobalt, with cream type and a banana button. It's for the thing you
- * came to the screen to do, so each screen has at most one. The whole card is the button.
+ * came to the screen to do, so each screen has at most one. With `onPress`, the whole card is the button;
+ * without it, it's a message.
  */
 export function CobaltCard({
   onPress,
@@ -19,11 +20,12 @@ export function CobaltCard({
   style,
   children,
 }: {
-  onPress: () => void;
-  accessibilityLabel: string;
+  onPress?: () => void;
+  accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
   children: ReactNode;
 }) {
+  if (!onPress) return <View style={[styles.card, style]}>{children}</View>;
   return (
     <Pressable
       accessibilityRole="button"

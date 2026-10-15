@@ -15,6 +15,7 @@ import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
 import { Tour, TourTarget, type TourStep } from '@/components/tour';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
+import { formatDuration, useNow } from '@/lib/clock';
 import { rowPieces } from '@/lib/row-pieces';
 import {
   countsRows,
@@ -63,31 +64,6 @@ const KNIT_TOUR: TourStep[] = [
     text: 'Peek at your PDF any time, without losing your place.',
   },
 ];
-
-/** "0:42" / "1:05:09" */
-function formatDuration(ms: number) {
-  const total = Math.floor(ms / 1000);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const sec = String(total % 60).padStart(2, '0');
-  return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
-}
-
-/** The current time, ticking every second while `active`. */
-function useNow(active: boolean) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!active) return;
-    const tick = () => setNow(Date.now());
-    const first = setTimeout(tick, 0);
-    const timer = setInterval(tick, 1000);
-    return () => {
-      clearTimeout(first);
-      clearInterval(timer);
-    };
-  }, [active]);
-  return now;
-}
 
 /** The current step: where you are in the pattern, which row and which side, plus the row buttons. */
 export default function KnitScreen() {

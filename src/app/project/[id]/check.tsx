@@ -106,7 +106,7 @@ export default function CheckStepsScreen() {
         </WaveBand>
 
         <View style={styles.body} onLayout={(e) => (layout.current.body = e.nativeEvent.layout.y)}>
-          {unsure > 0 && (
+          {unsure > 0 ? (
             // The one cobalt block here: checking these lines is what this screen is for.
             <CobaltCard
               accessibilityLabel={`I wasn’t sure about ${unsure === 1 ? '1 line' : `${unsure} lines`}. Show me.`}
@@ -117,6 +117,18 @@ export default function CheckStepsScreen() {
                 I wasn’t sure about {unsure === 1 ? '1 line' : `${unsure} lines`}, dear. Tap and I’ll show you.
               </Text>
               <Icon name="chevronDown" size={20} color={C.beige} strokeWidth={2.6} />
+            </CobaltCard>
+          ) : (
+            // Nothing to check: the cobalt block still says so, so the screen keeps its accent.
+            <CobaltCard style={styles.bubble}>
+              <Purl pose="head" size={42} />
+              <View style={{ flex: 1 }}>
+                <Text style={[cobaltText.text, styles.bubbleText]}>All clear, dear. I read every line.</Text>
+                <Text style={cobaltText.muted}>
+                  {steps.length} {steps.length === 1 ? 'step' : 'steps'}
+                  {parts.filter((part) => part.title).length > 1 ? ` in ${parts.filter((part) => part.title).length} parts` : ''}. Have a look, then let’s knit.
+                </Text>
+              </View>
             </CobaltCard>
           )}
           {parts.map((part, p) => (

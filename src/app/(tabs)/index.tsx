@@ -2,6 +2,7 @@ import { Redirect, useIsFocused, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { CobaltButton, CobaltCard, CobaltProgress, cobaltText } from '@/components/cobalt-card';
+import { KnittingPill } from '@/components/knitting-pill';
 import { progressOf, rowInfo } from '@/components/project-box';
 import { GrandmaTea } from '@/components/grandma/grandma-scenes';
 import { Icon } from '@/components/icon';
@@ -170,9 +171,18 @@ function NeedlesCard({ project }: { project: Project }) {
       </View>
       <CobaltProgress label={label} fraction={fraction} />
       <View style={styles.cardBottom}>
-        <Text style={[cobaltText.muted, { flex: 1 }]}>
-          {project.lastStitchAt ? `Last stitch ${timeAgo(project.lastStitchAt)}` : `Cast on ${daysAgo(project.createdAt)}`}
-        </Text>
+        <View style={{ flex: 1 }}>
+          {/* While Mrs Purl is still knitting, a way to stop her right here. */}
+          <KnittingPill
+            project={project}
+            onCobalt
+            resting={
+              <Text style={cobaltText.muted}>
+                {project.lastStitchAt ? `Last stitch ${timeAgo(project.lastStitchAt)}` : `Cast on ${daysAgo(project.createdAt)}`}
+              </Text>
+            }
+          />
+        </View>
         <CobaltButton label="Continue" icon="arrowRight" iconAfter />
       </View>
     </CobaltCard>

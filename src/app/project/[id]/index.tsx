@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { CobaltButton, CobaltCard, CobaltProgress, cobaltText } from '@/components/cobalt-card';
 import { Icon } from '@/components/icon';
+import { KnittingPill } from '@/components/knitting-pill';
 import { rowInfo } from '@/components/project-box';
 import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandma';
 import { Purl } from '@/components/purl';
@@ -12,6 +13,7 @@ import { HeaderButton, ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { WaveBand } from '@/components/wave-band';
 import { Colors, Fonts } from '@/constants/theme';
+import { useNow } from '@/lib/clock';
 import { daysAgo, knitDuration, longDate, shortDate } from '@/lib/dates';
 import { knitTime, projectTitle, timerRunning, useProject, useProjects } from '@/store/projects';
 
@@ -24,6 +26,8 @@ export default function ProjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useProject(id);
   const updateProject = useProjects((s) => s.updateProject);
+  // Ticks while the timer is on, so Mrs Purl dozes off by herself when it stops.
+  const now = useNow(!!project?.timerStartedAt);
 
   if (!project) {
     return (
@@ -37,8 +41,8 @@ export default function ProjectScreen() {
   const finished = !!project.finishedAt;
   const { step, row, target, counting } = rowInfo(project);
   const params = { id: project.id };
-  const knitted = knitTime(project);
-  const running = timerRunning(project);
+  const knitted = knitTime(project, now);
+  const running = timerRunning(project, now);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
@@ -80,12 +84,20 @@ export default function ProjectScreen() {
               : `Started ${shortDate(project.createdAt)} · ${daysAgo(project.createdAt)}`}
           </Text>
         </View>
-        {knitted > 0 && (
-          <View style={styles.metaRow}>
-            <Icon name={running ? 'pause' : 'play'} size={16} color={C.text} />
-            <Text style={styles.meta}>{knitDuration(knitted)} of knitting</Text>
-          </View>
-        )}
+        {/* While she's still knitting, pause her here; otherwise, how long you've knitted in all. */}
+        <View style={{ marginTop: 10 }}>
+          <KnittingPill
+            project={project}
+            resting={
+              knitted > 0 ? (
+                <View style={[styles.metaRow, { marginTop: 0 }]}>
+                  <Icon name="play" size={16} color={C.text} />
+                  <Text style={styles.meta}>{knitDuration(knitted)} of knitting</Text>
+                </View>
+              ) : null
+            }
+          />
+        </View>
       </WaveBand>
 
       <View style={styles.content}>
