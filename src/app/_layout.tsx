@@ -17,6 +17,7 @@ import { ScreenTransition } from '@/components/screen-transition';
 import { TourProvider } from '@/components/tour';
 import { Colors } from '@/constants/theme';
 import { useAccountSync } from '@/lib/sync';
+import { useWebUpdates } from '@/lib/web-updates';
 import { useProjectsHydrated } from '@/store/projects';
 
 SplashScreen.preventAutoHideAsync();
@@ -30,6 +31,8 @@ export default function RootLayout() {
   const hydrated = useProjectsHydrated();
   // Saves the knitting to your account in the background while you're signed in.
   useAccountSync();
+  // On the web, switches to a newer version of the app when it comes back into view.
+  useWebUpdates();
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_500Medium,
