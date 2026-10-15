@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="/movie.css?v=2026101503">
   <link rel="stylesheet" href="/book.css?v=2026101503">
   <link rel="stylesheet" href="/marks.css?v=2026101503">
+  <link rel="stylesheet" href="/waitlist.css?v=2026101510">
 </head>
 <body>
   <header class="band">
@@ -30,6 +31,37 @@
         <div class="hero-copy">
           <h1>Never miss<br>a stitch</h1>
           <p class="lede">Your knitting, counted for you. DropStitch reads your pattern, breaks it into steps for your size, and keeps count of every row.</p>
+          <div class="wl wl-hero">
+  <div class="wl-body">
+  <form class="wl-panel" tabindex="-1" novalidate>
+    <span class="wl-tag">Early testers</span>
+    <h2 class="wl-title">Be one of the first to knit with DropStitch</h2>
+    <p class="wl-sub">Mrs Purl is picking a few knitters to try the app before everyone else.</p>
+    
+    <div class="wl-row">
+      <label class="wl-email"><span class="sr">Your email</span><input type="email" name="email" placeholder="Your email" autocomplete="email" inputmode="email" required></label>
+      <button class="wl-go" type="submit">Join the waitlist<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+    <input class="wl-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p class="wl-msg" role="alert" hidden></p>
+    <p class="wl-note">Just your email. No newsletters. <a href="/privacy#waitlist">Privacy</a></p>
+  </form>
+  <div class="wl-panel wl-step2" tabindex="-1" hidden>
+    <span class="wl-tag">You’re in</span>
+    <h2 class="wl-title">One last thing: which phone do you use?</h2>
+    <p class="wl-sub">So Mrs Purl knows which version to send you.</p>
+    <div class="wl-tiles">
+      <button class="wl-tile" type="button" data-phone="iphone"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c.02 2.4 2.1 3.2 2.13 3.21-.02.06-.33 1.14-1.1 2.26-.66.97-1.35 1.94-2.43 1.96-1.06.02-1.4-.63-2.62-.63-1.21 0-1.6.61-2.6.65-1.05.04-1.85-1.05-2.52-2.02-1.37-1.98-2.42-5.6-1.01-8.04.7-1.21 1.95-1.98 3.3-2 1.03-.02 2.01.7 2.64.7.63 0 1.81-.86 3.06-.73.52.02 1.98.21 2.92 1.59-.08.05-1.74 1.02-1.72 3.05ZM14.35 4.9c.56-.68.93-1.62.83-2.56-.8.03-1.78.54-2.36 1.21-.52.6-.97 1.56-.85 2.48.9.07 1.81-.45 2.38-1.13Z"/></svg>iPhone</button>
+      <button class="wl-tile" type="button" data-phone="android"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 19a9 9 0 0 1 18 0z"/><path d="M7.7 11.3 5.9 8M16.3 11.3 18.1 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/><circle cx="8.7" cy="15.4" r="1.15" style="fill:var(--eye)"/><circle cx="15.3" cy="15.4" r="1.15" style="fill:var(--eye)"/></svg>Android</button>
+    </div>
+    <button class="wl-skip" type="button">Skip</button>
+  </div>
+  <div class="wl-panel wl-done" tabindex="-1" hidden>
+    <img src="/img/proud.webp" alt="Mrs Purl holding up a finished sweater" width="640" height="640">
+    <div><h2 class="wl-title">You’re on the list!</h2><p>Mrs Purl will email you when it’s your turn to try DropStitch.</p></div>
+  </div>
+  </div>
+</div>
           <div class="stores">
             <a class="store" aria-disabled="true">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c.02 2.4 2.1 3.2 2.13 3.21-.02.06-.33 1.14-1.1 2.26-.66.97-1.35 1.94-2.43 1.96-1.06.02-1.4-.63-2.62-.63-1.21 0-1.6.61-2.6.65-1.05.04-1.85-1.05-2.52-2.02-1.37-1.98-2.42-5.6-1.01-8.04.7-1.21 1.95-1.98 3.3-2 1.03-.02 2.01.7 2.64.7.63 0 1.81-.86 3.06-.73.52.02 1.98.21 2.92 1.59-.08.05-1.74 1.02-1.72 3.05ZM14.35 4.9c.56-.68.93-1.62.83-2.56-.8.03-1.78.54-2.36 1.21-.52.6-.97 1.56-.85 2.48.9.07 1.81-.45 2.38-1.13Z"/></svg>
@@ -40,7 +72,6 @@
               <span><small>Coming soon to</small><b>Google Play</b></span>
             </a>
           </div>
-          <p class="soon">Mrs Purl is still finishing a few rows. Write to <a href="mailto:hello@dropstitch.io">hello@dropstitch.io</a> to try it early.</p>
         </div>
         <div class="hero-purl">
           <p class="bubble" aria-live="polite"></p>
@@ -252,6 +283,38 @@
       </div>
 
       <p class="say">You bring the pattern. DropStitch keeps <b>only your size</b>, cuts it into little steps, and <b>counts while you knit</b>. Put it down for a month and it still knows where you were.</p>
+      <div class="wl wl-end">
+  <img class="wl-art" src="/img/yarn-pile.webp" alt="Mrs Purl surrounded by balls of yarn" width="720" height="660">
+  <div class="wl-body">
+  <form class="wl-panel" tabindex="-1" novalidate>
+    <span class="wl-tag">Early testers</span>
+    <h2 class="wl-title">Want to knit with it first?</h2>
+    <p class="wl-sub">Mrs Purl is picking a few knitters to try DropStitch early. Leave your email and she’ll write when it’s your turn.</p>
+    
+    <div class="wl-row">
+      <label class="wl-email"><span class="sr">Your email</span><input type="email" name="email" placeholder="Your email" autocomplete="email" inputmode="email" required></label>
+      <button class="wl-go" type="submit">Join the waitlist<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+    <input class="wl-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p class="wl-msg" role="alert" hidden></p>
+    <p class="wl-note">Just your email. No newsletters. <a href="/privacy#waitlist">Privacy</a></p>
+  </form>
+  <div class="wl-panel wl-step2" tabindex="-1" hidden>
+    <span class="wl-tag">You’re in</span>
+    <h2 class="wl-title">One last thing: which phone do you use?</h2>
+    <p class="wl-sub">So Mrs Purl knows which version to send you.</p>
+    <div class="wl-tiles">
+      <button class="wl-tile" type="button" data-phone="iphone"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c.02 2.4 2.1 3.2 2.13 3.21-.02.06-.33 1.14-1.1 2.26-.66.97-1.35 1.94-2.43 1.96-1.06.02-1.4-.63-2.62-.63-1.21 0-1.6.61-2.6.65-1.05.04-1.85-1.05-2.52-2.02-1.37-1.98-2.42-5.6-1.01-8.04.7-1.21 1.95-1.98 3.3-2 1.03-.02 2.01.7 2.64.7.63 0 1.81-.86 3.06-.73.52.02 1.98.21 2.92 1.59-.08.05-1.74 1.02-1.72 3.05ZM14.35 4.9c.56-.68.93-1.62.83-2.56-.8.03-1.78.54-2.36 1.21-.52.6-.97 1.56-.85 2.48.9.07 1.81-.45 2.38-1.13Z"/></svg>iPhone</button>
+      <button class="wl-tile" type="button" data-phone="android"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 19a9 9 0 0 1 18 0z"/><path d="M7.7 11.3 5.9 8M16.3 11.3 18.1 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/><circle cx="8.7" cy="15.4" r="1.15" style="fill:var(--eye)"/><circle cx="15.3" cy="15.4" r="1.15" style="fill:var(--eye)"/></svg>Android</button>
+    </div>
+    <button class="wl-skip" type="button">Skip</button>
+  </div>
+  <div class="wl-panel wl-done" tabindex="-1" hidden>
+    <img src="/img/proud.webp" alt="Mrs Purl holding up a finished sweater" width="640" height="640">
+    <div><h2 class="wl-title">You’re on the list!</h2><p>Mrs Purl will email you when it’s your turn to try DropStitch.</p></div>
+  </div>
+  </div>
+</div>
       <p class="maker"><img src="/img/head.png" alt="" width="44" height="44">Made in Amsterdam.</p>
     </section>
   </main>
@@ -269,5 +332,7 @@
   </footer>
   <script src="/js/purl.js?v=2026101503"></script>
   <script src="/js/book.js?v=2026101503"></script>
+  <script src="/js/config.js?v=2026101510"></script>
+  <script src="/js/waitlist.js?v=2026101510"></script>
 </body>
 </html>

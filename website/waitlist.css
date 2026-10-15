@@ -1,0 +1,104 @@
+/* The waitlist: a cream card in the sky band, and a light-blue one after the story. */
+.wl {
+  --wl-pad: 28px;
+  position: relative; max-width: 500px; margin: 28px 0 0; padding: var(--wl-pad);
+  background: var(--paper); border-radius: 28px;
+  box-shadow: 0 1px 0 rgba(42, 28, 24, .06), 0 24px 50px -20px rgba(42, 28, 24, .5);
+}
+.wl [hidden] { display: none !important; }
+.wl-panel:focus { outline: none; }
+
+.wl-tag {
+  display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 10px;
+  background: var(--cobalt); color: #fff; font-weight: 900; font-size: 13px; letter-spacing: .02em;
+}
+.wl-tag::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--paper); }
+.wl h2.wl-title { margin: 14px 0 6px; max-width: none; font-weight: 900; font-size: clamp(23px, 2.6vw, 28px); line-height: 1.12; letter-spacing: -.3px; text-wrap: balance; }
+.wl-sub { margin: 0 0 18px; color: var(--ink-2); font-size: 16px; max-width: 38ch; text-wrap: pretty; }
+
+/* Email and the button, one pill on laptops */
+.wl-row {
+  display: flex; gap: 6px; padding: 6px; border-radius: 999px;
+  background: var(--card); border: 1.5px solid var(--line); transition: border-color .15s, background .15s;
+}
+.wl-row:focus-within { border-color: var(--cobalt); background: #fff; }
+.wl-email { flex: 1; min-width: 0; display: flex; }
+.wl-email input {
+  width: 100%; min-height: 52px; padding: 0 18px; border: 0; background: transparent; outline: none;
+  font: inherit; font-weight: 700; font-size: 17px; color: var(--ink);
+}
+.wl-email input::placeholder { color: var(--ink-2); opacity: .65; }
+.wl-go {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 52px; padding: 0 24px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--paper); font: inherit; font-weight: 900; font-size: 16px;
+}
+.wl-go svg { width: 18px; height: 18px; }
+.wl-go:disabled { opacity: .6; cursor: default; }
+
+.wl-msg { margin: 12px 0 0; padding: 9px 14px; border-radius: 14px; background: #FDECEB; color: var(--ink); font-weight: 800; font-size: 14px; }
+.wl-note { margin: 12px 0 0; font-weight: 700; font-size: 13px; color: var(--ink-2); text-wrap: balance; }
+.wl-note a { color: var(--ink); white-space: nowrap; }
+.wl-hp, .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Option B: the phone as one switch with two halves */
+.wl-phone {
+  display: grid; grid-template-columns: 1fr 1fr; margin: 0 0 10px; padding: 5px;
+  border: 1.5px solid var(--line); border-radius: 999px; background: var(--card);
+}
+.wl-phone legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.wl-phone label { position: relative; cursor: pointer; }
+.wl-phone input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.wl-phone span {
+  --eye: var(--card);
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border-radius: 999px;
+  font-weight: 800; font-size: 15px; color: var(--ink-2); transition: background .15s, color .15s;
+}
+.wl-phone svg { width: 18px; height: 18px; }
+.wl-phone input:checked + span { --eye: var(--ink); background: var(--ink); color: var(--paper); }
+.wl-phone input:focus-visible + span { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+
+/* Option C: the phone asked after the email, as two big tiles */
+.wl-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.wl-tile {
+  --eye: var(--card);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 10px 16px;
+  border-radius: 22px; background: var(--card); border: 1.5px solid var(--line); cursor: pointer;
+  font: inherit; font-weight: 900; font-size: 17px; color: var(--ink); transition: border-color .15s;
+}
+.wl-tile:hover, .wl-tile:focus-visible { border-color: var(--ink); outline: none; }
+.wl-tile svg { width: 34px; height: 34px; }
+.wl-skip {
+  width: 100%; min-height: 48px; margin-top: 10px; border-radius: 999px; cursor: pointer;
+  background: none; border: 1.5px solid var(--line); font: inherit; font-weight: 800; font-size: 15px; color: var(--ink-2);
+}
+
+/* Done: Mrs Purl holds up her sweater */
+.wl-done { display: grid; grid-template-columns: 112px 1fr; gap: 18px; align-items: center; }
+.wl-done img { width: 112px; height: auto; }
+.wl .wl-done h2.wl-title { margin: 0 0 4px; }
+.wl-done p { margin: 0; color: var(--ink-2); font-size: 16px; }
+
+/* After the story, on the cream page */
+.wl-end {
+  display: grid; grid-template-columns: 230px 1fr; gap: 32px; align-items: center;
+  max-width: 860px; margin: 56px auto 0; padding: 32px 36px;
+  background: var(--card); border: 1.5px solid var(--line); box-shadow: none;
+}
+.wl-art { width: 230px; height: auto; }
+.wl-end .wl-row, .wl-end .wl-phone, .wl-end .wl-tile { background: var(--paper); }
+.wl-end .wl-row:focus-within { background: #fff; }
+.wl-end .wl-phone span, .wl-end .wl-tile { --eye: var(--paper); }
+.wl-end .wl-phone input:checked + span { --eye: var(--ink); }
+.wl-end .wl-done { grid-template-columns: 1fr; }
+.wl-end .wl-done img { display: none; }
+
+@media (max-width: 560px) {
+  .wl { --wl-pad: 20px; border-radius: 24px; }
+  .wl-row { flex-direction: column; border-radius: 22px; }
+  .wl-go { width: 100%; }
+  .wl-done { grid-template-columns: 84px 1fr; gap: 14px; }
+  .wl-done img { width: 84px; }
+  .wl-end { grid-template-columns: 1fr; gap: 6px; padding: 22px 20px; }
+  .wl-art { width: 180px; margin: 0 auto; }
+}
