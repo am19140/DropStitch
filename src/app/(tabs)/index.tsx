@@ -1,7 +1,6 @@
 import { Redirect, useIsFocused, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/button';
 import { progressOf, rowInfo } from '@/components/project-box';
 import { GrandmaTea } from '@/components/grandma/grandma-scenes';
 import { Icon } from '@/components/icon';
@@ -159,36 +158,36 @@ function NeedlesCard({ project }: { project: Project }) {
       accessibilityRole="button"
       accessibilityLabel={`Continue ${projectTitle(project)}`}
       onPress={open}
-      style={({ pressed }) => [styles.card, { marginTop: 22, transform: [{ scale: pressed ? 0.99 : 1 }] }]}>
+      style={({ pressed }) => [styles.card, styles.hero, { marginTop: 22, transform: [{ scale: pressed ? 0.99 : 1 }] }]}>
       <View style={styles.cardTop}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.muted}>On the needles</Text>
-          <Text style={styles.cardTitle} numberOfLines={2}>
+          <Text style={styles.heroMuted}>On the needles</Text>
+          <Text style={[styles.cardTitle, styles.heroTitle]} numberOfLines={2}>
             {projectTitle(project)}
           </Text>
-          {where ? <Text style={[styles.muted, { marginTop: 2 }]}>{where.charAt(0).toUpperCase() + where.slice(1)}</Text> : null}
+          {where ? <Text style={[styles.heroMuted, { marginTop: 2 }]}>{where.charAt(0).toUpperCase() + where.slice(1)}</Text> : null}
         </View>
         <YarnBall color={project.color} size={58} style={{ marginTop: -8, marginRight: -6 }} />
       </View>
 
       <View style={styles.progressTop}>
-        <Text style={styles.progressLabel}>{label}</Text>
-        {fraction !== undefined && <Text style={styles.muted}>{Math.round(fraction * 100)}%</Text>}
+        <Text style={[styles.progressLabel, styles.heroText]}>{label}</Text>
+        {fraction !== undefined && <Text style={styles.heroMuted}>{Math.round(fraction * 100)}%</Text>}
       </View>
       {fraction !== undefined && (
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${Math.round(fraction * 100)}%` }]} />
+        <View style={[styles.track, styles.heroTrack]}>
+          <View style={[styles.fill, styles.heroFill, { width: `${Math.round(fraction * 100)}%` }]} />
         </View>
       )}
 
       <View style={styles.cardBottom}>
-        <Text style={[styles.muted, { flex: 1 }]}>
+        <Text style={[styles.heroMuted, { flex: 1 }]}>
           {project.lastStitchAt ? `Last stitch ${timeAgo(project.lastStitchAt)}` : `Cast on ${daysAgo(project.createdAt)}`}
         </Text>
         {/* The whole card is the button; this is just its label. */}
-        <View style={styles.go}>
-          <Text style={styles.goText}>Continue</Text>
-          <Icon name="arrowRight" size={18} color={C.surface} strokeWidth={2.4} />
+        <View style={[styles.go, styles.heroGo]}>
+          <Text style={[styles.goText, styles.heroGoText]}>Continue</Text>
+          <Icon name="arrowRight" size={18} color={C.text} strokeWidth={2.4} />
         </View>
       </View>
     </Pressable>
@@ -198,19 +197,27 @@ function NeedlesCard({ project }: { project: Project }) {
 /** Shown when nothing is on the needles. */
 function StartCard({ onPress }: { onPress: () => void }) {
   return (
-    <View style={[styles.card, { marginTop: 22 }]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Start a project"
+      onPress={onPress}
+      style={({ pressed }) => [styles.card, styles.hero, { marginTop: 22, transform: [{ scale: pressed ? 0.99 : 1 }] }]}>
       <View style={styles.cardTop}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.muted}>Nothing on the needles</Text>
-          <Text style={styles.cardTitle}>Your first project</Text>
-          <Text style={[styles.muted, { marginTop: 2 }]}>Add a PDF pattern and we’ll turn it into steps, in your size.</Text>
+          <Text style={styles.heroMuted}>Nothing on the needles</Text>
+          <Text style={[styles.cardTitle, styles.heroTitle]}>Your first project</Text>
+          <Text style={[styles.heroMuted, { marginTop: 2 }]}>Add a PDF pattern and we’ll turn it into steps, in your size.</Text>
         </View>
-        <YarnBall color={C.sky} size={58} style={{ marginTop: -8, marginRight: -6 }} />
+        <YarnBall color={C.beige} size={58} style={{ marginTop: -8, marginRight: -6 }} />
       </View>
       <View style={[styles.cardBottom, { justifyContent: 'flex-end' }]}>
-        <Button label="Start a project" icon="add" size="small" onPress={onPress} />
+        {/* The whole card is the button; this is just its label. */}
+        <View style={[styles.go, styles.heroGo]}>
+          <Icon name="add" size={18} color={C.text} strokeWidth={2.4} />
+          <Text style={[styles.goText, styles.heroGoText]}>Start a project</Text>
+        </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -287,6 +294,15 @@ const styles = StyleSheet.create({
 
   go: { height: 44, paddingHorizontal: 18, borderRadius: 999, backgroundColor: C.text, flexDirection: 'row', alignItems: 'center', gap: 8 },
   goText: { fontFamily: Fonts.extrabold, fontSize: 15, color: C.surface },
+  // The one bold block on the screen: cobalt, with banana type and a banana button.
+  hero: { backgroundColor: C.primary, borderColor: C.primary },
+  heroTitle: { fontSize: 26, lineHeight: 31, color: '#FFFFFF' },
+  heroText: { color: '#F6F1E3' },
+  heroMuted: { fontFamily: Fonts.semibold, fontSize: 14, color: 'rgba(246, 241, 227, 0.8)' },
+  heroTrack: { backgroundColor: 'rgba(255, 255, 255, 0.22)' },
+  heroFill: { backgroundColor: C.beige },
+  heroGo: { backgroundColor: C.beige },
+  heroGoText: { color: C.text },
   section: { marginTop: 26, marginBottom: 10, fontFamily: Fonts.display, fontSize: 19, color: C.text },
   smallRow: { marginBottom: 10, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 12 },
   smallTitle: { fontFamily: Fonts.extrabold, fontSize: 16, color: C.text },
