@@ -38,8 +38,11 @@ html { overflow-x: clip; }
 .page::after { background: linear-gradient(112deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .34) 44%, rgba(255, 255, 255, .08) 52%, rgba(255, 255, 255, 0) 64%); }
 .page.left::after { background: linear-gradient(68deg, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, .22) 50%, rgba(255, 255, 255, 0) 64%); }
 /* the stack of pages showing at the outer edges */
-.page.right.base { box-shadow: 1px 0 0 #e6dfcb, 2px 0 0 #d4cbb4, 3px 0 0 #e8e1cd, 4px 0 0 #d0c7af, 5px 1px 0 #e3dbc6, 0 2px 3px rgba(42, 28, 24, .12); }
-.page.left.base { box-shadow: -1px 0 0 #e6dfcb, -2px 0 0 #d4cbb4, -3px 0 0 #e8e1cd, -4px 0 0 #d0c7af, -5px 1px 0 #e3dbc6, 0 2px 3px rgba(42, 28, 24, .12); }
+.page.right.base { box-shadow: 1px 0 0 #e6dfcb, 2px 0 0 #d4cbb4, 3px 0 0 #e8e1cd, 4px 0 0 #d0c7af, 5px 1px 0 #e3dbc6, 0 2px 3px rgba(42, 28, 24, .12), 0 26px 44px -18px rgba(42, 28, 24, .3); }
+.page.left.base { box-shadow: -1px 0 0 #e6dfcb, -2px 0 0 #d4cbb4, -3px 0 0 #e8e1cd, -4px 0 0 #d0c7af, -5px 1px 0 #e3dbc6, 0 2px 3px rgba(42, 28, 24, .12), 0 26px 44px -18px rgba(42, 28, 24, .3); }
+/* On the pale page a hairline keeps the paper's edge visible (not on the bending slices, where it would draw seams). */
+.page { outline: 1px solid rgba(60, 40, 20, .1); outline-offset: -1px; }
+.page.cover { outline: none; }
 
 /* a page that turns: front on the right, back becomes the next left page */
 /* Each page is flat and carries its own perspective; the script shows the side that faces you. */
@@ -52,7 +55,7 @@ html { overflow-x: clip; }
 .seg { position: absolute; top: 0; left: 0; height: 100%; transform-origin: 0 50%; }
 .seg > .sf, .seg > .sb { position: absolute; inset: 0; overflow: hidden; }
 .seg > .sb { transform: scaleX(-1); }
-.seg .page { left: auto; }
+.seg .page { left: auto; outline: none; }
 /* no per-slice gloss or spine shading: overlapping slices would draw it twice */
 .seg .page::before, .seg .page::after { display: none; }
 .seg .dim { position: absolute; inset: 0; z-index: 4; pointer-events: none; }

@@ -478,7 +478,7 @@ export const useProjects = create<ProjectsState>()(
     },
     {
       name: 'dropstitch-projects',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         projects: state.projects,
@@ -491,7 +491,7 @@ export const useProjects = create<ProjectsState>()(
         deleted: state.deleted,
         sync: state.sync,
       }),
-      // v1 projects had no box colour; v2 box colours may be one the app has since retired.
+      // v1 projects had no box colour; later ones may have a colour the app has since retired.
       migrate: (persisted, version) => {
         const state = persisted as { projects?: Project[] };
         if (version < 2 && state.projects) {
@@ -500,7 +500,7 @@ export const useProjects = create<ProjectsState>()(
             color: p.color ?? ProjectColors[i % ProjectColors.length],
           }));
         }
-        if (version < 3 && state.projects) {
+        if (version < 4 && state.projects) {
           state.projects = state.projects.map((p) => ({ ...p, color: RetiredColors[p.color] ?? p.color }));
         }
         return state as ProjectsState;

@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     borderColor: C.cardLine,
     backgroundColor: C.card,
   },
-  unsureCard: { backgroundColor: C.beige, borderColor: '#D6CBA6' },
+  unsureCard: { backgroundColor: C.beige, borderColor: '#E2DCC0' },
   focusedCard: { borderColor: C.primary, borderWidth: 2.5 },
   bar: { width: 4, borderRadius: 3, alignSelf: 'stretch' },
   cardBody: { flex: 1, gap: 6 },
