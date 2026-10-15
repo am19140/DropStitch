@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/button';
+import { CobaltCard, cobaltText } from '@/components/cobalt-card';
 import { Icon } from '@/components/icon';
 import { Purl } from '@/components/purl';
 import { HeaderButton } from '@/components/screen-header';
@@ -106,13 +107,17 @@ export default function CheckStepsScreen() {
 
         <View style={styles.body} onLayout={(e) => (layout.current.body = e.nativeEvent.layout.y)}>
           {unsure > 0 && (
-            <Pressable accessibilityRole="button" onPress={nextUnsure} style={styles.bubble}>
+            // The one cobalt block here: checking these lines is what this screen is for.
+            <CobaltCard
+              accessibilityLabel={`I wasn’t sure about ${unsure === 1 ? '1 line' : `${unsure} lines`}. Show me.`}
+              onPress={nextUnsure}
+              style={styles.bubble}>
               <Purl pose="head" size={42} />
-              <Text style={styles.bubbleText}>
+              <Text style={[cobaltText.text, styles.bubbleText]}>
                 I wasn’t sure about {unsure === 1 ? '1 line' : `${unsure} lines`}, dear. Tap and I’ll show you.
               </Text>
-              <Icon name="chevronDown" size={18} color={C.text} strokeWidth={2.4} />
-            </Pressable>
+              <Icon name="chevronDown" size={20} color={C.beige} strokeWidth={2.6} />
+            </CobaltCard>
           )}
           {parts.map((part, p) => (
             <View key={p} onLayout={(e) => (layout.current.parts[p] = e.nativeEvent.layout.y)}>
@@ -271,19 +276,8 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
   },
-  bubble: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 12,
-    marginTop: 4,
-    marginBottom: 6,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: C.cardLine,
-    backgroundColor: C.surface,
-  },
-  bubbleText: { flex: 1, fontFamily: Fonts.bold, fontSize: 14, lineHeight: 19, color: C.text },
+  bubble: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, marginTop: 4, marginBottom: 6 },
+  bubbleText: { flex: 1, fontFamily: Fonts.extrabold },
   part: {
     marginTop: 14,
     marginBottom: 8,

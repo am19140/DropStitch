@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { CobaltButton, CobaltCard, CobaltProgress, cobaltText } from '@/components/cobalt-card';
 import { Icon } from '@/components/icon';
 import { rowInfo } from '@/components/project-box';
 import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandma';
@@ -95,18 +96,32 @@ export default function ProjectScreen() {
           </View>
         ) : (
           <>
-            <Button
-              label="Go to current step"
-              icon="arrowRight"
-              iconAfter
-              size="large"
-              onPress={() => router.push({ pathname: '/project/[id]/knit', params })}
-            />
-            <Text style={styles.caption} numberOfLines={1}>
-              {step
-                ? `${step.text}${counting ? ` · row ${row}${target ? ` of ${target}` : ''}` : ''}`
-                : `${project.rowCount} rows counted`}
-            </Text>
+            {/* The one cobalt block here: the step you're on, how far along, and the way back in. */}
+            <CobaltCard
+              accessibilityLabel={step ? `Go to current step: ${step.text}` : 'Open the row counter'}
+              onPress={() => router.push({ pathname: '/project/[id]/knit', params })}>
+              <Text style={cobaltText.muted}>{step?.section ? `Knitting now · ${step.section}` : 'Knitting now'}</Text>
+              <Text style={[cobaltText.title, styles.stepTitle]} numberOfLines={3}>
+                {step ? step.text : 'Your row counter'}
+              </Text>
+              <CobaltProgress
+                label={
+                  step
+                    ? counting
+                      ? `Row ${Math.min(row + 1, target ?? row + 1)}${target ? ` of ${target}` : ''}`
+                      : `Step ${project.currentStep + 1} of ${project.steps.length}`
+                    : `${project.rowCount} rows counted`
+                }
+                fraction={counting && target ? Math.min(1, row / target) : undefined}
+              />
+              <View style={styles.goRow}>
+                <CobaltButton
+                  label={step ? 'Go to current step' : project.rowCount > 0 ? 'Keep counting' : 'Start counting'}
+                  icon="arrowRight"
+                  iconAfter
+                />
+              </View>
+            </CobaltCard>
           </>
         )}
 
@@ -179,7 +194,8 @@ const styles = StyleSheet.create({
   meta: { flex: 1, fontFamily: Fonts.semibold, fontSize: 14, color: C.text },
   proudTitle: { fontFamily: Fonts.display, fontSize: 30, color: C.text },
   proudNote: { marginTop: 2, fontFamily: Fonts.semibold, fontSize: 15, color: C.textSecondary },
-  caption: { marginTop: 10, fontFamily: Fonts.semibold, fontSize: 13.5, color: C.textSecondary },
+  stepTitle: { fontSize: 21, lineHeight: 26 },
+  goRow: { marginTop: 16, flexDirection: 'row', justifyContent: 'flex-end' },
   sectionRow: { marginTop: 26, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   section: { fontFamily: Fonts.display, fontSize: 20, color: C.text },
   sectionHint: { fontFamily: Fonts.semibold, fontSize: 13, color: C.textSecondary },

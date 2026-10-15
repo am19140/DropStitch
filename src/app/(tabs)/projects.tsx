@@ -2,12 +2,14 @@ import { useIsFocused, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
-import { ProjectBox } from '@/components/project-box';
+import { CobaltCard, CobaltProgress, cobaltText } from '@/components/cobalt-card';
+import { ProjectBox, progressOf, rowInfo } from '@/components/project-box';
 import { GrandmaReading } from '@/components/grandma/grandma-scenes';
 import { ThemedText } from '@/components/themed-text';
 import { WaveBand } from '@/components/wave-band';
+import { YarnBall } from '@/components/yarn-ball';
 import { Colors, Fonts } from '@/constants/theme';
-import { useProjects, type Project } from '@/store/projects';
+import { projectTitle, useProjects, type Project } from '@/store/projects';
 
 /** How far Mrs Purl turns her head while reading (1 = as painted). */
 const READING_MOTION = 1.8;
@@ -28,6 +30,8 @@ export default function ProjectsScreen() {
   const isFocused = useIsFocused();
   const projects = useProjects((s) => s.projects);
   const active = projects.filter((p) => !p.finishedAt).sort((a, b) => b.updatedAt - a.updatedAt);
+  // The one you're knitting now (the same one Home shows) gets the cobalt card; the rest stay in the grid.
+  const [knitting, ...others] = active;
   const finished = projects
     .filter((p) => p.finishedAt)
     .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0));
@@ -50,7 +54,10 @@ export default function ProjectsScreen() {
             <Button label="Start a project" icon="add" onPress={() => router.push('/new')} />
           </View>
         ) : (
-          <Grid items={active} columns={2} size="large" />
+          <>
+            <KnittingNow project={knitting} />
+            {others.length > 0 && <Grid items={others} columns={2} size="large" />}
+          </>
         )}
 
         <Section title="Finished" count={finished.length} />
@@ -63,6 +70,32 @@ export default function ProjectsScreen() {
         )}
       </View>
     </ScrollView>
+  );
+}
+
+/** The project you're knitting now, wide and cobalt above the others. */
+function KnittingNow({ project }: { project: Project }) {
+  const router = useRouter();
+  const { step } = rowInfo(project);
+  const { label, fraction } = progressOf(project);
+  const where = [step?.section, step && `step ${project.currentStep + 1} of ${project.steps.length}`].filter(Boolean).join(' · ');
+  return (
+    <CobaltCard
+      accessibilityLabel={projectTitle(project)}
+      onPress={() => router.push({ pathname: '/project/[id]', params: { id: project.id } })}
+      style={{ marginBottom: 14 }}>
+      <View style={styles.knittingTop}>
+        <YarnBall color={project.color} size={58} style={{ marginLeft: -6, marginVertical: -6 }} />
+        <View style={{ flex: 1 }}>
+          <Text style={cobaltText.muted}>Knitting now</Text>
+          <Text style={[cobaltText.title, { fontSize: 23, lineHeight: 28 }]} numberOfLines={2}>
+            {projectTitle(project)}
+          </Text>
+          {where ? <Text style={cobaltText.muted}>{where.charAt(0).toUpperCase() + where.slice(1)}</Text> : null}
+        </View>
+      </View>
+      <CobaltProgress label={label} fraction={fraction} />
+    </CobaltCard>
   );
 }
 
@@ -102,4 +135,5 @@ const styles = StyleSheet.create({
   section: { marginTop: 14, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   sectionTitle: { fontFamily: Fonts.display, fontSize: 19, color: C.text },
   emptyActive: { gap: 12, alignItems: 'flex-start' },
+  knittingTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });
