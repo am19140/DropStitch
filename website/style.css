@@ -115,3 +115,17 @@ footer { margin-top: 40px; border-top: 1.5px solid var(--line); }
   .cards, .purl-row { grid-template-columns: 1fr; }
   .section { padding-top: 72px; }
 }
+
+/* Phones: the two store buttons side by side, each half the width */
+@media (max-width: 560px) {
+  .stores { flex-wrap: nowrap; gap: 10px; }
+  .store { flex: 1 1 0; min-width: 0; min-height: 52px; padding: 0 10px; gap: 8px; justify-content: center; }
+  .store svg { width: 18px; height: 18px; }
+  .store small { font-size: 10px; white-space: nowrap; }
+  .store b { font-size: 15px; white-space: nowrap; }
+}
+/* Too narrow for two: back on top of each other */
+@media (max-width: 350px) {
+  .stores { flex-wrap: wrap; }
+  .store { flex: 0 0 auto; padding: 0 22px 0 18px; }
+}
