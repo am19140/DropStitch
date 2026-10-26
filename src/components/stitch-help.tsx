@@ -4,7 +4,7 @@ import { Linking, Pressable, StyleSheet, Text, View, type StyleProp, type TextSt
 import { Icon } from '@/components/icon';
 import { Purl } from '@/components/purl';
 import { Colors, Fonts } from '@/constants/theme';
-import { stitchByKey, stitchesIn, stitchMatches } from '@/lib/stitches';
+import { stitchesIn, stitchMatches } from '@/lib/stitches';
 import { useProjects } from '@/store/projects';
 
 const C = Colors.light;
@@ -76,8 +76,8 @@ export function StitchChips({ texts }: { texts: (string | undefined)[] }) {
   const { on, shown, open, setOpen } = useContext(HelpContext);
   const stitches = on && shown ? stitchesIn(texts) : [];
   if (!stitches.length) return null;
-  const picked = open ? stitchByKey(open) : undefined;
-  const opened = picked && stitches.includes(picked) ? picked : undefined;
+  // Chips can carry the pattern's own spelling, so match the open one by key.
+  const opened = open ? stitches.find((s) => s.key === open) : undefined;
 
   return (
     <View style={styles.wrap}>

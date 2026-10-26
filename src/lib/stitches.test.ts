@@ -28,6 +28,26 @@ describe('stitch help', () => {
     assert.deepEqual(keys('*K2, yo, k2tog; rep from * to end. Work in st st for 5 cm.'), ['yo', 'k2tog', 'rep', 'stst']);
   });
 
+  test('checked against the Craft Yarn Council list: slip knitwise/purlwise, reverse stockinette, p2sso, M1K, M1rp', () => {
+    assert.deepEqual(keys('Sl1k, k to end. Sl1p wyif.'), ['sl1k', 'sl1p', 'wyif']);
+    assert.deepEqual(keys('Work in rev St st for 4 rows, then St st.'), ['revstst', 'stst']);
+    assert.deepEqual(keys('Sl 2 tog kwise, k1, p2sso.'), ['sl', 'tog', 'kwise', 'p2sso']);
+    assert.deepEqual(keys('K1, M1K, k to end, M1rp, M1lp.'), ['m1', 'm1rp', 'm1lp']);
+  });
+
+  test('a chip says the abbreviation the way the pattern writes it', () => {
+    assert.deepEqual(stitchesIn(['Work S2KP2 at the centre, then cdd again.']).map((s) => s.label), ['S2KP2']);
+    assert.deepEqual(stitchesIn(['K1, skpo, k1.']).map((s) => s.label), ['skpo']);
+  });
+
+  test('[ ] repeats are explained without hiding the stitches inside them', () => {
+    assert.deepEqual(keys('[K2tog, yo] 3 times, k1.'), ['brackets', 'k2tog', 'yo']);
+  });
+
+  test('pattern words beginners trip over: rem, cont, patt, foll, alt, dec, inc', () => {
+    assert.deepEqual(keys('Cont in patt, dec 1 st at each end of foll alt rows. 40 sts rem.'), ['cont', 'patt', 'dec', 'foll', 'alt', 'rem']);
+  });
+
   test('matches carry their place in the text, for marking the words', () => {
     const text = 'K1, ssk, k1.';
     const [m] = stitchMatches(text);
