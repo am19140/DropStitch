@@ -130,7 +130,6 @@ export default function KnitScreen() {
       {/* Stitch help (beginner friendly; off in Settings) and, for repeating steps that hide their
           sentence after the first repeat, the full pattern text: both one small tap away. */}
       <View style={styles.moreRow}>
-        <StitchHelpButton texts={[step.text, line]} />
         {step.detail || repeat ? (
           <Pressable
             accessibilityRole="button"
@@ -280,6 +279,8 @@ export default function KnitScreen() {
 
           <StitchHelpProvider key={step?.id}>
             <View style={styles.stepCard}>
+              {/* Stitch help's "?" sits in the card's top-right corner. */}
+              {step ? <StitchHelpButton texts={[step.text, line]} style={styles.helpCorner} /> : null}
               {step && repeat && counting ? (
                 <RepeatCard step={step} repeat={repeat} unit={unit} done={done} details={details} ticked={ticked} onTick={onTick} />
               ) : step ? (
@@ -306,11 +307,6 @@ export default function KnitScreen() {
                     </View>
                   )}
                   {details}
-                  {counting && target ? (
-                    <View style={styles.track}>
-                      <View style={[styles.fill, { width: `${Math.min(100, Math.round((rowsDone / target) * 100))}%` }]} />
-                    </View>
-                  ) : null}
                 </>
               ) : (
                 <>
@@ -371,7 +367,9 @@ const styles = StyleSheet.create({
   timer: { left: 20, bottom: 18 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.red },
   stepCard: { marginTop: 14, padding: 18, borderRadius: 22, borderWidth: 1.5, borderColor: C.cardLine, backgroundColor: C.surface, gap: 8 },
-  cardLabel: { fontFamily: Fonts.bold, fontSize: 13, color: C.textSecondary },
+  // Room on the right for stitch help's "?" in the corner.
+  cardLabel: { marginRight: 36, fontFamily: Fonts.bold, fontSize: 13, color: C.textSecondary },
+  helpCorner: { position: 'absolute', top: 12, right: 12, zIndex: 1 },
   stepText: { fontFamily: Fonts.extrabold, fontSize: 18, lineHeight: 25, color: C.text },
   thisRow: { marginTop: 4, padding: 14, borderRadius: 16, backgroundColor: C.card, gap: 2 },
   thisRowText: { fontFamily: Fonts.extrabold, fontSize: 19, lineHeight: 26, color: C.text },
@@ -381,8 +379,6 @@ const styles = StyleSheet.create({
   detailText: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 21, color: C.textSecondary },
   repeatChip: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999, backgroundColor: C.beige },
   repeatText: { fontFamily: Fonts.bold, fontSize: 13, color: C.text },
-  track: { marginTop: 4, height: 6, borderRadius: 3, backgroundColor: C.cardLine, overflow: 'hidden' },
-  fill: { height: 6, borderRadius: 3, backgroundColor: C.primary },
   linkButton: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
   link: { fontFamily: Fonts.extrabold, fontSize: 15, color: C.text, textDecorationLine: 'underline', textDecorationColor: C.red },
 });

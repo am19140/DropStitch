@@ -5,6 +5,7 @@
  * Plain knit and purl ("k2", "p1") and RS/WS are left out on purpose: they're in nearly every row
  * (the counter already shows the side), and a chip for each would bury the ones that need explaining.
  * `video` is where Mariana's own tutorial for a stitch goes, once she's made it.
+ * Mrs Purl opens every explanation with "<name>, dear.", so `says` never says "dear" itself.
  */
 export type Stitch = {
   key: string;
@@ -32,7 +33,7 @@ export const STITCHES: Stitch[] = [
     key: 'ssk',
     label: 'ssk',
     name: 'slip, slip, knit',
-    says: 'Slip two stitches one at a time as if to knit, then knit them together through the back, dear. Two become one, leaning left.',
+    says: 'Slip two stitches one at a time as if to knit, then knit them together through the back. Two become one, leaning left.',
     match: /\bssk\b/gi,
   },
   {
@@ -172,7 +173,7 @@ export const STITCHES: Stitch[] = [
     key: 'pm',
     label: 'pm',
     name: 'place marker',
-    says: 'Slide a stitch marker onto your right needle here, dear. It saves you counting later.',
+    says: 'Slide a stitch marker onto your right needle here. It saves you counting later.',
     match: /\bpm\b/gi,
   },
   {

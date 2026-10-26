@@ -126,7 +126,8 @@ const styles = StyleSheet.create({
   repeatText: { marginTop: 10, fontFamily: Fonts.extrabold, fontSize: 15, color: C.text },
   segments: { width: 156, flexDirection: 'row', gap: 3, marginTop: 8 },
   segment: { flex: 1, height: 9, borderRadius: 5 },
-  intro: { fontFamily: Fonts.semibold, fontSize: 14.5, lineHeight: 21, color: C.textSecondary },
-  eyebrow: { fontFamily: Fonts.bold, fontSize: 13, color: C.textSecondary },
+  // Room on the right for stitch help's "?" in the card's corner.
+  intro: { marginRight: 36, fontFamily: Fonts.semibold, fontSize: 14.5, lineHeight: 21, color: C.textSecondary },
+  eyebrow: { marginRight: 36, fontFamily: Fonts.bold, fontSize: 13, color: C.textSecondary },
   line: { fontFamily: Fonts.extrabold, fontSize: 20, lineHeight: 27, color: C.text },
 });

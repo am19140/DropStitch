@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 
 import { Icon } from '@/components/icon';
 import { Purl } from '@/components/purl';
@@ -32,7 +32,7 @@ export function StitchHelpProvider({ children }: { children: ReactNode }) {
 }
 
 /** The small "?" that opens (and closes) Mrs Purl's stitch chips. Hidden when there's nothing to explain. */
-export function StitchHelpButton({ texts }: { texts: (string | undefined)[] }) {
+export function StitchHelpButton({ texts, style }: { texts: (string | undefined)[]; style?: StyleProp<ViewStyle> }) {
   const { on, shown, setShown, setOpen } = useContext(HelpContext);
   if (!on || !stitchesIn(texts).length) return null;
   return (
@@ -45,7 +45,7 @@ export function StitchHelpButton({ texts }: { texts: (string | undefined)[] }) {
         setOpen(null);
       }}
       hitSlop={8}
-      style={[styles.ask, shown && styles.askOn]}>
+      style={[styles.ask, shown && styles.askOn, style]}>
       <Text style={[styles.askText, shown && { color: C.surface }]}>?</Text>
     </Pressable>
   );
@@ -100,11 +100,15 @@ export function StitchChips({ texts }: { texts: (string | undefined)[] }) {
         })}
       </View>
       {opened && (
+        // Mrs Purl's head inside the bubble: she's the one saying it.
         <View style={styles.says} accessibilityLiveRegion="polite">
-          <Text style={styles.saysText}>
-            <Text style={styles.saysName}>{opened.name.charAt(0).toUpperCase() + opened.name.slice(1)}. </Text>
-            {opened.says}
-          </Text>
+          <View style={styles.saysRow}>
+            <Purl pose="head" size={34} />
+            <Text style={styles.saysText}>
+              <Text style={styles.saysName}>{opened.name.charAt(0).toUpperCase() + opened.name.slice(1)}, dear. </Text>
+              {opened.says}
+            </Text>
+          </View>
           {opened.video ? (
             <Pressable accessibilityRole="button" onPress={() => Linking.openURL(opened.video!)} style={styles.showMe}>
               <Icon name="play" size={13} color={C.surface} strokeWidth={2.6} />
@@ -153,7 +157,8 @@ const styles = StyleSheet.create({
   chipOpen: { backgroundColor: C.text },
   chipText: { fontFamily: Fonts.extrabold, fontSize: 14, color: C.text },
   says: { padding: 14, borderRadius: 18, borderBottomLeftRadius: 3, backgroundColor: C.beige, gap: 10 },
-  saysText: { fontFamily: Fonts.semibold, fontSize: 15, lineHeight: 22, color: C.text },
+  saysRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  saysText: { flex: 1, fontFamily: Fonts.semibold, fontSize: 15, lineHeight: 22, color: C.text },
   saysName: { fontFamily: Fonts.extrabold },
   showMe: {
     alignSelf: 'flex-start',
