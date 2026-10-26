@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, View } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { TabletFrame } from '@/components/tablet-frame';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -35,6 +36,7 @@ export function Sheet({
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={onClose}>
+      <TabletFrame>
       <SafeAreaView style={[styles.flex, { backgroundColor: theme.background }]}>
         <KeyboardAvoidingView
           style={styles.flex}
@@ -56,6 +58,7 @@ export function Sheet({
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      </TabletFrame>
     </Modal>
   );
 }

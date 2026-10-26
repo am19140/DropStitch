@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { Modal, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Purl } from '@/components/purl';
+import { TabletFrame, tabletFrame, toFrame } from '@/components/tablet-frame';
 import { CardShadow, Colors, Fonts } from '@/constants/theme';
 import { useProjects } from '@/store/projects';
 
@@ -104,19 +105,25 @@ export function Tour({ id, steps, ready = true }: { id: string; steps: TourStep[
     setBox(null);
   };
 
+  // On an iPad the app is a scaled-up column (TabletFrame), and so is this layer: work in its points.
+  const frame = tabletFrame(window.width, window.height);
+  const area = frame ?? window;
+  const target = toFrame(box, frame);
+
   // The lit-up hole, a little bigger than the target and kept on screen.
   const hole = {
-    x: Math.max(4, box.x - PAD),
-    y: Math.max(4, box.y - PAD),
-    width: Math.min(window.width - 8, box.width + PAD * 2),
-    height: box.height + PAD * 2,
+    x: Math.max(4, target.x - PAD),
+    y: Math.max(4, target.y - PAD),
+    width: Math.min(area.width - 8, target.width + PAD * 2),
+    height: target.height + PAD * 2,
   };
-  const below = hole.y + hole.height + 230 < window.height;
+  const below = hole.y + hole.height + 230 < area.height;
   const bubbleTop = below ? hole.y + hole.height + 14 : undefined;
-  const bubbleBottom = below ? undefined : window.height - hole.y + 14;
+  const bubbleBottom = below ? undefined : area.height - hole.y + 14;
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={finish}>
+      <TabletFrame pageColor="transparent">
       {/* A full-screen layer takes every touch, so the app underneath can't be used; only Next and Skip work. */}
       <View style={StyleSheet.absoluteFill}>
         {/* The spotlight: a rounded hole whose huge shadow darkens everything around it. */}
@@ -159,6 +166,7 @@ export function Tour({ id, steps, ready = true }: { id: string; steps: TourStep[
           </View>
         </View>
       </View>
+      </TabletFrame>
     </Modal>
   );
 }

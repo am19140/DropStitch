@@ -14,6 +14,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 import { ScreenTransition } from '@/components/screen-transition';
+import { TabletFrame } from '@/components/tablet-frame';
 import { TourProvider } from '@/components/tour';
 import { Colors } from '@/constants/theme';
 import { useAccountSync } from '@/lib/sync';
@@ -65,6 +66,8 @@ export default function RootLayout() {
           border: C.border,
         },
       }}>
+      {/* On an iPad or a wide window: a centred column, everything a bit bigger. */}
+      <TabletFrame>
       <TourProvider>
       <Stack
         // Screens slide in from the right on phones (iOS style on Android too); in the browser,
@@ -91,6 +94,7 @@ export default function RootLayout() {
         <Stack.Screen name="project/[id]/edit" options={{ presentation: 'modal' }} />
       </Stack>
       </TourProvider>
+      </TabletFrame>
     </ThemeProvider>
   );
 }

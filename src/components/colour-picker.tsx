@@ -3,11 +3,13 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View, type GestureRespon
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Button } from '@/components/button';
+import { TabletFrame, useTabletFrame } from '@/components/tablet-frame';
 import { YarnBall, type YarnAppearance } from '@/components/yarn-ball';
 import { normalizeYarnHex } from '@/components/yarn-colors';
 import { CardShadow, Colors, Fonts } from '@/constants/theme';
 
 const C = Colors.light;
+const DIM = 'rgba(28, 26, 23, 0.4)';
 
 type Hsv = { h: number; s: number; v: number };
 
@@ -34,8 +36,10 @@ const clamp = (x: number) => Math.max(0, Math.min(1, x));
 /** A touch area that reports where the finger is, from 0 to 1 across and down, while dragging. */
 function DragArea({ onMove, style, children }: { onMove: (x: number, y: number) => void; style: object; children: React.ReactNode }) {
   const size = useRef({ w: 1, h: 1 });
+  // On an iPad the column is scaled up: the finger's position comes in window pixels, the size in points.
+  const scale = useTabletFrame()?.scale ?? 1;
   const move = (e: GestureResponderEvent) =>
-    onMove(clamp(e.nativeEvent.locationX / size.current.w), clamp(e.nativeEvent.locationY / size.current.h));
+    onMove(clamp(e.nativeEvent.locationX / (size.current.w * scale)), clamp(e.nativeEvent.locationY / (size.current.h * scale)));
   return (
     <View
       style={style}
@@ -65,6 +69,7 @@ type ColourPickerProps = {
 export function ColourPicker({ visible, initial, appearance, onCancel, onPick }: ColourPickerProps) {
   const [hsv, setHsv] = useState<Hsv>(() => hexToHsv(initial));
   const [typed, setTyped] = useState<string | null>(null);
+  const framed = !!useTabletFrame();
   const hex = hsvToHex(hsv);
   const hue = hsvToHex({ h: hsv.h, s: 1, v: 1 });
 
@@ -76,7 +81,9 @@ export function ColourPicker({ visible, initial, appearance, onCancel, onPick }:
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.layer}>
+      {/* On an iPad the dim covers the whole window and the card sits in the scaled-up column. */}
+      <TabletFrame pageColor={DIM}>
+      <View style={[styles.layer, framed && { backgroundColor: 'transparent' }]}>
         <Pressable accessibilityLabel="Cancel" style={StyleSheet.absoluteFill} onPress={onCancel} />
         <View style={[styles.card, CardShadow]}>
           <Text style={styles.title}>Your own colour</Text>
@@ -138,12 +145,13 @@ export function ColourPicker({ visible, initial, appearance, onCancel, onPick }:
           </View>
         </View>
       </View>
+      </TabletFrame>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  layer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(28, 26, 23, 0.4)' },
+  layer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: DIM },
   card: { width: '100%', maxWidth: 380, padding: 20, borderRadius: 26, backgroundColor: C.surface, gap: 14 },
   title: { fontFamily: Fonts.display, fontSize: 22, color: C.text, textAlign: 'center' },
   shades: { height: 170, borderRadius: 18, overflow: 'hidden' },
