@@ -216,6 +216,9 @@ type ProjectsState = {
   projects: Project[];
   yarns: Yarn[];
   seenWelcome: boolean;
+  /** Stitch help on the counter: Mrs Purl explains stitches like ssk under each row. Advanced knitters can turn it off. */
+  stitchHelp: boolean;
+  setStitchHelp: (on: boolean) => void;
   markWelcomeSeen: () => void;
   /** Which on-screen guides have been shown (or skipped) on this phone, by guide id. */
   seenTours: Record<string, true>;
@@ -303,6 +306,8 @@ export const useProjects = create<ProjectsState>()(
         yarns: [],
         seenWelcome: false,
         markWelcomeSeen: () => set({ seenWelcome: true }),
+        stitchHelp: true,
+        setStitchHelp: (on) => set({ stitchHelp: on }),
         seenTours: {},
         markTourSeen: (id) => set((state) => ({ seenTours: { ...state.seenTours, [id]: true } })),
         resetTours: () => set({ seenTours: {} }),
@@ -484,6 +489,7 @@ export const useProjects = create<ProjectsState>()(
         projects: state.projects,
         yarns: state.yarns,
         seenWelcome: state.seenWelcome,
+        stitchHelp: state.stitchHelp,
         seenTours: state.seenTours,
         knitterName: state.knitterName,
         knitLog: state.knitLog,

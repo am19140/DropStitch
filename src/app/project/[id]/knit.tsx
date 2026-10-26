@@ -11,6 +11,7 @@ import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandm
 import { RepeatCard, RepeatSide } from '@/components/repeat-view';
 import { RowPieces } from '@/components/row-pieces';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
+import { StitchChips, StitchHelpProvider, StitchText } from '@/components/stitch-help';
 import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
 import { Tour, TourTarget, type TourStep } from '@/components/tour';
@@ -121,6 +122,8 @@ export default function KnitScreen() {
   const grandma = <PaintedKnittingGrandma paused={!running} width={196} active={isFocused} />;
   const details = step ? (
     <>
+      {/* Stitch help: Mrs Purl explains the stitches in what's on screen (beginner friendly; off in Settings). */}
+      <StitchChips texts={[step.text, line]} />
       {step.stitches ? (
         <View style={[styles.repeatChip, { backgroundColor: C.skySoft }]}>
           <Text style={styles.repeatText}>ends with {step.stitches} sts</Text>
@@ -274,50 +277,52 @@ export default function KnitScreen() {
             </View>
           )}
 
-          <View style={styles.stepCard}>
-            {step && repeat && counting ? (
-              <RepeatCard step={step} repeat={repeat} unit={unit} done={done} details={details} ticked={ticked} onTick={onTick} />
-            ) : step ? (
-              <>
-                <Text style={styles.cardLabel}>
-                  Current step{textSplit?.label ? ` · ${textSplit.label.toLowerCase()}` : ''}
-                </Text>
-                {textSplit && !done ? (
-                  <RowPieces pieces={textSplit.pieces} ticked={ticked} onTick={onTick} />
-                ) : (
-                  <Text style={styles.stepText}>{step.text}</Text>
-                )}
-                {line && (
-                  <View style={styles.thisRow}>
-                    <Text style={styles.cardLabel}>
-                      {`This ${unit}`}
-                      {lineSplit?.label ? ` · ${lineSplit.label.toLowerCase()}` : ''}
-                    </Text>
-                    {lineSplit ? (
-                      <RowPieces pieces={lineSplit.pieces} ticked={ticked} onTick={onTick} />
-                    ) : (
-                      <Text style={styles.thisRowText}>{line}</Text>
-                    )}
-                  </View>
-                )}
-                {details}
-                {counting && target ? (
-                  <View style={styles.track}>
-                    <View style={[styles.fill, { width: `${Math.min(100, Math.round((rowsDone / target) * 100))}%` }]} />
-                  </View>
-                ) : null}
-              </>
-            ) : (
-              <>
-                <Text style={styles.stepText}>
-                  No steps yet. Add the pattern’s steps under “All steps” to tick them off as you go.
-                </Text>
-                <Pressable accessibilityRole="button" onPress={() => setTab('steps')} style={styles.linkButton}>
-                  <Text style={styles.link}>Add steps</Text>
-                </Pressable>
-              </>
-            )}
-          </View>
+          <StitchHelpProvider key={step?.id}>
+            <View style={styles.stepCard}>
+              {step && repeat && counting ? (
+                <RepeatCard step={step} repeat={repeat} unit={unit} done={done} details={details} ticked={ticked} onTick={onTick} />
+              ) : step ? (
+                <>
+                  <Text style={styles.cardLabel}>
+                    Current step{textSplit?.label ? ` · ${textSplit.label.toLowerCase()}` : ''}
+                  </Text>
+                  {textSplit && !done ? (
+                    <RowPieces pieces={textSplit.pieces} ticked={ticked} onTick={onTick} />
+                  ) : (
+                    <StitchText style={styles.stepText} text={step.text} />
+                  )}
+                  {line && (
+                    <View style={styles.thisRow}>
+                      <Text style={styles.cardLabel}>
+                        {`This ${unit}`}
+                        {lineSplit?.label ? ` · ${lineSplit.label.toLowerCase()}` : ''}
+                      </Text>
+                      {lineSplit ? (
+                        <RowPieces pieces={lineSplit.pieces} ticked={ticked} onTick={onTick} />
+                      ) : (
+                        <StitchText style={styles.thisRowText} text={line} />
+                      )}
+                    </View>
+                  )}
+                  {details}
+                  {counting && target ? (
+                    <View style={styles.track}>
+                      <View style={[styles.fill, { width: `${Math.min(100, Math.round((rowsDone / target) * 100))}%` }]} />
+                    </View>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.stepText}>
+                    No steps yet. Add the pattern’s steps under “All steps” to tick them off as you go.
+                  </Text>
+                  <Pressable accessibilityRole="button" onPress={() => setTab('steps')} style={styles.linkButton}>
+                    <Text style={styles.link}>Add steps</Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
+          </StitchHelpProvider>
         </ScrollView>
       ) : (
         <View style={{ flex: 1 }}>

@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAccountActions } from '@/components/account-actions';
@@ -45,6 +45,8 @@ export default function SettingsScreen() {
   const router = useRouter();
   const session = useSession();
   const resetTours = useProjects((s) => s.resetTours);
+  const stitchHelp = useProjects((s) => s.stitchHelp);
+  const setStitchHelp = useProjects((s) => s.setStitchHelp);
   const { signOut, removeAccount, busy, problem, dialog } = useAccountActions();
 
   return (
@@ -108,6 +110,28 @@ export default function SettingsScreen() {
             )}
           </View>
           {problem && <Text style={styles.problem}>{problem}</Text>}
+
+          <Text style={styles.section}>Knitting</Text>
+          <View style={styles.list}>
+            {/* Beginner friendly by default; advanced knitters can switch Mrs Purl's stitch notes off. */}
+            <View style={styles.row}>
+              <Purl pose="head" size={26} />
+              <View style={{ flex: 1, gap: 1 }}>
+                <Text style={styles.rowLabel}>Stitch help</Text>
+                <Text style={styles.rowDetail} numberOfLines={2}>
+                  Mrs Purl explains stitches like ssk under each row.
+                </Text>
+              </View>
+              <Switch
+                accessibilityLabel="Stitch help"
+                value={stitchHelp}
+                onValueChange={setStitchHelp}
+                trackColor={{ false: C.border, true: C.primary }}
+                thumbColor={C.surface}
+                {...(Platform.OS === 'web' ? { activeThumbColor: C.surface } : {})}
+              />
+            </View>
+          </View>
 
           <Text style={styles.section}>Help</Text>
           <View style={styles.list}>

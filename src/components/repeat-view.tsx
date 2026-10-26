@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { RowPieces } from '@/components/row-pieces';
+import { StitchText } from '@/components/stitch-help';
 import { Colors, Fonts } from '@/constants/theme';
 import { rowPieces } from '@/lib/row-pieces';
 import type { Side, Step } from '@/store/projects';
@@ -103,7 +104,7 @@ export function RepeatCard({
   const split = line ? rowPieces(line) : undefined;
   return (
     <>
-      {repeat.now === 1 && !done ? <Text style={styles.intro}>{step.text}</Text> : null}
+      {repeat.now === 1 && !done ? <StitchText style={styles.intro} text={step.text} /> : null}
       {line ? (
         <>
           <Text style={styles.eyebrow}>
@@ -111,7 +112,7 @@ export function RepeatCard({
             {repeat.size > 2 ? `This ${unit} · ${repeat.row} of ${repeat.size}` : `This ${unit}`}
             {split?.label ? ` · ${split.label.toLowerCase()}` : ''}
           </Text>
-          {split ? <RowPieces pieces={split.pieces} ticked={ticked} onTick={onTick} /> : <Text style={styles.line}>{line}</Text>}
+          {split ? <RowPieces pieces={split.pieces} ticked={ticked} onTick={onTick} /> : <StitchText style={styles.line} text={line} />}
         </>
       ) : null}
       {details}

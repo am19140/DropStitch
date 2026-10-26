@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
+import { StitchText } from '@/components/stitch-help';
 import { Colors, Fonts } from '@/constants/theme';
 
 const C = Colors.light;
@@ -27,7 +28,7 @@ export function RowPieces({ pieces, ticked, onTick }: { pieces: string[]; ticked
             <View style={[styles.tick, done && styles.tickDone, now && styles.tickNow]}>
               {done ? <Icon name="check" size={15} color={C.surface} strokeWidth={3} /> : null}
             </View>
-            <Text style={[styles.text, done && styles.textDone, now && styles.textNow, !done && !now && styles.textNext]}>{piece}</Text>
+            <StitchText style={[styles.text, done && styles.textDone, now && styles.textNow, !done && !now && styles.textNext]} text={piece} />
           </Pressable>
         );
       })}
