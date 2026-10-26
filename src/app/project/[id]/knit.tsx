@@ -11,7 +11,7 @@ import PaintedKnittingGrandma from '@/components/grandma/painted-knitting-grandm
 import { RepeatCard, RepeatSide } from '@/components/repeat-view';
 import { RowPieces } from '@/components/row-pieces';
 import { HeaderButton, ScreenHeader } from '@/components/screen-header';
-import { StitchChips, StitchHelpProvider, StitchText } from '@/components/stitch-help';
+import { StitchChips, StitchHelpButton, StitchHelpProvider, StitchText } from '@/components/stitch-help';
 import { StepList } from '@/components/step-list';
 import { TextTabs } from '@/components/text-tabs';
 import { Tour, TourTarget, type TourStep } from '@/components/tour';
@@ -122,16 +122,16 @@ export default function KnitScreen() {
   const grandma = <PaintedKnittingGrandma paused={!running} width={196} active={isFocused} />;
   const details = step ? (
     <>
-      {/* Stitch help: Mrs Purl explains the stitches in what's on screen (beginner friendly; off in Settings). */}
-      <StitchChips texts={[step.text, line]} />
       {step.stitches ? (
         <View style={[styles.repeatChip, { backgroundColor: C.skySoft }]}>
           <Text style={styles.repeatText}>ends with {step.stitches} sts</Text>
         </View>
       ) : null}
-      {/* Repeating steps hide their sentence after the first repeat, so keep it one tap away. */}
-      {step.detail || repeat ? (
-        <View>
+      {/* Stitch help (beginner friendly; off in Settings) and, for repeating steps that hide their
+          sentence after the first repeat, the full pattern text: both one small tap away. */}
+      <View style={styles.moreRow}>
+        <StitchHelpButton texts={[step.text, line]} />
+        {step.detail || repeat ? (
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ expanded: showDetail }}
@@ -140,9 +140,10 @@ export default function KnitScreen() {
             <Text style={styles.detailToggleText}>{showDetail ? 'Hide pattern text' : 'Full pattern text'}</Text>
             <Icon name={showDetail ? 'up' : 'chevronDown'} size={16} color={C.textSecondary} strokeWidth={2} />
           </Pressable>
-          {showDetail && <Text style={styles.detailText}>{step.detail ?? step.text}</Text>}
-        </View>
-      ) : null}
+        ) : null}
+      </View>
+      <StitchChips texts={[step.text, line]} />
+      {showDetail && <Text style={styles.detailText}>{step.detail ?? step.text}</Text>}
     </>
   ) : null;
 
@@ -375,6 +376,7 @@ const styles = StyleSheet.create({
   thisRow: { marginTop: 4, padding: 14, borderRadius: 16, backgroundColor: C.card, gap: 2 },
   thisRowText: { fontFamily: Fonts.extrabold, fontSize: 19, lineHeight: 26, color: C.text },
   detailToggle: { alignSelf: 'flex-start', minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  moreRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   detailToggleText: { fontFamily: Fonts.bold, fontSize: 13.5, color: C.textSecondary },
   detailText: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 21, color: C.textSecondary },
   repeatChip: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999, backgroundColor: C.beige },

@@ -10,26 +10,51 @@ import { useProjects } from '@/store/projects';
 const C = Colors.light;
 
 /**
- * Stitch help on the counter (beginner friendly): the stitch words in the row are softly marked, and
- * under it Mrs Purl hands you a chip per stitch. Tap one and she explains it in her own words.
+ * Stitch help on the counter (beginner friendly). The row stays clean: a small "?" sits under it when
+ * it holds stitches worth explaining. Tap it and the stitch words get softly marked, and Mrs Purl hands
+ * you a chip per stitch; tap a chip and she explains it in her own words.
  * Only inside the provider, and only while "Stitch help" is on in Settings.
  */
-const HelpContext = createContext<{ on: boolean; open: string | null; setOpen: (key: string | null) => void }>({
-  on: false,
-  open: null,
-  setOpen: () => {},
-});
+type Help = {
+  on: boolean;
+  shown: boolean;
+  setShown: (shown: boolean) => void;
+  open: string | null;
+  setOpen: (key: string | null) => void;
+};
+const HelpContext = createContext<Help>({ on: false, shown: false, setShown: () => {}, open: null, setOpen: () => {} });
 
 export function StitchHelpProvider({ children }: { children: ReactNode }) {
   const on = useProjects((s) => s.stitchHelp);
+  const [shown, setShown] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  return <HelpContext.Provider value={{ on, open, setOpen }}>{children}</HelpContext.Provider>;
+  return <HelpContext.Provider value={{ on, shown, setShown, open, setOpen }}>{children}</HelpContext.Provider>;
+}
+
+/** The small "?" that opens (and closes) Mrs Purl's stitch chips. Hidden when there's nothing to explain. */
+export function StitchHelpButton({ texts }: { texts: (string | undefined)[] }) {
+  const { on, shown, setShown, setOpen } = useContext(HelpContext);
+  if (!on || !stitchesIn(texts).length) return null;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Stitch help: Mrs Purl explains the stitches in this row"
+      accessibilityState={{ expanded: shown }}
+      onPress={() => {
+        setShown(!shown);
+        setOpen(null);
+      }}
+      hitSlop={8}
+      style={[styles.ask, shown && styles.askOn]}>
+      <Text style={[styles.askText, shown && { color: C.surface }]}>?</Text>
+    </Pressable>
+  );
 }
 
 /** Row text with its stitch words softly marked (the one Mrs Purl is explaining, in ink). */
 export function StitchText({ text, style }: { text: string; style?: StyleProp<TextStyle> }) {
-  const { on, open } = useContext(HelpContext);
-  const matches = on ? stitchMatches(text) : [];
+  const { on, shown, open } = useContext(HelpContext);
+  const matches = on && shown ? stitchMatches(text) : [];
   if (!matches.length) return <Text style={style}>{text}</Text>;
   const parts: ReactNode[] = [];
   let at = 0;
@@ -48,11 +73,11 @@ export function StitchText({ text, style }: { text: string; style?: StyleProp<Te
 
 /** Mrs Purl's head, then a speech-bubble chip per stitch; tapping one opens her explanation. */
 export function StitchChips({ texts }: { texts: (string | undefined)[] }) {
-  const { on, open, setOpen } = useContext(HelpContext);
-  const stitches = on ? stitchesIn(texts) : [];
+  const { on, shown, open, setOpen } = useContext(HelpContext);
+  const stitches = on && shown ? stitchesIn(texts) : [];
   if (!stitches.length) return null;
-  const shown = open ? stitchByKey(open) : undefined;
-  const opened = shown && stitches.includes(shown) ? shown : undefined;
+  const picked = open ? stitchByKey(open) : undefined;
+  const opened = picked && stitches.includes(picked) ? picked : undefined;
 
   return (
     <View style={styles.wrap}>
@@ -93,6 +118,18 @@ export function StitchChips({ texts }: { texts: (string | undefined)[] }) {
 }
 
 const styles = StyleSheet.create({
+  ask: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: C.text,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: C.surface,
+  },
+  askOn: { backgroundColor: C.text },
+  askText: { fontFamily: Fonts.display, fontSize: 15, lineHeight: 18, color: C.text },
   // Pale banana alone is too faint on the cream card, so the words also get a dotted underline.
   mark: {
     backgroundColor: C.beige,
