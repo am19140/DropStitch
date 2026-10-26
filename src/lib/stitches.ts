@@ -2,8 +2,8 @@
  * Stitch help: the stitch names and abbreviations a row can use, explained in Mrs Purl's voice,
  * so a beginner never has to leave the row to find out what "ssk" means.
  *
- * Plain knit and purl ("k2", "p1") and RS/WS are left out on purpose: they're in nearly every row
- * (the counter already shows the side), and a chip for each would bury the ones that need explaining.
+ * Knit and purl are in too, for total beginners (Mariana, 2026-10-26). The chips only show once
+ * someone taps the "?", so they don't crowd the row. RS/WS stay out: the counter already shows the side.
  * `video` is where Mariana's own tutorial for a stitch goes, once she's made it.
  * Mrs Purl opens every explanation with "<name>, dear.", so `says` never says "dear" itself.
  * Checked against the Craft Yarn Council's standard knitting abbreviations (2026-10-26); the wording is our own.
@@ -28,6 +28,21 @@ export type Stitch = {
 const word = (key: string, label: string, name: string, says: string, match: RegExp): Stitch => ({ key, label, name, says, match });
 
 export const STITCHES: Stitch[] = [
+  {
+    key: 'k',
+    label: 'k',
+    name: 'knit',
+    says: 'The first stitch every knitter learns. Put your right needle into the front of the stitch from left to right, wrap the yarn around it, pull the new loop through and let the old stitch slide off. "K2" means knit two.',
+    // "k", "K1", "k12" or the word "knit", never part of k2tog, kfb or knitwise.
+    match: /\bk\d*\b|\bknit\b/gi,
+  },
+  {
+    key: 'p',
+    label: 'p',
+    name: 'purl',
+    says: 'With the yarn in front, put your right needle into the front of the stitch from right to left, wrap the yarn around it, push the new loop out to the back and let the old stitch slide off. "P2" means purl two.',
+    match: /\bp\d*\b|\bpurl\b/gi,
+  },
   {
     key: 'sssk',
     label: 'sssk',
